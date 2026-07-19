@@ -3,7 +3,6 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 
-import { AiModule } from "./ai/ai.module";
 import { AdminModule } from "./admin/admin.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { AuditModule } from "./audit/audit.module";
@@ -36,6 +35,11 @@ import { UsersModule } from "./users/users.module";
 import { PrepModule } from './prep/prep.module';
 import { QueueModule } from "./common/queue/queue.module";
 import { RecruitmentWorkflowModule } from "./recruitment-workflow/recruitment-workflow.module";
+import { VmsModule } from "./vms/vms.module";
+import { WorkforceModule } from "./workforce/workforce.module";
+import { FinanceModule } from "./finance/finance.module";
+import { MarketplaceModule } from "./marketplace/marketplace.module";
+import { OperationsModule } from "./operations/operations.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -67,7 +71,6 @@ import { RecruitmentWorkflowModule } from "./recruitment-workflow/recruitment-wo
     RecruiterModule,
     TalentModule,
     AtsModule,
-    AiModule,
     AutomationModule,
     AdminModule,
     CrmModule,
@@ -77,6 +80,11 @@ import { RecruitmentWorkflowModule } from "./recruitment-workflow/recruitment-wo
     HealthModule, PrepModule,
     QueueModule,
     RecruitmentWorkflowModule,
+    VmsModule,
+    WorkforceModule,
+    FinanceModule,
+    MarketplaceModule,
+    OperationsModule,
   ],
   providers: [
     HttpExceptionFilter,

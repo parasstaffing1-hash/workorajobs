@@ -6,7 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { AiResumeBuilder } from "@/components/ai/ai-resume-builder";
+import { BuilderWorkspace } from "@/components/resume-builder/builder-workspace";
 import { ThemeSelector } from "@/components/theme/theme-selector";
 import { Section } from "@/components/layout/section";
 import { CtaBand } from "@/components/marketing/cta-band";
@@ -16,9 +16,9 @@ import { Card } from "@/components/ui/card";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "AI Resume Builder",
+  title: "Professional Resume Builder",
   description:
-    "Build a polished, ATS-ready resume locally in the browser with Workora Jobs AI resume builder.",
+    "Build a polished, ATS-ready resume locally in the browser with Workora Jobs free resume builder.",
   path: "/resume-builder",
 });
 
@@ -47,8 +47,8 @@ export default function ResumeBuilderPage() {
   return (
     <>
       <PageHero
-        description="Build a premium, ATS-ready resume with local AI-style guidance, keyword matching, impact rewriting and downloadable output."
-        eyebrow="AI Resume Builder"
+        description="Build a premium, ATS-ready resume with standard formatting rules, style templates, and print-ready downloads."
+        eyebrow="Resume Builder Workspace"
         title="Create a resume that looks sharp and reads like evidence."
       >
         <ButtonLink href="#builder" size="lg" variant="accent">
@@ -61,11 +61,13 @@ export default function ResumeBuilderPage() {
         className="bg-secondary/40"
         eyebrow="Builder"
         title="Tailor your resume to the role."
-        description="Paste a target job description, add your experience and generate a polished resume draft without any backend or external AI call."
+        description="Fill in your sections, adjust margins and sizing presets, and export your polished resume draft instantly."
         id="builder"
       >
-        <AiResumeBuilder />
-        <ThemeSelector />
+        <BuilderWorkspace />
+        <div className="mt-8">
+          <ThemeSelector />
+        </div>
       </Section>
 
       <Section
@@ -95,8 +97,8 @@ export default function ResumeBuilderPage() {
             Browse matching jobs
             <FileText aria-hidden="true" className="h-4 w-4" />
           </ButtonLink>
-          <ButtonLink href="/ai-tools" variant="outline">
-            Explore AI tools
+          <ButtonLink href="/services" variant="outline">
+            Explore services
           </ButtonLink>
         </div>
       </Section>

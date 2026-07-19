@@ -105,8 +105,8 @@ export default function ToolResultPage() {
           <FileText className="h-10 w-10 text-slate-600 mx-auto" />
           <h3 className="font-semibold text-slate-400 text-sm">No tool result loaded</h3>
           <p className="text-xs text-slate-500">The result may have expired, or you accessed this URL directly without triggering a generator.</p>
-          <Button variant="outline" onClick={() => router.push("/ai-tools")}>
-            Go to Tool Library
+          <Button variant="outline" onClick={() => router.push("/services")}>
+            Go to Services
           </Button>
         </div>
       </PlatformShell>

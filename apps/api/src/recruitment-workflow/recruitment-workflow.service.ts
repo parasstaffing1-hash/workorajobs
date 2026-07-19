@@ -35,7 +35,6 @@ import { EmailService } from "../email/email.service";
 import { AuthenticatedUser } from "../auth/types/authenticated-user.type";
 import {
   RecruitmentStore,
-  ExtendedInterviewDetails,
   Offer,
   OfferApproval,
 } from "./recruitment-store";

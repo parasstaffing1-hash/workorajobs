@@ -1,8 +1,6 @@
 export const primaryNav = [
   { href: "/services", label: "Services" },
-  { href: "/career-copilot", label: "Career Copilot" },
   { href: "/prep", label: "HackerPrep (Practice)" },
-  { href: "/ai-tools", label: "AI Tools" },
   { href: "/resume-builder", label: "Resume Builder" },
   { href: "/companies", label: "Companies" },
   { href: "/industries", label: "Industries" },
@@ -10,6 +8,7 @@ export const primaryNav = [
   { href: "/internship-jobs", label: "Internships" },
   { href: "/employers", label: "Employers" },
   { href: "/candidates", label: "Candidates" },
+  { href: "/tools", label: "Tools" },
   { href: "/resources", label: "Resources" },
 ];
 
@@ -18,20 +17,18 @@ export const footerNav = [
     title: "Platform",
     links: [
       { href: "/services", label: "Services" },
-      { href: "/career-copilot", label: "Career Copilot" },
       { href: "/prep", label: "HackerPrep" },
-      { href: "/ai-tools", label: "AI Tools" },
       { href: "/companies", label: "Companies" },
       { href: "/industries", label: "Industries" },
       { href: "/jobs", label: "Jobs" },
       { href: "/employers", label: "Employers" },
+      { href: "/tools", label: "Tools" },
     ],
   },
   {
     title: "Talent",
     links: [
       { href: "/candidates", label: "Candidates" },
-      { href: "/career-copilot", label: "Career Copilot" },
       { href: "/resume-builder", label: "Resume Builder" },
       { href: "/resources", label: "Resources" },
       { href: "/blog", label: "Blog" },

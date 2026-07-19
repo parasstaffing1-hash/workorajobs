@@ -327,6 +327,13 @@ model User {
   ownedHiringTeams          HiringTeam[]              @relation("HiringTeamOwner")
   sentHiringTeamInvitations HiringTeamInvitation[]    @relation("HiringTeamInviter")
   hiringTeamMemberships     HiringTeamMember[]
+  vendorMembers             VendorMember[]
+  requisitions              JobRequisition[]          @relation("HiringManagerRequisitions")
+  commissions               RecruiterCommission[]     @relation("RecruiterCommissions")
+  copilotSessions           CopilotSession[]          @relation("UserCopilotSessions")
+  mobileDevices             MobileDevice[]            @relation("UserMobileDevices")
+  developerAccount          DeveloperAccount?         @relation("UserDeveloperAccount")
+  employeeProfile           EmployeeProfile?          @relation("UserEmployeeProfile")
 
   @@map("users")
 }
@@ -464,6 +471,15 @@ model Company {
   recruiters         RecruiterProfile[]
   hiringTeams        HiringTeam[]
   verifications      CompanyVerification[]
+  requisitions       JobRequisition[]
+  placements         Placement[]           @relation("CompanyPlacements")
+  clientInvoices     ClientInvoice[]       @relation("CompanyInvoices")
+  appInstallations   AppInstallation[]     @relation("CompanyAppInstallations")
+  resourceQuotas     ResourceQuota[]       @relation("CompanyResourceQuotas")
+  tenantLifecycleLogs TenantLifecycleLog[]  @relation("CompanyTenantLogs")
+  supportTickets     SupportTicket[]       @relation("CompanyTickets")
+  healthScores       CustomerHealthScore[] @relation("CompanyHealthScores")
+  whiteLabelConfig   WhiteLabelConfig?     @relation("CompanyWhiteLabel")
 
   @@index([ownerId])
   @@index([status])
@@ -592,7 +608,12 @@ model CandidateProfile {
   resumeIndex          ResumeIndex?
   tasks                RecruiterTask[]          @relation("CandidateTaskTarget")
   aiArtifacts          AiArtifact[]
-
+  vendorSubmissions    VendorSubmission[]
+  placements           Placement[]              @relation("CandidatePlacements")
+  leaveRequests        LeaveRequest[]
+  expenseClaims        ExpenseClaim[]
+  complianceRecords    WorkerCompliance[]
+ 
   @@index([assignedRecruiterId])
   @@map("candidate_profiles")
 }
@@ -1616,3 +1637,1016 @@ model HiringTeamInvitation {
   @@index([email])
   @@map("hiring_team_invitations")
 }
+
+enum VendorStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+  ARCHIVED
+}
+
+enum VendorRole {
+  OWNER
+  ADMIN
+  RECRUITER
+  ACCOUNT_MANAGER
+  FINANCE
+  READ_ONLY
+}
+
+enum RequisitionStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  OPEN
+  VENDOR_DISTRIBUTION
+  INTERVIEWING
+  OFFER
+  FILLED
+  ON_HOLD
+  CANCELLED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  OFFER_EXTENDED
+  OFFER_ACCEPTED
+  PLACEMENT_CONFIRMED
+  REJECTED
+  WITHDRAWN
+}
+
+model VendorProfile {
+  id               String               @id @default(uuid()) @db.Uuid
+  name             String
+  companyId        String?              @db.Uuid // Optional link to tenant company
+  status           VendorStatus         @default(PENDING)
+  category         String?
+  specialization   String?
+  primaryContact   String?
+  billingContact   String?
+  complianceStatus String               @default("PENDING") // PENDING, APPROVED, REJECTED
+  contractStatus   String               @default("PENDING") // PENDING, ACTIVE, EXPIRED
+  performanceScore Float                @default(100.0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  members          VendorMember[]
+  distributions    VendorDistribution[]
+  submissions      VendorSubmission[]
+  scorecards       VendorScorecard[]
+  slaViolations    VendorSlaViolation[]
+
+  @@map("vendor_profiles")
+}
+
+model VendorMember {
+  id        String        @id @default(uuid()) @db.Uuid
+  vendorId  String        @db.Uuid
+  userId    String        @db.Uuid
+  role      VendorRole    @default(RECRUITER)
+  joinedAt  DateTime      @default(now())
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, userId])
+  @@map("vendor_members")
+}
+
+model JobRequisition {
+  id                 String               @id @default(uuid()) @db.Uuid
+  requisitionNumber  String               @unique
+  companyId          String               @db.Uuid // Client company
+  jobId              String?              @db.Uuid // Linked job, if any
+  title              String
+  department         String?
+  hiringManagerId    String               @db.Uuid
+  location           String?
+  employmentType     String
+  numberOfOpenings   Int                  @default(1)
+  minSalary          Float?
+  maxSalary          Float?
+  requiredSkills     String[]
+  preferredSkills    String[]
+  priority           String               @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status             RequisitionStatus    @default(DRAFT)
+  deadline           DateTime?
+  expectedStartDate  DateTime?
+  description        String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  company            Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  hiringManager      User                 @relation("HiringManagerRequisitions", fields: [hiringManagerId], references: [id], onDelete: Cascade)
+  distributions      VendorDistribution[]
+  submissions        VendorSubmission[]
+
+  @@map("job_requisitions")
+}
+
+model VendorDistribution {
+  id            String         @id @default(uuid()) @db.Uuid
+  requisitionId String         @db.Uuid
+  vendorId      String         @db.Uuid
+  assignedAt    DateTime       @default(now())
+  status        String         @default("ACTIVE") // ACTIVE, REMOVED
+  requisition   JobRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  vendor        VendorProfile  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([requisitionId, vendorId])
+  @@map("vendor_distributions")
+}
+
+model VendorSubmission {
+  id            String           @id @default(uuid()) @db.Uuid
+  requisitionId String           @db.Uuid
+  vendorId      String           @db.Uuid
+  candidateId   String           @db.Uuid // Link to CandidateProfile
+  status        SubmissionStatus @default(SUBMITTED)
+  expectedRate  Float?
+  availability  String?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  requisition   JobRequisition   @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  vendor        VendorProfile    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  candidate     CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([requisitionId, vendorId, candidateId])
+  @@map("vendor_submissions")
+}
+
+model VendorSlaViolation {
+  id          String        @id @default(uuid()) @db.Uuid
+  vendorId    String        @db.Uuid
+  slaType     String // RESPONSE, SUBMISSION, INTERVIEW, PLACEMENT
+  description String
+  detectedAt  DateTime      @default(now())
+  resolvedAt  DateTime?
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_sla_violations")
+}
+
+model VendorScorecard {
+  id               String        @id @default(uuid()) @db.Uuid
+  vendorId         String        @db.Uuid
+  submissionScore  Float
+  placementScore   Float
+  feedbackScore    Float
+  timeToFillScore  Float
+  slaCompliance    Float
+  overallScore     Float
+  calculatedAt     DateTime      @default(now())
+  vendor           VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_scorecards")
+}
+
+// Prompt 36: Workforce Management & Timesheets
+model Placement {
+  id               String             @id @default(uuid()) @db.Uuid
+  candidateId      String             @db.Uuid
+  companyId        String             @db.Uuid
+  jobId            String?            @db.Uuid
+  billingRate      Float
+  payRate          Float
+  startDate        DateTime
+  endDate          DateTime?
+  status           String             @default("ACTIVE") // ACTIVE, TERMINATED, COMPLETED
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  candidate        CandidateProfile   @relation("CandidatePlacements", fields: [candidateId], references: [id], onDelete: Cascade)
+  company          Company            @relation("CompanyPlacements", fields: [companyId], references: [id], onDelete: Cascade)
+  assignments      Assignment[]
+  timesheets       Timesheet[]
+  payrollRecords   PayrollRecord[]
+  commissions      RecruiterCommission[]
+
+  @@map("placements")
+}
+
+model Assignment {
+  id          String         @id @default(uuid()) @db.Uuid
+  placementId String         @db.Uuid
+  name        String
+  project     String?
+  department  String?
+  startDate   DateTime
+  endDate     DateTime?
+  status      String         @default("ACTIVE")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  placement   Placement      @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  attendance  AttendanceRecord[]
+
+  @@map("assignments")
+}
+
+model Timesheet {
+  id          String         @id @default(uuid()) @db.Uuid
+  placementId String         @db.Uuid
+  startDate   DateTime
+  endDate     DateTime
+  totalHours  Float          @default(0)
+  status      String         @default("PENDING") // PENDING, SUBMITTED, APPROVED, REJECTED
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  placement   Placement      @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  rows        TimesheetRow[]
+
+  @@map("timesheets")
+}
+
+model TimesheetRow {
+  id          String    @id @default(uuid()) @db.Uuid
+  timesheetId String    @db.Uuid
+  date        DateTime
+  hours       Float
+  description String?
+  timesheet   Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+
+  @@map("timesheet_rows")
+}
+
+model AttendanceRecord {
+  id           String     @id @default(uuid()) @db.Uuid
+  assignmentId String     @db.Uuid
+  clockIn      DateTime
+  clockOut     DateTime?
+  breakStart   DateTime?
+  breakEnd     DateTime?
+  createdAt    DateTime   @default(now())
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("attendance_records")
+}
+
+model LeaveRequest {
+  id          String    @id @default(uuid()) @db.Uuid
+  candidateId String    @db.Uuid
+  leaveType   String // ANNUAL, SICK, CASUAL, UNPAID
+  startDate   DateTime
+  endDate     DateTime
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason      String?
+  createdAt   DateTime  @default(now())
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("leave_requests")
+}
+
+model ExpenseClaim {
+  id          String    @id @default(uuid()) @db.Uuid
+  candidateId String    @db.Uuid
+  category    String // TRAVEL, MEALS, EQUIPMENT
+  amount      Float
+  receiptUrl  String?
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime  @default(now())
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("expense_claims")
+}
+
+model WorkerCompliance {
+  id          String    @id @default(uuid()) @db.Uuid
+  candidateId String    @db.Uuid
+  documentType String // VISA, BACKGROUND_CHECK, TRAINING
+  expiryDate  DateTime?
+  status      String    @default("PENDING") // PENDING, VERIFIED, EXPIRED
+  createdAt   DateTime  @default(now())
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("worker_compliance_records")
+}
+
+// Prompt 37: Payroll, Invoicing & Financial Operations
+model PayrollRecord {
+  id          String    @id @default(uuid()) @db.Uuid
+  placementId String    @db.Uuid
+  payPeriodStart DateTime
+  payPeriodEnd   DateTime
+  baseEarnings   Float
+  overtimeEarnings Float @default(0)
+  totalDeductions Float @default(0)
+  netPay         Float
+  status      String    @default("DRAFT") // DRAFT, APPROVED, PAID
+  createdAt   DateTime  @default(now())
+  placement   Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  components  PayrollComponent[]
+
+  @@map("payroll_records")
+}
+
+model PayrollComponent {
+  id              String        @id @default(uuid()) @db.Uuid
+  payrollRecordId String        @db.Uuid
+  type            String // BASE, OVERTIME, TAX, INSURANCE, PF
+  amount          Float
+  payrollRecord   PayrollRecord @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+
+  @@map("payroll_components")
+}
+
+model ClientInvoice {
+  id            String    @id @default(uuid()) @db.Uuid
+  companyId     String    @db.Uuid
+  invoiceNumber String    @unique
+  amount        Float
+  taxAmount     Float     @default(0)
+  status        String    @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE
+  dueDate       DateTime
+  createdAt     DateTime  @default(now())
+  company       Company   @relation("CompanyInvoices", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("client_invoices")
+}
+
+model RecruiterCommission {
+  id          String    @id @default(uuid()) @db.Uuid
+  recruiterId String    @db.Uuid
+  placementId String    @db.Uuid
+  amount      Float
+  status      String    @default("PENDING") // PENDING, PAID
+  createdAt   DateTime  @default(now())
+  recruiter   User      @relation("RecruiterCommissions", fields: [recruiterId], references: [id], onDelete: Cascade)
+  placement   Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@map("recruiter_commissions")
+}
+
+// Prompt 38: Marketplace & Partner Ecosystem
+model MarketplaceApp {
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String
+  description String
+  version     String
+  category    String
+  priceModel  String             @default("FREE") // FREE, SUBSCRIPTION, PAY_AS_YOU_GO
+  createdAt   DateTime           @default(now())
+  installations AppInstallation[]
+  reviews     AppReview[]
+
+  @@map("marketplace_apps")
+}
+
+model AppInstallation {
+  id          String         @id @default(uuid()) @db.Uuid
+  appId       String         @db.Uuid
+  companyId   String         @db.Uuid // Installed by Tenant
+  status      String         @default("ACTIVE") // ACTIVE, DISABLED
+  installedAt DateTime       @default(now())
+  app         MarketplaceApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  company     Company        @relation("CompanyAppInstallations", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("app_installations")
+}
+
+model AppReview {
+  id          String         @id @default(uuid()) @db.Uuid
+  appId       String         @db.Uuid
+  rating      Int
+  comment     String?
+  createdAt   DateTime       @default(now())
+  app         MarketplaceApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@map("app_reviews")
+}
+
+// Prompt 39: AI Copilot & Workflows
+model CopilotSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  contextKey  String?
+  createdAt   DateTime  @default(now())
+  user        User      @relation("UserCopilotSessions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("copilot_sessions")
+}
+
+model PromptTemplate {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String    @unique
+  template    String
+  version     Int       @default(1)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@map("prompt_templates")
+}
+
+model WorkflowTemplate {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  triggerType String
+  definition  Json
+  createdAt   DateTime  @default(now())
+  executions  WorkflowExecution[]
+
+  @@map("workflow_templates")
+}
+
+model WorkflowExecution {
+  id          String           @id @default(uuid()) @db.Uuid
+  templateId  String           @db.Uuid
+  status      String           @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  logs        String?
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+  template    WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_executions")
+}
+
+// Prompt 40: Observability, Alerts & Incidents
+model OperationalAlert {
+  id          String    @id @default(uuid()) @db.Uuid
+  metricName  String
+  severity    String // LOW, MEDIUM, HIGH, CRITICAL
+  message     String
+  status      String    @default("ACTIVE") // ACTIVE, RESOLVED, ACKNOWLEDGED
+  createdAt   DateTime  @default(now())
+
+  @@map("operational_alerts")
+}
+
+model Incident {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  severity    String
+  status      String    @default("OPEN") // OPEN, INVESTIGATING, RESOLVED
+  logs        String?
+  createdAt   DateTime  @default(now())
+
+  @@map("incidents")
+}
+
+// Prompt 41: Globalization & Translations
+model TranslationKey {
+  id          String             @id @default(uuid()) @db.Uuid
+  key         String             @unique
+  namespace   String             @default("default")
+  values      TranslationValue[]
+
+  @@map("translation_keys")
+}
+
+model TranslationValue {
+  id          String         @id @default(uuid()) @db.Uuid
+  keyId       String         @db.Uuid
+  locale      String // en, es, fr, etc.
+  value       String
+  keyRelation TranslationKey @relation(fields: [keyId], references: [id], onDelete: Cascade)
+
+  @@map("translation_values")
+}
+
+model ExchangeRate {
+  id          String    @id @default(uuid()) @db.Uuid
+  fromCurrency String
+  toCurrency   String
+  rate        Float
+  date        DateTime  @default(now())
+
+  @@map("exchange_rates")
+}
+
+// Prompt 42: Backup, Disaster Recovery & Continuity
+model BackupJob {
+  id          String    @id @default(uuid()) @db.Uuid
+  size        Int
+  checksum    String
+  provider    String // S3, AZURE, LOCAL
+  status      String    @default("COMPLETED") // COMPLETED, FAILED
+  createdAt   DateTime  @default(now())
+
+  @@map("backup_jobs")
+}
+
+model RestoreJob {
+  id          String    @id @default(uuid()) @db.Uuid
+  backupId    String    @db.Uuid
+  status      String    @default("PENDING") // PENDING, SUCCESS, FAILED
+  restoredAt  DateTime  @default(now())
+
+  @@map("restore_jobs")
+}
+
+model DrDrillLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  drillType   String // FAILOVER, BACKUP_TEST
+  result      String // PASSED, FAILED
+  logs        String?
+  drillDate   DateTime  @default(now())
+
+  @@map("dr_drill_logs")
+}
+
+// Prompt 43: BI & KPI Definitions
+model KpiDefinition {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  metricKey   String    @unique
+  queryExpr   String
+  target      Float?
+  createdAt   DateTime  @default(now())
+
+  @@map("kpi_definitions")
+}
+
+model AnalyticsDashboard {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  config      Json
+  createdAt   DateTime  @default(now())
+
+  @@map("analytics_dashboards")
+}
+
+// Prompt 44: Performance Tuning & Quotas
+model PerformanceAudit {
+  id          String    @id @default(uuid()) @db.Uuid
+  targetPath  String
+  latencyMs   Float
+  suggestions String?
+  auditedAt   DateTime  @default(now())
+
+  @@map("performance_audits")
+}
+
+model ResourceQuota {
+  id          String    @id @default(uuid()) @db.Uuid
+  companyId   String    @db.Uuid
+  resourceType String // API_REQUESTS, AI_TOKENS, STORAGE
+  limitValue  Int
+  usedValue   Int       @default(0)
+  company     Company   @relation("CompanyResourceQuotas", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("resource_quotas")
+}
+
+// Prompt 45: Release & Deployment Management
+model SoftwareRelease {
+  id          String    @id @default(uuid()) @db.Uuid
+  version     String    @unique
+  changelog   String
+  riskLevel   String    @default("LOW") // LOW, MEDIUM, HIGH
+  status      String    @default("STAGING") // STAGING, PRODUCTION, ROLLBACKED
+  createdAt   DateTime  @default(now())
+
+  @@map("software_releases")
+}
+
+model SystemDeployment {
+  id          String    @id @default(uuid()) @db.Uuid
+  releaseId   String
+  environment String // STAGING, PRODUCTION
+  status      String    @default("PENDING") // PENDING, SUCCESS, FAILED
+  deployedAt  DateTime  @default(now())
+
+  @@map("system_deployments")
+}
+
+// Prompt 46: Device Sync & Edge
+model MobileDevice {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  deviceToken String    @unique
+  platform    String // IOS, ANDROID
+  pushToken   String?
+  lastSeen    DateTime  @default(now())
+  user        User      @relation("UserMobileDevices", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mobile_devices")
+}
+
+model OfflineSyncLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  deviceId    String    @db.Uuid
+  syncStatus  String    @default("SUCCESS") // SUCCESS, CONFLATED
+  checkpoint  DateTime  @default(now())
+
+  @@map("offline_sync_logs")
+}
+
+// Prompt 47: DX, Service Registry & DORA
+model ServiceRegistry {
+  id          String    @id @default(uuid()) @db.Uuid
+  serviceName String    @unique
+  ownerTeam   String
+  status      String    @default("HEALTHY")
+  createdAt   DateTime  @default(now())
+
+  @@map("service_registries")
+}
+
+model EngineeringMetric {
+  id          String    @id @default(uuid()) @db.Uuid
+  metricType  String // DEPLOYMENT_FREQUENCY, LEAD_TIME, MTTR
+  value       Float
+  loggedAt    DateTime  @default(now())
+
+  @@map("engineering_metrics")
+}
+
+// Prompt 48: Feature Store & Model Registry
+model FeatureStoreRecord {
+  id          String    @id @default(uuid()) @db.Uuid
+  entityId    String    @db.Uuid
+  entityType  String // CANDIDATE, JOB
+  features    Json
+  updatedAt   DateTime  @updatedAt
+
+  @@map("feature_store_records")
+}
+
+model ModelRegistry {
+  id          String    @id @default(uuid()) @db.Uuid
+  modelName   String
+  version     String
+  accuracy    Float?
+  status      String    @default("TESTING") // TESTING, PRODUCTION, ARCHIVED
+  createdAt   DateTime  @default(now())
+
+  @@map("model_registries")
+}
+
+// Prompt 49: Platform Admin & Tenant Logs
+model TenantLifecycleLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  companyId   String    @db.Uuid
+  oldState    String
+  newState    String
+  reason      String?
+  loggedAt    DateTime  @default(now())
+  company     Company   @relation("CompanyTenantLogs", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_lifecycle_logs")
+}
+
+// Prompt 51: AIOps & Self-Healing
+model OperationalIncident {
+  id               String               @id @default(uuid()) @db.Uuid
+  title            String
+  severity         String // LOW, MEDIUM, HIGH, CRITICAL
+  status           String // OPEN, INVESTIGATING, RESOLVED
+  logs             String?
+  createdAt        DateTime             @default(now())
+  resolvedAt       DateTime?
+  selfHealingActions SelfHealingAction[]
+
+  @@map("operational_incidents")
+}
+
+model SelfHealingAction {
+  id          String              @id @default(uuid()) @db.Uuid
+  incidentId  String              @db.Uuid
+  actionTaken String
+  status      String // PENDING, SUCCESS, FAILED
+  auditedBy   String              @default("SYSTEM")
+  createdAt   DateTime            @default(now())
+  incident    OperationalIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("self_healing_actions")
+}
+
+// Prompt 52: AI Knowledge Graph & Semantic Search
+model GraphNode {
+  id          String      @id @default(uuid()) @db.Uuid
+  entityId    String      @db.Uuid
+  entityType  String // CANDIDATE, JOB, COMPANY, SKILL
+  label       String
+  createdAt   DateTime    @default(now())
+  edgesFrom   GraphEdge[] @relation("SourceNode")
+  edgesTo     GraphEdge[] @relation("TargetNode")
+
+  @@map("graph_nodes")
+}
+
+model GraphEdge {
+  id             String    @id @default(uuid()) @db.Uuid
+  sourceId       String    @db.Uuid
+  targetId       String    @db.Uuid
+  relationType   String // HAS_SKILL, WORKED_AT, HIRED_BY
+  confidence     Float     @default(1.0)
+  createdAt      DateTime  @default(now())
+  sourceNode     GraphNode @relation("SourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetNode     GraphNode @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@map("graph_edges")
+}
+
+// Prompt 53: Autonomous AI Agents & Workflow Orchestration
+model AgentInstance {
+  id           String               @id @default(uuid()) @db.Uuid
+  name         String
+  role         String // RECRUITER_AGENT, MATCHING_AGENT
+  status       String               @default("IDLE") // IDLE, RUNNING, ERROR
+  settings     Json?
+  createdAt    DateTime             @default(now())
+  executions   AgentExecutionLog[]
+
+  @@map("agent_instances")
+}
+
+model AgentExecutionLog {
+  id          String        @id @default(uuid()) @db.Uuid
+  agentId     String        @db.Uuid
+  goal        String
+  stepsTaken  Json
+  result      String?
+  status      String // SUCCESS, FAILED
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+  agent       AgentInstance @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_execution_logs")
+}
+
+// Prompt 54: Multi-Region, Active-Active Global Infrastructure
+model RegionConfig {
+  id           String           @id @default(uuid()) @db.Uuid
+  regionName   String           @unique // us-east-1, eu-central-1
+  connectionUrl String
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  replications ReplicationLog[]
+
+  @@map("region_configs")
+}
+
+model ReplicationLog {
+  id          String       @id @default(uuid()) @db.Uuid
+  regionId    String       @db.Uuid
+  tableName   String
+  recordId    String       @db.Uuid
+  syncStatus  String // PENDING, SUCCESS, FAILED
+  replicatedAt DateTime    @default(now())
+  region      RegionConfig @relation(fields: [regionId], references: [id], onDelete: Cascade)
+
+  @@map("replication_logs")
+}
+
+// Prompt 55: Ecosystem Marketplace Extension
+model DeveloperAccount {
+  id          String             @id @default(uuid()) @db.Uuid
+  userId      String             @unique @db.Uuid
+  portalRole  String             @default("DEVELOPER") // DEVELOPER, PARTNER
+  approvedAt  DateTime?
+  createdAt   DateTime           @default(now())
+  user        User               @relation("UserDeveloperAccount", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("developer_accounts")
+}
+
+model ExtensionLicensing {
+  id          String    @id @default(uuid()) @db.Uuid
+  appId       String    @db.Uuid
+  companyId   String    @db.Uuid
+  licenseType String // TRIAL, ENTERPRISE, SEAT
+  status      String    @default("ACTIVE")
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("extension_licensings")
+}
+
+// Prompt 56: Future Composable Capabilities & Digital Twins
+model ComposableCapability {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  version     String
+  status      String   @default("ACTIVE")
+  definition  Json
+  createdAt   DateTime @default(now())
+
+  @@map("composable_capabilities")
+}
+
+model DigitalTwinState {
+  id          String   @id @default(uuid()) @db.Uuid
+  entityId    String   @db.Uuid
+  entityType  String // USER, INFRASTRUCTURE, DB
+  stateSnapshot Json
+  updatedAt   DateTime @updatedAt
+
+  @@map("digital_twin_states")
+}
+
+// Prompt 57: Employee Management & LMS Completion
+model EmployeeProfile {
+  id           String             @id @default(uuid()) @db.Uuid
+  userId       String             @unique @db.Uuid
+  managerId    String?            @db.Uuid
+  department   String?
+  title        String
+  joinedDate   DateTime
+  status       String             @default("ACTIVE")
+  createdAt    DateTime           @default(now())
+  user         User               @relation("UserEmployeeProfile", fields: [userId], references: [id], onDelete: Cascade)
+  manager      EmployeeProfile?   @relation("ManagerSubordinates", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates EmployeeProfile[]  @relation("ManagerSubordinates")
+  completions  CourseCompletion[]
+
+  @@map("employee_profiles")
+}
+
+model CourseCompletion {
+  id          String          @id @default(uuid()) @db.Uuid
+  employeeId  String          @db.Uuid
+  courseId    String          @db.Uuid
+  score       Float?
+  completedAt DateTime        @default(now())
+  employee    EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("course_completions")
+}
+
+// Prompt 58: Financial ERP Ledgers & Purchase Orders
+model GeneralLedgerEntry {
+  id          String   @id @default(uuid()) @db.Uuid
+  accountCode String
+  entryType   String // DEBIT, CREDIT
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@map("general_ledger_entries")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(uuid()) @db.Uuid
+  poNumber    String   @unique
+  vendorId    String   @db.Uuid
+  totalAmount Float
+  status      String   @default("PENDING") // PENDING, APPROVED, BILLED
+  createdAt   DateTime @default(now())
+
+  @@map("purchase_orders")
+}
+
+// Prompt 59: Customer Success CX Helpdesk
+model SupportTicket {
+  id          String    @id @default(uuid()) @db.Uuid
+  companyId   String    @db.Uuid
+  subject     String
+  priority    String // LOW, MEDIUM, HIGH, URGENT
+  status      String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  slaDeadline DateTime?
+  createdAt   DateTime  @default(now())
+  company     Company   @relation("CompanyTickets", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("support_tickets")
+}
+
+model CustomerHealthScore {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @db.Uuid
+  npsScore     Int
+  csatScore    Int
+  healthRating Float
+  calculatedAt DateTime @default(now())
+  company      Company  @relation("CompanyHealthScores", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("customer_health_scores")
+}
+
+// Prompt 60: Data Intelligence & ETL Runs
+model EtlPipelineRun {
+  id           String   @id @default(uuid()) @db.Uuid
+  pipelineName String
+  recordsProcessed Int
+  status       String // SUCCESS, FAILED
+  startedAt    DateTime @default(now())
+  completedAt  DateTime @default(now())
+
+  @@map("etl_pipeline_runs")
+}
+
+// Prompt 61: GRC Risk Registry
+model RiskRegister {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  category    String // CYBER, FINANCE, OPERATIONAL
+  riskScore   Int
+  status      String   @default("ACTIVE") // ACTIVE, MITIGATED
+  createdAt   DateTime @default(now())
+
+  @@map("risk_registers")
+}
+
+// Prompt 62: White Label Configuration & Low-Code Forms
+model WhiteLabelConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @unique @db.Uuid
+  customDomain String? @unique
+  primaryColor String?
+  logoUrl     String?
+  company     Company  @relation("CompanyWhiteLabel", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("white_label_configs")
+}
+
+model FormTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  schemaJson  Json
+  createdAt   DateTime @default(now())
+
+  @@map("form_templates")
+}
+
+// Prompt 63: RevOps Transactions
+model PaymentGatewayTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  gatewayName String
+  amount      Float
+  currency    String   @default("USD")
+  status      String // SUCCESS, RETRYING, FAILED
+  processedAt DateTime @default(now())
+
+  @@map("payment_gateway_transactions")
+}
+
+// Prompt 64: Robotic Process Automation Bots
+model RpaBotJob {
+  id          String   @id @default(uuid()) @db.Uuid
+  botName     String
+  actionTaken String
+  status      String // SUCCESS, FAILED
+  executedAt  DateTime @default(now())
+
+  @@map("rpa_bot_jobs")
+}
+
+// Prompt 65: MLOps Model Inference Log
+model MlModelInference {
+  id          String   @id @default(uuid()) @db.Uuid
+  modelName   String
+  prediction  Json
+  driftScore  Float?
+  auditedAt   DateTime @default(now())
+
+  @@map("ml_model_inferences")
+}
+
+// Prompt 66: Edge AI Node Configurations
+model EdgeNodeConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  nodeName    String   @unique
+  ipAddress   String?
+  syncStatus  String   @default("SYNCED")
+  updatedAt   DateTime @updatedAt
+
+  @@map("edge_node_configs")
+}
+
+// Prompt 67: Command Center Cockpits
+model ExecutiveDashboardConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  widgets     Json
+  createdAt   DateTime @default(now())
+
+  @@map("executive_dashboard_configs")
+}
+
+// Prompt 68: B2B Exchange Logs
+model B2bExchangeLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  partnerId   String   @db.Uuid
+  dataType    String // CANDIDATES, JOBS, INVOICES
+  recordsCount Int
+  exchangedAt DateTime @default(now())
+
+  @@map("b2b_exchange_logs")
+}
+
+// Prompt 69: Autonomous Platforms Decisions
+model AutonomousDecision {
+  id          String   @id @default(uuid()) @db.Uuid
+  decisionKey String
+  rationale   String
+  approvedBy  String?
+  status      String   @default("PENDING") // PENDING, EXECUTED, REJECTED
+  createdAt   DateTime @default(now())
+
+  @@map("autonomous_decisions")
+}
+
+// Prompt 70: GA General Availability Releases
+model PlatformGaRelease {
+  id          String   @id @default(uuid()) @db.Uuid
+  version     String   @unique
+  testedBy    String
+  certifiedAt DateTime @default(now())
+
+  @@map("platform_ga_releases")
+}
+
+

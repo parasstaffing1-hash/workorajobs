@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { VerificationStatus } from "@prisma/client";
-import { IsBoolean, IsEnum, IsOptional, IsString, IsUrl, IsUUID } from "class-validator";
+import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
 
 export class RequestVerificationDto {
   @ApiProperty({ example: "https://example.com/docs/business-license.pdf" })

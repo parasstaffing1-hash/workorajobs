@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { ExperienceLevel, RemotePolicy } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import { TalentStore, AiMatchScore } from "./talent-store";
 

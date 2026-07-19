@@ -1,5 +1,4 @@
 "use client";
-import { AiToolLaunchButton } from "@/components/ai/ai-tool-launch-button";
 import { useState } from "react";
 import { Section } from "@/components/layout/section";
 import { CtaBand } from "@/components/marketing/cta-band";
@@ -26,8 +25,8 @@ export default function ServicesPage() {
       </Section>
       <Section
         className="bg-secondary/40"
-        eyebrow="AI tools"
-        title="AI-assisted hiring workflows now run locally."
+        eyebrow="Hiring tools"
+        title="Hiring workflow tools built into the platform."
         description="The UI exposes resume analysis, scoring, matching and assistant surfaces that work in the browser today and remain ready for future backend endpoints."
       >
         <div className="grid gap-4 lg:grid-cols-3">
@@ -35,7 +34,7 @@ export default function ServicesPage() {
             <Card
               className="cursor-pointer p-6 transition-colors hover:border-primary"
               key={tool.name}
-              onClick={() => alert(`Details for AI Tool: ${tool.name}`)}
+              onClick={() => alert(`Details for Tool: ${tool.name}`)}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 {tool.status}
@@ -47,19 +46,12 @@ export default function ServicesPage() {
               <p className="mt-4 rounded-md border border-border/70 bg-background/70 px-3 py-2 text-xs font-medium text-muted-foreground">
                 {tool.endpoint}
               </p>
-              <AiToolLaunchButton
-                className="mt-5 w-full"
-                size="sm"
-                targetPath="/ai-tools"
-                toolName={tool.name}
-                variant="outline"
-              />
             </Card>
           ))}
         </div>
         <div className="mt-8 flex justify-center">
-          <ButtonLink href="/ai-tools" variant="accent">
-            Explore AI Tools
+          <ButtonLink href="/jobs" variant="accent">
+            Browse Jobs
           </ButtonLink>
         </div>
       </Section>

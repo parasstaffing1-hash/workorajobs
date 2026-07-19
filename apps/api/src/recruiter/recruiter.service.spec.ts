@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 
 const UserRole = {
   RECRUITER: "RECRUITER" as any,
@@ -7,18 +7,9 @@ const UserRole = {
 };
 
 const RecruiterRole = {
+  OWNER: "OWNER" as any,
   ADMIN: "ADMIN" as any,
   STANDARD: "STANDARD" as any,
-};
-
-const RecruiterStatus = {
-  ACTIVE: "ACTIVE" as any,
-  SUSPENDED: "SUSPENDED" as any,
-};
-
-const VerificationStatus = {
-  PENDING: "PENDING" as any,
-  APPROVED: "APPROVED" as any,
 };
 
 import { RecruiterService } from "./recruiter.service";

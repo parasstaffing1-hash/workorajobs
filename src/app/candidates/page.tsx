@@ -28,8 +28,8 @@ export default function CandidatesPage() {
             Build your resume
             <FileText aria-hidden="true" className="h-4 w-4" />
           </ButtonLink>
-          <ButtonLink href="/career-copilot" size="lg" variant="primary">
-            Launch career copilot
+          <ButtonLink href="/resume-builder" size="lg" variant="primary">
+            Build your resume
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </ButtonLink>
           <ButtonLink href="/jobs" size="lg" variant="outline">

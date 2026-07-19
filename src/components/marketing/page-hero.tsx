@@ -30,15 +30,15 @@ export function PageHero({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       <div className="pointer-events-none absolute right-0 top-8 h-64 w-1/2 skew-y-6 bg-gradient-to-l from-primary/10 via-[hsl(var(--violet)/0.08)] to-transparent blur-3xl" />
       <Container>
-        <Reveal className="relative max-w-3xl" distance={16}>
+        <Reveal className="relative max-w-[620px] mx-auto text-center" distance={16}>
           <Badge>{eyebrow}</Badge>
-          <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-6 text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             {title}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
             {description}
           </p>
-          {children ? <div className="mt-8">{children}</div> : null}
+          {children ? <div className="mt-8 flex justify-center">{children}</div> : null}
         </Reveal>
       </Container>
     </section>

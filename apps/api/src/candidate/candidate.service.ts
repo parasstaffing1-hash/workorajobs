@@ -20,7 +20,7 @@ type CompletionDraft = Partial<CandidateProfileDto> & {
 
 import { Injectable, NotFoundException, OnModuleInit } from "@nestjs/common";
 import { NotificationType, EmploymentType } from "@prisma/client";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import * as fs from "node:fs";
 import * as path from "node:path";
 

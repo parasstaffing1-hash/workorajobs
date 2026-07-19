@@ -6,8 +6,6 @@ import { CandidateSearchDto } from "../dto/candidate-search.dto";
 import { TalentStore } from "./talent-store";
 
 // Deferred imports to prevent circular dependencies at load time
-import type { CandidateMatchingService } from "./candidate-matching.service";
-import type { TalentPoolService } from "./talent-pool.service";
 
 export interface IndexStats {
   totalCandidates: number;

@@ -19,7 +19,7 @@ export function ContactForm() {
 
   return (
     <form
-      className="glass-panel space-y-5 rounded-lg border border-border/70 p-6 shadow-premium"
+      className="glass-panel space-y-5 rounded-lg border border-border/70 p-6 shadow-premium w-full max-w-[850px] mx-auto"
       onSubmit={onSubmit}
     >
       <div className="grid gap-4 sm:grid-cols-2">

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { RecruiterRole } from "@prisma/client";
 import { IsEmail, IsEnum, IsString, IsUUID, MaxLength, MinLength } from "class-validator";
 

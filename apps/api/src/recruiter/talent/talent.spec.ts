@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { UserRole, EmploymentType, ExperienceLevel, RemotePolicy, JobStatus } from "@prisma/client";
+import { EmploymentType, ExperienceLevel, RemotePolicy, JobStatus } from "@prisma/client";
 import { SearchIndexService } from "./search-index.service";
 import { CandidateMatchingService } from "./candidate-matching.service";
 import { TalentPoolService } from "./talent-pool.service";
@@ -8,7 +8,7 @@ import { TalentController } from "./talent.controller";
 import { PrismaService } from "../../prisma/prisma.service";
 import { QueueService } from "../../common/queue/queue.service";
 import { TalentStore } from "./talent-store";
-import { ModuleRef } from "@nestjs/core";
+import { ModuleRef, Reflector } from "@nestjs/core";
 
 describe("Enterprise Talent Platform Services & APIs", () => {
   let searchIndex: SearchIndexService;
@@ -16,12 +16,6 @@ describe("Enterprise Talent Platform Services & APIs", () => {
   let pools: TalentPoolService;
   let lists: CandidateListsService;
   let controller: TalentController;
-
-  const mockUser = {
-    sub: "recruiter-1",
-    email: "enterprise-recruiter@workora.com",
-    role: UserRole.RECRUITER,
-  };
 
   const mockPrisma = {
     candidateProfile: {
@@ -62,6 +56,7 @@ describe("Enterprise Talent Platform Services & APIs", () => {
         CandidateMatchingService,
         TalentPoolService,
         CandidateListsService,
+        Reflector,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: QueueService, useValue: mockQueue },
         { provide: ModuleRef, useValue: mockModuleRef },

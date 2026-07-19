@@ -218,8 +218,8 @@ export const resourceCards = [
     title: "AI hiring workflow map",
     description:
       "A practical guide to resume analysis, scoring, matching, summaries and assistant endpoints.",
-    type: "AI Tools",
-    href: "/ai-tools",
+    type: "Tools",
+    href: "/services",
   },
   {
     title: "Global hiring readiness checklist",

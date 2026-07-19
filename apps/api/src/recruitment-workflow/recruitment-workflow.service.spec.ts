@@ -1,5 +1,5 @@
 import { RecruitmentWorkflowService } from "./recruitment-workflow.service";
-import { NotFoundException, BadRequestException } from "@nestjs/common";
+import { NotFoundException } from "@nestjs/common";
 import { RecruitmentStore } from "./recruitment-store";
 
 const InterviewStatus = {
@@ -7,11 +7,6 @@ const InterviewStatus = {
   COMPLETED: "COMPLETED" as any,
   CANCELLED: "CANCELLED" as any,
   RESCHEDULED: "RESCHEDULED" as any,
-};
-
-const NotificationType = {
-  INTERVIEW_SCHEDULED: "INTERVIEW_SCHEDULED" as any,
-  APPLICATION_STATUS_CHANGED: "APPLICATION_STATUS_CHANGED" as any,
 };
 
 describe("RecruitmentWorkflowService", () => {
