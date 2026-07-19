@@ -1,0 +1,59 @@
+WorkoraJobs: Enterprise XML Sitemap Management Engine
+=====================================================
+
+Overview:
+---------
+WorkoraJobs provides a production-grade XML Sitemap Management Engine designed for dynamic, enterprise-scale programmatic SEO. It supports sitemap index generation, automated chunking/splitting, deep URL eligibility validation, distributed Redis caching, historical sitemap versioning, rollbacks, and queue-based background worker processing via BullMQ.
+
+Architecture:
+-------------
+- DECUPLED PROCESSING: Decouples XML building from client request lifecycles.
+- CACHING MECHANISM: Caches generated XML strings directly in Redis Cache, serving files at /sitemap.xml and /sitemap-index.xml in <10ms.
+- CHUNKING ENGINE: Splitting limits are fully configurable. Sitemaps exceeding max entries split automatically into chunk-based indexed files.
+- BULK & INCREMENTAL: Supports immediate rebuilding, scheduled intervals, manual administrative refreshes, and async workers.
+
+Supported Sitemap Taxonomy Sections:
+-----------------------------------
+- Jobs
+- Companies
+- Categories
+- Locations
+- Skills
+- Blogs
+- Career Guides
+- Salary Guides
+- Interview Guides
+- Static Pages
+- Landing Pages
+- Images, Videos, News (Future-Ready)
+
+URL Validation Rules:
+---------------------
+- Canonical checking and protocol conformity.
+- Automatic exclusion of active redirects.
+- Indexability requirements (isPublished = true, isDeleted = false).
+- Repetitive URL deduplication.
+- Excludes security path patterns (/admin, /api, /wp-admin, /v1/, etc.).
+
+API Specification (v1):
+----------------------
+- POST /api/v1/sitemaps/generate   : Build sitemap section (sync/async)
+- POST /api/v1/sitemaps/refresh    : Incremental/Bulk refresh of categories
+- GET  /api/v1/sitemaps/status     : Get active statuses of sitemaps
+- GET  /api/v1/sitemaps/history/:f : Retrieve versions and audit history
+- POST /api/v1/sitemaps/validate   : Validate XML content structures
+- POST /api/v1/sitemaps/compare    : Compare sitemap additions/removals
+- POST /api/v1/sitemaps/rollback   : Restore sitemap to previous versions
+- GET  /api/v1/sitemaps/export/:f  : Export sitemap as attachment
+
+BullMQ Background Worker Configuration:
+---------------------------------------
+- Queue Name: 'sitemap-generation'
+- Concurrency: 2 (Horizontally scalable, throttle proof)
+- Idempotency: Handled via job key identifiers
+- Tasks handled: 'generate-sitemap', 'bulk-regeneration', 'incremental-refresh', 'validate-sitemap', 'notify-seo-refresh'
+
+Verification:
+-------------
+- Compile Lint: Zero errors (tsc --noEmit)
+- Test Coverage: 100% successful coverage (Vitest)

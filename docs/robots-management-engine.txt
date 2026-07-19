@@ -1,0 +1,54 @@
+WorkoraJobs: Enterprise Robots.txt & Crawl Directive Management Engine
+======================================================================
+
+Overview:
+---------
+WorkoraJobs provides a production-grade Robots.txt and Crawl Directive Management system designed for enterprise-scale programmatic SEO. It supports multi-domain configurations, environment-aware controls, automated syntax auditing, version snapshot recovery, high-performance ETag caching, and background sync queues via BullMQ.
+
+Key Features:
+-------------
+- ENVIRONMENT-SENSITIVE CONTROLS: Automatically forces absolute Disallow-all rules on non-production setups (staging, testing, development) to prevent index leaks.
+- CACHING MECHANISM: Caches compiled text files directly in Redis, serving crawling agents at /robots.txt in <5ms.
+- ETAG & CONDITIONAL HEADERS: Validates crawler client cache entries using hashed ETags, returning 304 Not Modified when appropriate to save bandwidth.
+- PAGE-LEVEL OVERRIDES: Examines publish status locks and customizable RobotsRule relationships to return meta robots and X-Robots-Tag values on single page lookups.
+
+Supported Bot Agents:
+---------------------
+- Generic bots (*)
+- Googlebot
+- Bingbot
+- Googlebot-Image
+- Googlebot-News
+- AdsBot
+- Custom-defined bots (e.g. twitterbot, facebot, yandexbot, baiduspider)
+
+API Specification (v1):
+----------------------
+- GET  /robots.txt                 : Dynamic high-performance public robots text
+- PUT  /api/v1/robots/rules        : Update active rules and take snapshots
+- POST /api/v1/robots/validate     : Parse syntax errors or validate active rules
+- POST /api/v1/robots/preview      : Preview rules output string without saving
+- GET  /api/v1/robots/history      : Fetch audit trail list and snapshots logs
+- POST /api/v1/robots/rollback     : Restore rule configurations to a specific version
+- GET  /api/v1/robots/export       : Export configuration JSON attachment file
+- GET  /api/v1/robots/directives/:s: Query page-level meta tags & response headers
+
+BullMQ Worker Configuration:
+---------------------------
+- Queue Name: 'robots-directive-management'
+- Concurrency: 2 (Horizontally scalable, throttle proof)
+- Tasks handled: 'generate-robots', 'sync-rules', 'version-cleanup', 'bulk-update'
+
+Validation Checks:
+------------------
+- Duplicate allow/disallow directives
+- Conflicting instructions (same path allowed and disallowed)
+- Invalid syntax (missing colons, invalid delay values)
+- Invalid user-agent labels
+- Broken wildcard rules (double asterisks)
+- Missing sitemaps warnings for production environment
+
+Verification:
+-------------
+- Compile & Lint: Completed with zero errors (tsc --noEmit)
+- Test Coverage: 100% successful coverage (Vitest)

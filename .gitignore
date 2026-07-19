@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.tools/
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+
+# production
+dist/
+build/
+
+# testing and coverage
+coverage/
+
+# env & credentials
+.env
+.env*.local
+!.env.example
+*.pem
+P.pem
+AWS IP.txt
+*.tar.gz
+audit_payload*.json
+temp_audit_prompt.json
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# system
+.DS_Store
+Thumbs.db

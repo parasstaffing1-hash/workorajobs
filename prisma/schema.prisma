@@ -1,0 +1,879 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. CORE DOMAIN (Users, Roles, Permissions)
+// ==========================================
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  passwordHash  String?
+  name          String?
+  role          Role            @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Existing Workora relations
+  jobsPosted    Job[]           @relation("JobsPosted")
+  applications  Application[]
+  company       Company?
+  subscription  Subscription?
+
+  // Enterprise SEO Platform relations
+  permissions   UserPermission[]
+  activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+enum Role {
+  USER
+  RECRUITER
+  EDITOR
+  SEO_MANAGER
+  ADMIN
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  name        String           @unique // e.g., "seo:publish", "content:edit", "analytics:view"
+  description String?
+  users       UserPermission[]
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+  grantedAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+}
+
+// ==========================================
+// 2. SEO DOMAIN (Keywords, Pages, Links, Meta)
+// ==========================================
+
+enum SearchIntentType {
+  INFORMATIONAL
+  NAVIGATIONAL
+  COMMERCIAL
+  TRANSACTIONAL
+}
+
+enum SeoPageStatus {
+  DRAFT
+  QUEUED_FOR_GENERATION
+  GENERATING
+  PENDING_REVIEW
+  PUBLISHED
+  NEEDS_REFRESH
+  ARCHIVED
+}
+
+enum SeoPageType {
+  JOB_POSTING
+  JOB_CATEGORY
+  LOCATION_JOBS
+  SKILL_JOBS
+  SALARY_GUIDE
+  CAREER_ROADMAP
+  INTERVIEW_PREP
+  COMPANY_REVIEW
+}
+
+model KeywordCluster {
+  id              String      @id @default(cuid())
+  name            String
+  category        String
+  parentClusterId String?
+  parentCluster   KeywordCluster?  @relation("ClusterHierarchy", fields: [parentClusterId], references: [id], onDelete: SetNull)
+  subClusters     KeywordCluster[] @relation("ClusterHierarchy")
+  keywords        Keyword[]
+  contentBriefs   ContentBrief[]
+  seoPages        SeoPage[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([category])
+  @@index([parentClusterId])
+}
+
+model Keyword {
+  id              String           @id @default(cuid())
+  term            String           @unique
+  searchVolume    Int              @default(0)
+  difficulty      Int              @default(0) // 0 - 100
+  cpcCents        Int              @default(0)
+  intent          SearchIntentType @default(INFORMATIONAL)
+  clusterId       String?
+  cluster         KeywordCluster?  @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  rankings        Ranking[]
+  gscData         SearchConsoleData[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([term])
+  @@index([clusterId])
+  @@index([intent, searchVolume(sort: Desc)])
+}
+
+model Competitor {
+  id              String   @id @default(cuid())
+  domain          String   @unique
+  name            String
+  overlapScore    Float    @default(0.0)
+  trackedKeywords String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([domain])
+}
+
+model ContentBrief {
+  id               String          @id @default(cuid())
+  clusterId        String
+  cluster          KeywordCluster  @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  primaryKeyword   String
+  secondaryKeywords String[]
+  targetWordCount  Int             @default(1500)
+  outlineJson      Json
+  seoPage          SeoPage?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([clusterId])
+}
+
+model SeoPage {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  title               String
+  pageType            SeoPageType          @default(JOB_POSTING)
+  status              SeoPageStatus        @default(DRAFT)
+  qualityScore        Int                  @default(0) // 0-100
+  canonicalUrl        String?
+  clusterId           String?
+  cluster             KeywordCluster?      @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  contentBriefId      String?              @unique
+  contentBrief        ContentBrief?        @relation(fields: [contentBriefId], references: [id], onDelete: SetNull)
+  publishedAt         DateTime?
+  lastRevalidatedAt   DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // SEO Child Entities
+  generatedContent    GeneratedContent?
+  metaTitles          MetaTitle[]
+  metaDescriptions    MetaDescription[]
+  outgoingLinks       InternalLink[]       @relation("SourcePageLinks")
+  incomingLinks       InternalLink[]       @relation("TargetPageLinks")
+  externalLinks       ExternalLink[]
+  schemaDefinitions   SchemaDefinition[]
+  images              SeoImage[]
+  faqs                FaqItem[]
+  jobPage             JobPage?
+
+  // Analytics & Audits
+  rankings            Ranking[]
+  gscMetrics          SearchConsoleData[]
+  gaMetrics           GoogleAnalyticsData[]
+  technicalAudits     TechnicalSeoAudit[]
+  performanceMetrics  PerformanceMetric[]
+  refreshQueues       RefreshQueue[]
+  publishingQueues    PublishingQueue[]
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([pageType, status])
+  @@index([clusterId])
+}
+
+model GeneratedContent {
+  id               String   @id @default(cuid())
+  pageId           String   @unique
+  page             SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  markdownContent  String
+  htmlContent      String
+  version          Int      @default(1)
+  wordCount        Int      @default(0)
+  readabilityScore Float    @default(0.0)
+  checksum         String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([pageId])
+}
+
+model MetaTitle {
+  id               String   @id @default(cuid())
+  pageId           String
+  page             SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  titleText        String
+  isActive         Boolean  @default(false)
+  ctrScore         Float    @default(0.0)
+  createdAt        DateTime @default(now())
+
+  @@index([pageId, isActive])
+}
+
+model MetaDescription {
+  id               String   @id @default(cuid())
+  pageId           String
+  page             SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  descriptionText  String
+  isActive         Boolean  @default(false)
+  ctrScore         Float    @default(0.0)
+  createdAt        DateTime @default(now())
+
+  @@index([pageId, isActive])
+}
+
+enum LinkType {
+  CONTEXTUAL
+  BREADCRUMB
+  FOOTER
+  RELATED_JOBS
+  HUB_PARENT
+}
+
+model InternalLink {
+  id             String   @id @default(cuid())
+  sourcePageId   String
+  sourcePage     SeoPage  @relation("SourcePageLinks", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  targetPageId   String
+  targetPage     SeoPage  @relation("TargetPageLinks", fields: [targetPageId], references: [id], onDelete: Cascade)
+  anchorText     String
+  linkType       LinkType @default(CONTEXTUAL)
+  linkWeight     Float    @default(1.0)
+  createdAt      DateTime @default(now())
+
+  @@unique([sourcePageId, targetPageId])
+  @@index([sourcePageId])
+  @@index([targetPageId])
+}
+
+model ExternalLink {
+  id             String   @id @default(cuid())
+  pageId         String
+  page           SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  externalUrl    String
+  rel            String   @default("nofollow")
+  anchorText     String
+  createdAt      DateTime @default(now())
+
+  @@index([pageId])
+}
+
+model CanonicalUrl {
+  id             String   @id @default(cuid())
+  sourceSlug     String   @unique
+  targetUrl      String
+  statusCode     Int      @default(200)
+  createdAt      DateTime @default(now())
+}
+
+model Redirect {
+  id             String   @id @default(cuid())
+  sourcePath     String   @unique
+  targetPath     String
+  statusCode     Int      @default(301) // 301, 302, 307, 308
+  isActive       Boolean  @default(true)
+  hitCount       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  @@index([sourcePath])
+}
+
+model Sitemap {
+  id              String   @id @default(cuid())
+  name            String   @unique // e.g. "sitemap-jobs-1.xml"
+  chunkIndex      Int      @default(1)
+  totalUrls       Int      @default(0)
+  storageUrl      String
+  lastGeneratedAt DateTime @default(now())
+
+  @@index([name])
+}
+
+model RobotsRule {
+  id          String   @id @default(cuid())
+  userAgent   String   @default("*")
+  allowPath   String?
+  disallowPath String?
+  crawlDelay  Int?
+  createdAt   DateTime @default(now())
+}
+
+model SchemaDefinition {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  schemaType  String   // e.g., "JobPosting", "BreadcrumbList", "FAQPage"
+  schemaJson  Json
+  createdAt   DateTime @default(now())
+
+  @@index([pageId])
+}
+
+model SeoImage {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  src         String
+  altText     String
+  caption     String?
+  width       Int?
+  height      Int?
+  storageUrl  String?
+  createdAt   DateTime @default(now())
+
+  @@index([pageId])
+}
+
+model FaqItem {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  question    String
+  answer      String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([pageId])
+}
+
+// ==========================================
+// 3. JOBS DOMAIN (Companies, Locations, Skills)
+// ==========================================
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  websiteUrl  String?
+  logoUrl     String?
+  domain      String?  @unique
+  rating      Float?   @default(4.5)
+  ownerId     String   @unique
+  owner       User     @relation(fields: [ownerId], references: [id])
+  jobs        Job[]
+  jobPages    JobPage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+}
+
+model JobCategory {
+  id               String        @id @default(cuid())
+  name             String
+  slug             String        @unique
+  parentCategoryId String?
+  parentCategory   JobCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories    JobCategory[] @relation("CategoryHierarchy")
+  jobPages         JobPage[]
+  createdAt        DateTime      @default(now())
+
+  @@index([slug])
+}
+
+model Location {
+  id          String    @id @default(cuid())
+  city        String
+  state       String?
+  country     String    @default("USA")
+  slug        String    @unique
+  geoLat      Float?
+  geoLng      Float?
+  jobPages    JobPage[]
+  createdAt   DateTime  @default(now())
+
+  @@index([slug])
+  @@index([city, country])
+}
+
+model Skill {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  category    String?
+  jobPages    JobPageSkill[]
+  createdAt   DateTime     @default(now())
+
+  @@index([slug])
+}
+
+model SalaryBenchmark {
+  id           String   @id @default(cuid())
+  roleTitle    String
+  locationSlug String
+  p25Cents     Int
+  p50Cents     Int
+  p75Cents     Int
+  currency     String   @default("USD")
+  updatedAt    DateTime @updatedAt
+
+  @@unique([roleTitle, locationSlug])
+  @@index([roleTitle])
+}
+
+model JobPage {
+  id             String         @id @default(cuid())
+  seoPageId      String         @unique
+  seoPage        SeoPage        @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
+  companyId      String?
+  company        Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  categoryId     String?
+  category       JobCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  locationId     String?
+  location       Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  skills         JobPageSkill[]
+  salaryMin      Int?
+  salaryMax      Int?
+  createdAt      DateTime       @default(now())
+
+  @@index([seoPageId])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([locationId])
+}
+
+model JobPageSkill {
+  jobPageId String
+  skillId   String
+  jobPage   JobPage @relation(fields: [jobPageId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([jobPageId, skillId])
+}
+
+// Existing Job & Application models
+model Job {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  location     String?
+  salary       Int?
+  type         JobType
+  postedAt     DateTime      @default(now())
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id])
+  postedById   String
+  postedBy     User          @relation("JobsPosted", fields: [postedById], references: [id])
+  applications Application[]
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  status      ApplicationStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  applicantId String
+  applicant   User              @relation(fields: [applicantId], references: [id])
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id])
+  resumeUrl   String?
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  REJECTED
+  ACCEPTED
+}
+
+model Subscription {
+  id          String    @id @default(cuid())
+  plan        String
+  priceCents  Int
+  startedAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+// Existing Prep Models
+model PrepRole {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  description String?
+  topics      PrepTopic[]
+  courses     PrepCourse[] @relation("RoleCourses")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PrepTopic {
+  id          String       @id @default(cuid())
+  roleId      String
+  role        PrepRole     @relation(fields: [roleId], references: [id])
+  name        String
+  order       Int?
+  questions   PrepQuestion[]
+  notes       PrepNote?    @relation("PrepTopicNote")
+  roadmap     PrepRoadmap? @relation("PrepTopicRoadmap")
+  courses     PrepCourse[] @relation("CourseTopics")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PrepQuestion {
+  id          String    @id @default(cuid())
+  topicId     String
+  topic       PrepTopic @relation(fields: [topicId], references: [id])
+  difficulty  Int       // 1-5
+  text        String
+  answer      String?
+  explanation String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PrepNote {
+  id          String    @id @default(cuid())
+  topicId     String    @unique
+  markdown    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  topic       PrepTopic @relation("PrepTopicNote", fields: [topicId], references: [id])
+}
+
+model PrepRoadmap {
+  id          String    @id @default(cuid())
+  topicId     String    @unique
+  mermaidSvg  String    // raw mermaid source
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  topic       PrepTopic @relation("PrepTopicRoadmap", fields: [topicId], references: [id])
+}
+
+model PrepCourse {
+  id          String      @id @default(cuid())
+  title       String
+  roleId      String
+  role        PrepRole    @relation("RoleCourses", fields: [roleId], references: [id])
+  priceCents  Int
+  topics      PrepTopic[] @relation("CourseTopics")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// ==========================================
+// 4. ANALYTICS & SEARCH CONSOLE DOMAIN
+// ==========================================
+
+model Ranking {
+  id           String   @id @default(cuid())
+  keywordId    String
+  keyword      Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  pageId       String
+  page         SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  position     Int
+  trackedDate  DateTime @default(now())
+  device       String   @default("DESKTOP") // DESKTOP, MOBILE
+
+  @@index([keywordId, trackedDate(sort: Desc)])
+  @@index([pageId])
+}
+
+model SearchConsoleData {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  keywordId   String?
+  keyword     Keyword? @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  query       String
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  ctr         Float    @default(0.0)
+  position    Float    @default(0.0)
+  date        DateTime @default(now())
+
+  @@unique([pageId, query, date])
+  @@index([pageId, date(sort: Desc)])
+  @@index([query])
+}
+
+model GoogleAnalyticsData {
+  id             String   @id @default(cuid())
+  pageId         String
+  page           SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageviews      Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  bounceRate     Float    @default(0.0)
+  avgTimeOnPage  Float    @default(0.0)
+  date           DateTime @default(now())
+
+  @@unique([pageId, date])
+  @@index([pageId, date(sort: Desc)])
+}
+
+model CrawlReport {
+  id                String   @id @default(cuid())
+  auditDate         DateTime @default(now())
+  totalCrawled      Int      @default(0)
+  totalErrors       Int      @default(0)
+  avgResponseTimeMs Int      @default(0)
+  detailsJson       Json
+}
+
+enum AuditIssueSeverity {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+model TechnicalSeoAudit {
+  id             String             @id @default(cuid())
+  pageId         String
+  page           SeoPage            @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  statusCode     Int                @default(200)
+  crawlIssue     String             // e.g. "MISSING_ALT", "DUPLICATE_CANONICAL", "SLOW_LCP"
+  severity       AuditIssueSeverity @default(WARNING)
+  auditedAt      DateTime           @default(now())
+
+  @@index([pageId])
+  @@index([severity])
+}
+
+model PerformanceMetric {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  lcpMs     Int      @default(0)
+  fidMs     Int      @default(0)
+  clsScore  Float    @default(0.0)
+  ttfbMs    Int      @default(0)
+  recordedAt DateTime @default(now())
+
+  @@index([pageId])
+}
+
+// ==========================================
+// 5. AUTOMATION & QUEUES DOMAIN
+// ==========================================
+
+enum WorkflowStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model WorkflowRun {
+  id           String         @id @default(cuid())
+  workflowName String
+  status       WorkflowStatus @default(QUEUED)
+  triggeredBy  String         @default("n8n")
+  startedAt    DateTime       @default(now())
+  finishedAt   DateTime?
+  logsJson     Json?
+
+  @@index([workflowName, status])
+}
+
+model BackgroundJob {
+  id          String   @id @default(cuid())
+  queueName   String
+  payloadJson Json
+  status      String   @default("PENDING")
+  retryCount  Int      @default(0)
+  errorLog    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([queueName, status])
+}
+
+model QueueHistory {
+  id             String   @id @default(cuid())
+  queueName      String
+  processedJobs  Int      @default(0)
+  failedJobs     Int      @default(0)
+  avgDurationMs  Int      @default(0)
+  recordedAt     DateTime @default(now())
+
+  @@index([queueName, recordedAt(sort: Desc)])
+}
+
+model RefreshQueue {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      SeoPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  reason    String   // e.g., "DECAYING_TRAFFIC", "OUTDATED_CONTENT"
+  priority  Int      @default(1)
+  queuedAt  DateTime @default(now())
+
+  @@index([pageId])
+  @@index([priority(sort: Desc)])
+}
+
+model PublishingQueue {
+  id                 String    @id @default(cuid())
+  pageId             String
+  page               SeoPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  scheduledPublishAt DateTime  @default(now())
+  status             String    @default("PENDING")
+  createdAt          DateTime  @default(now())
+
+  @@index([pageId])
+  @@index([scheduledPublishAt])
+}
+
+model FailedJob {
+  id         String   @id @default(cuid())
+  jobName    String
+  queueName  String
+  errorStack String
+  retryCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([queueName])
+}
+
+// ==========================================
+// 6. SYSTEM DOMAIN (Logs, Audit, Settings)
+// ==========================================
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  entityType String
+  entityId   String
+  action     String
+  details    Json?
+  timestamp  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp(sort: Desc)])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   @default("INFO")
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  valueJson   Json
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Requisition {
+  id            String   @id @default(cuid())
+  title         String
+  department    String
+  budget        Int
+  status        String   @default("OPEN") // OPEN, CLOSED, ON_HOLD
+  hiringManager String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CandidateProfile {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  skills        String[]
+  experienceYrs Int      @default(0)
+  parsedText    String?
+  source        String   @default("DIRECT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CandidateNote {
+  id          String   @id @default(cuid())
+  candidateId String
+  authorId    String
+  content     String
+  createdAt   DateTime @default(now())
+}
+
+model RecruiterTask {
+  id          String   @id @default(cuid())
+  title       String
+  dueDate     DateTime
+  priority    String   @default("MEDIUM") // HIGH, MEDIUM, LOW
+  status      String   @default("PENDING") // PENDING, COMPLETED
+  createdAt   DateTime @default(now())
+}
+
+model SourcingSearch {
+  id          String   @id @default(cuid())
+  queryName   String
+  queryText   String
+  platform    String   // LINKEDIN, GOOGLE, GITHUB, etc.
+  score       Int      @default(100)
+  createdAt   DateTime @default(now())
+}
+
+model CommunicationLog {
+  id          String   @id @default(cuid())
+  recipient   String
+  subject     String
+  body        String
+  sentAt      DateTime @default(now())
+}
+
+model GeneratedDocument {
+  id          String   @id @default(cuid())
+  docType     String   // OFFER_LETTER, EXPERIENCE_LETTER, etc.
+  recipient   String
+  detailsJson Json
+  createdAt   DateTime @default(now())
+}
+
+model TimesheetEntry {
+  id          String   @id @default(cuid())
+  employeeId  String
+  workDate    DateTime
+  hoursWorked Float    @default(8.0)
+  leaveType   String?  // PTO, SICK, CASUAL
+  createdAt   DateTime @default(now())
+}

@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+coverage
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+apps/api/dist
+apps/api/generated
+*.prisma
+.env
+.env.*
+nginx/*.conf

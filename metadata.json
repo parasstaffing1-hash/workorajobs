@@ -1,0 +1,6 @@
+{
+  "name": "WorkoraJobs",
+  "description": "An elite tech job board and recruitment portal. Features smart job searching, AI-powered Resume Matching & Optimization, dynamic cover letter generation, and an Employer Dashboard with AI Candidate Screening.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

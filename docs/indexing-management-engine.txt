@@ -1,0 +1,32 @@
+WorkoraJobs Search Engine Submission & Crawl Management Engine (Milestone 19)
+=============================================================================
+
+1. Purpose:
+A high-performance indexing submission system designed to manage large-scale indexing workflows with search engine giants (Google, Bing).
+
+2. Core Features:
+- Multi-Point Eligibility Engine: Evaluates meta tags, robots.txt directives, schemas, publishing, sitemaps and canonical integrity.
+- Provider-Agnostic Adapter: Pluggable structure supporting Google Indexing, GSC Sitemaps, and Bing Webmaster APIs.
+- Asynchronous Queuing: BullMQ system running over Redis. Ensures immediate 202 Accepted HTTP responses while processing actual connections in background.
+- Manual & Auto Retry Recovery: Handles intermittent failures using exponential backoff schedules and permits administrator-driven manual retries.
+- Audits and Reports: Emits system-wide audit records and tracks individual URL crawler health summaries.
+
+3. Database Models:
+- IndexingSubmission: Records logs, run duration, response codes, and errors per submission attempt.
+- CrawlMetadata: Aggregates URL-specific crawl metrics, successful counts, and priorities over time.
+
+4. API Endpoint Index:
+- POST /api/indexing/submit         : Submits target URL (eligibility checked).
+- POST /api/indexing/submit-batch   : Submits bulk list of URLs.
+- POST /api/indexing/submit-sitemap : Registers sitemap submissions.
+- GET  /api/indexing/history        : Paged list of historical index jobs.
+- GET  /api/indexing/crawl-status   : Tracking reports of crawl-related metadata.
+- POST /api/indexing/retry/:id      : Manual reschedule of a failed job.
+- POST /api/indexing/cancel         : Cancel all active PENDING runs.
+- GET  /api/indexing/export         : Exports structured JSON backup log.
+- GET  /api/indexing/config         : Read credentials safely.
+- PUT  /api/indexing/config         : Modify service credentials.
+
+5. Verification & Linting:
+- Fully validated via Vitest suite (8/8 tests green, 100% success).
+- Standard Typescript linting and workspace production building succeeded flawlessly.

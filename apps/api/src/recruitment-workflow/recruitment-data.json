@@ -1,0 +1,155 @@
+{
+  "interviews": {
+    "int-123": {
+      "interviewId": "int-123",
+      "roundName": "Technical Round",
+      "bufferMinutes": 10,
+      "panel": [
+        {
+          "userId": "interviewer-1",
+          "role": "Lead"
+        }
+      ],
+      "feedback": {
+        "technicalRating": 5,
+        "communicationRating": 4,
+        "problemSolvingRating": 5,
+        "leadershipRating": 4,
+        "culturalFitRating": 4,
+        "recommendation": "STRONG_HIRE",
+        "createdAt": "2026-07-19T16:04:50.804Z"
+      }
+    }
+  },
+  "offers": {
+    "2c905b5f-bce5-4321-bb77-d8584668ec01": {
+      "id": "2c905b5f-bce5-4321-bb77-d8584668ec01",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:03:03.088Z",
+      "expirationDate": "2026-07-19T16:03:03.088Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:03:03.088Z",
+      "updatedAt": "2026-07-19T16:03:03.088Z"
+    },
+    "offer-123": {
+      "id": "offer-123",
+      "applicationId": "app-1",
+      "status": "APPROVED",
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Hiring Manager Approval",
+          "status": "APPROVED",
+          "comment": "Great fit",
+          "updatedAt": "2026-07-19T16:04:50.807Z"
+        }
+      ],
+      "updatedAt": "2026-07-19T16:04:50.807Z"
+    },
+    "2194aaae-521e-4630-b8cc-617fa773a72c": {
+      "id": "2194aaae-521e-4630-b8cc-617fa773a72c",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:03:21.886Z",
+      "expirationDate": "2026-07-19T16:03:21.886Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:03:21.887Z",
+      "updatedAt": "2026-07-19T16:03:21.887Z"
+    },
+    "02b0efc6-dd7a-4f62-9a36-a530e277698a": {
+      "id": "02b0efc6-dd7a-4f62-9a36-a530e277698a",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:03:39.474Z",
+      "expirationDate": "2026-07-19T16:03:39.474Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:03:39.475Z",
+      "updatedAt": "2026-07-19T16:03:39.475Z"
+    },
+    "ac045cb5-8c84-4eda-b991-61b5cbfbdaf3": {
+      "id": "ac045cb5-8c84-4eda-b991-61b5cbfbdaf3",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:04:09.461Z",
+      "expirationDate": "2026-07-19T16:04:09.461Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:04:09.461Z",
+      "updatedAt": "2026-07-19T16:04:09.461Z"
+    },
+    "30e81db1-87f6-48d2-b050-3eb7d0ff9132": {
+      "id": "30e81db1-87f6-48d2-b050-3eb7d0ff9132",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:04:27.877Z",
+      "expirationDate": "2026-07-19T16:04:27.877Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:04:27.877Z",
+      "updatedAt": "2026-07-19T16:04:27.877Z"
+    },
+    "946c8487-33f4-4489-8513-bfb69c20468f": {
+      "id": "946c8487-33f4-4489-8513-bfb69c20468f",
+      "applicationId": "app-1",
+      "templateName": "Full-Time Executive",
+      "baseSalary": 150000,
+      "joiningDate": "2026-07-19T16:04:50.805Z",
+      "expirationDate": "2026-07-19T16:04:50.805Z",
+      "status": "PENDING_APPROVAL",
+      "version": 1,
+      "approvals": [
+        {
+          "userId": "approver-1",
+          "role": "Executive Approval",
+          "status": "PENDING"
+        }
+      ],
+      "createdAt": "2026-07-19T16:04:50.805Z",
+      "updatedAt": "2026-07-19T16:04:50.805Z"
+    }
+  }
+}
