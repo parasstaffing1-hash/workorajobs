@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
+import { JobCard } from "@/components/jobs/job-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -453,135 +454,13 @@ export function JobBoard() {
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-foreground">All Active Openings</h3>
         <div className="grid gap-4">
-        {filteredJobs.map((item) => {
-          const { job, match } = item;
-
-          return (
-            <Card className="p-5" key={job.id}>
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className={job.type === "Internship" ? "bg-violet-500/20 text-violet-600 dark:text-violet-300 border-violet-500/30" : "bg-primary/20 text-primary"}>
-                      {job.type}
-                    </Badge>
-                    <Badge className="bg-secondary text-foreground">{job.workMode}</Badge>
-                    <Badge className="bg-secondary text-foreground">{job.department}</Badge>
-                    {match ? (
-                      <span
-                        className={cn(
-                          "rounded-md border px-2.5 py-1 text-xs font-semibold",
-                          matchBadgeClass(match.score),
-                        )}
-                      >
-                        {match.score}% Match
-                      </span>
-                    ) : null}
-                  </div>
-                  <h2 className="mt-4 text-xl font-semibold tracking-tight">
-                    {job.title}
-                  </h2>
-                  <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-5">
-                    <span className="inline-flex items-center gap-2">
-                      <BriefcaseBusiness
-                        aria-hidden="true"
-                        className="h-4 w-4"
-                      />
-                      {job.company}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <MapPin aria-hidden="true" className="h-4 w-4" />
-                      {job.location}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {job.tags.map((tag) => (
-                      <span
-                        className="rounded-full border border-border/70 bg-secondary/70 px-3 py-1 text-xs text-muted-foreground"
-                        key={tag}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  {match ? (
-                    <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                      <div>
-                        <p className="text-sm font-semibold">Matched skills</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {(match.matchedSkills.length
-                            ? match.matchedSkills.slice(0, 6)
-                            : ["Review manually"]
-                          ).map((skill) => (
-                            <span
-                              className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
-                              key={skill}
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">Missing skills</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {(match.missingSkills.length
-                            ? match.missingSkills.slice(0, 6)
-                            : ["No major gaps"]
-                          ).map((skill) => (
-                            <span
-                              className="rounded-md border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs text-muted-foreground"
-                              key={skill}
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">
-                          Why this job matches
-                        </p>
-                        <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
-                          {match.reasons.slice(0, 4).map((reason) => (
-                            <li className="flex gap-2" key={reason}>
-                              <CheckCircle2
-                                aria-hidden="true"
-                                className="mt-1 h-4 w-4 shrink-0 text-primary"
-                              />
-                              <span>{reason}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {match.missing.length ? (
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            Missing: {match.missing.join(", ")}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="min-w-40 text-left lg:text-right">
-                  <p className="font-semibold text-primary">{job.salary}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {job.posted}
-                  </p>
-                  <Link href={`/candidate/jobs?search=${encodeURIComponent(job.title)}`}>
-                    <Button
-                      className="mt-4 w-full lg:w-auto"
-                      size="sm"
-                      variant={job.type === "Internship" ? "accent" : "outline"}
-                    >
-                      {job.type === "Internship" ? "Apply Internship" : "Preview role"}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+          {filteredJobs.map((item) => {
+            const { job, match } = item;
+            return <JobCard key={job.id} job={job} match={match} />;
+          })}
+        </div>
       </div>
-    </div>
+
       {filteredJobs.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground space-y-3">
           <p>No roles match that search. Try another department or keyword.</p>

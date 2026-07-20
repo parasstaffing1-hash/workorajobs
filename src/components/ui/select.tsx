@@ -1,5 +1,4 @@
 import type { SelectHTMLAttributes } from "react";
-
 import { cn } from "@/lib/utils";
 
 export function Select({
@@ -9,7 +8,7 @@ export function Select({
   return (
     <select
       className={cn(
-        "h-11 w-full rounded-md border border-input/80 bg-card/80 px-3 text-sm text-foreground shadow-sm outline-none backdrop-blur-xl transition-[border-color,box-shadow,background-color] duration-300 focus:border-primary/60 focus-visible:shadow-focus-ring disabled:cursor-not-allowed disabled:opacity-50",
+        "h-11 min-h-[44px] w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3.5 text-sm text-slate-900 dark:text-white shadow-xs outline-none backdrop-blur-xl transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
         className,
       )}
       {...props}

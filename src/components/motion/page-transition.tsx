@@ -4,19 +4,27 @@ import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-export function PageTransition({ children }: { children: ReactNode }) {
+type PageTransitionProps = {
+  children: ReactNode;
+};
+
+export function PageTransition({ children }: PageTransitionProps) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <motion.main
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      id="main-content"
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.996 }}
+    <motion.div
       key={pathname}
-      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
+      transition={{
+        duration: 0.28,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="w-full flex-1 flex flex-col gpu-accelerated"
     >
       {children}
-    </motion.main>
+    </motion.div>
   );
 }

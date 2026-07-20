@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
+  MouseEvent,
   ReactNode,
 } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -31,24 +35,66 @@ const sizes: Record<ButtonSize, string> = {
 };
 
 const base =
-  "animated-sheen inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium ring-offset-background transition-[background,border-color,box-shadow,color,transform] duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 disabled:pointer-events-none disabled:opacity-50";
+  "btn-ripple-container animated-sheen inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium ring-offset-background transition-[background,border-color,box-shadow,color,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gpu-accelerated";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
 };
 
+type Ripple = {
+  x: number;
+  y: number;
+  size: number;
+  id: number;
+};
+
 export function Button({
   className,
   variant = "primary",
   size = "md",
+  onClick,
+  children,
   ...props
 }: ButtonProps) {
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const rippleSize = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - rippleSize / 2;
+    const y = e.clientY - rect.top - rippleSize / 2;
+
+    const newRipple = { x, y, size: rippleSize, id: Date.now() };
+    setRipples((prev) => [...prev, newRipple]);
+
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+    }, 600);
+
+    if (onClick) onClick(e);
+  };
+
   return (
     <button
       className={cn(base, variants[variant], sizes[size], className)}
+      onClick={handleClick}
       {...props}
-    />
+    >
+      {children}
+      {ripples.map((ripple) => (
+        <span
+          key={ripple.id}
+          className="btn-ripple"
+          style={{
+            top: ripple.y,
+            left: ripple.x,
+            width: ripple.size,
+            height: ripple.size,
+          }}
+        />
+      ))}
+    </button>
   );
 }
 

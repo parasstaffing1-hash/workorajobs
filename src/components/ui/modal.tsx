@@ -35,34 +35,39 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
         <motion.div
           animate={{ opacity: 1 }}
           aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 px-4 py-8 backdrop-blur-md"
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 py-8 backdrop-blur-md gpu-accelerated"
           exit={{ opacity: 0 }}
           initial={shouldReduceMotion ? false : { opacity: 0 }}
           role="dialog"
-          transition={{ duration: 0.24 }}
+          transition={{ duration: 0.2 }}
         >
           <motion.div
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="glass-panel w-full max-w-lg rounded-lg border border-border/70 p-6 shadow-premium"
-            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+            className="glass-panel w-full max-w-lg rounded-2xl border border-slate-200/80 dark:border-white/10 p-6 shadow-2xl gpu-accelerated"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
             initial={
-              shouldReduceMotion ? false : { opacity: 0, scale: 0.98, y: 12 }
+              shouldReduceMotion ? false : { opacity: 0, scale: 0.94, y: 16 }
             }
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 320,
+            }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200/50 dark:border-white/5 pb-4">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h2>
               <Button
                 aria-label="Close modal"
                 onClick={onClose}
                 size="icon"
                 type="button"
                 variant="ghost"
+                className="rounded-full"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
               </Button>
             </div>
-            <div className={cn("mt-4 text-sm text-muted-foreground")}>
+            <div className={cn("mt-4 text-sm text-slate-600 dark:text-slate-300")}>
               {children}
             </div>
           </motion.div>

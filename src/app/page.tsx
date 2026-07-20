@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -6,8 +5,6 @@ import {
   Globe2,
   ShieldCheck,
   Sparkles,
-  Search,
-  MapPin,
 } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
@@ -15,97 +12,78 @@ import { Reveal } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
+import { HeroBackground } from "@/components/hero/hero-background";
+import { HeroBadge } from "@/components/hero/hero-badge";
+import { AnimatedHeroHeadline } from "@/components/hero/animated-hero-headline";
+import { AnimatedSearchBar } from "@/components/hero/animated-search-bar";
+import { HeroCTA } from "@/components/hero/hero-cta";
+import { LiveHiringMetrics } from "@/components/hero/live-hiring-metrics";
+import { HeroMockupSection } from "@/components/hero/hero-mockup-section";
+import { AiToolsSection } from "@/components/home/ai-tools-section";
+import { PremiumTrustSection } from "@/components/home/premium-trust-section";
+import { ConversionCTA } from "@/components/home/conversion-cta";
+import { SuccessStories } from "@/components/home/success-stories";
+import { BenefitsComparison } from "@/components/home/benefits-comparison";
+import { FaqSection } from "@/components/home/faq-section";
+import { StickyCTA } from "@/components/home/sticky-cta";
 
 export default function HomePage() {
   return (
     <>
+      {/* Sticky Conversion Bar */}
+      <StickyCTA />
+
       {/* Hero Section */}
-      <main className="relative min-h-[921px] flex flex-col items-center justify-center pt-32 px-4 md:px-6 overflow-hidden">
-        <Reveal distance={24} className="max-w-4xl w-full text-center">
-          <h1 className="font-h1 text-[32px] md:text-[48px] font-bold mb-4 md:mb-6 leading-[1.05] tracking-[-0.04em]">
-            Find Better Jobs.<br />
-            <span className="text-primary">Get Hired Faster.</span>
-          </h1>
-          <p className="font-body-lg text-lg text-muted-foreground max-w-2xl mx-auto mb-12">
-            The modern staffing ecosystem built for technological precision. Connecting elite talent with industry leaders through a built-for-speed recruitment portal.
-          </p>
-        </Reveal>
+      <header className="relative min-h-screen flex flex-col items-center justify-start pt-28 sm:pt-36 pb-20 px-4 md:px-6 overflow-hidden">
+        <HeroBackground />
 
-        {/* Apple-style Search Bar */}
-        <Reveal delay={0.1} distance={24} className="w-full max-w-4xl relative z-10">
-          <div className="search-container bg-background border border-border/70 p-2 rounded-[20px] shadow-sm flex flex-col md:flex-row items-center gap-2 transition-all duration-300">
-            <div className="flex items-center flex-1 w-full px-4 gap-2 h-12">
-              <Search className="w-5 h-5 text-muted-foreground" />
-              <input
-                className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-sm text-foreground placeholder:text-muted-foreground"
-                placeholder="Job title, keywords, or company"
-                type="text"
-              />
-            </div>
-            <div className="h-8 w-[1px] bg-border/70 hidden md:block" />
-            <div className="flex items-center flex-1 w-full px-4 gap-2 h-12">
-              <MapPin className="w-5 h-5 text-muted-foreground" />
-              <input
-                className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-sm text-foreground placeholder:text-muted-foreground"
-                placeholder="City or remote"
-                type="text"
-              />
-            </div>
-            <button className="w-full md:w-auto bg-foreground text-background px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity">
-              Search Jobs
-            </button>
-          </div>
-          <div className="mt-4 flex flex-wrap justify-center gap-4 text-muted-foreground uppercase tracking-widest text-[10px] font-semibold">
-            <span>Trending: Product Design</span>
-            <span>•</span>
-            <span>Engineering</span>
-            <span>•</span>
-            <span>Growth Marketing</span>
-          </div>
-        </Reveal>
-      </main>
+        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
+          <HeroBadge />
+          <AnimatedHeroHeadline />
+          <AnimatedSearchBar />
+          <HeroCTA />
+          <LiveHiringMetrics />
 
-      {/* Trust Section (Stats) */}
-      <section className="py-24">
-        <Container>
-          <Reveal className="text-center mb-16">
-            <h2 className="text-3xl font-semibold mb-2">Modern Staffing Ecosystem</h2>
-            <p className="text-muted-foreground">Empowering the next generation of workforce management.</p>
-          </Reveal>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Stat Card 1 */}
-            <Reveal delay={0.1} className="bg-card border border-border/70 p-12 rounded-[20px] shadow-sm flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Globe2 className="text-primary w-6 h-6" />
-              </div>
-              <span className="text-4xl font-bold text-primary mb-2">2.4k+</span>
-              <p className="font-semibold text-foreground">Vetted Talent</p>
-              <p className="text-sm text-muted-foreground mt-2">A global pool of pre-screened professionals ready to deploy.</p>
-            </Reveal>
+          {/* Interactive Mockup Container with Levitating Job Cards */}
+          <HeroMockupSection />
+        </div>
+      </header>
 
-            {/* Stat Card 2 */}
-            <Reveal delay={0.2} className="bg-card border border-border/70 p-12 rounded-[20px] shadow-sm flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <Sparkles className="text-accent w-6 h-6" />
-              </div>
-              <span className="text-4xl font-bold text-foreground mb-2">98%</span>
-              <p className="font-semibold text-foreground">Match Rate</p>
-              <p className="text-sm text-muted-foreground mt-2">AI-driven matching ensures high-fidelity candidate alignment.</p>
-            </Reveal>
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
 
-            {/* Stat Card 3 */}
-            <Reveal delay={0.3} className="bg-card border border-border/70 p-12 rounded-[20px] shadow-sm flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center mb-4">
-                <ShieldCheck className="text-foreground w-6 h-6" />
-              </div>
-              <span className="text-4xl font-bold text-foreground mb-2">15m</span>
-              <p className="font-semibold text-foreground">Avg. Time-to-Hire</p>
-              <p className="text-sm text-muted-foreground mt-2">Accelerating the hiring cycle without compromising quality.</p>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
+      {/* AI Tools Section */}
+      <AiToolsSection />
+
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
+
+      {/* Stripe-Grade Premium Trust Section */}
+      <PremiumTrustSection />
+
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
+
+      {/* Verified Success Stories Case Studies */}
+      <SuccessStories />
+
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
+
+      {/* Recruiter & Candidate High-Impact Conversion CTA */}
+      <ConversionCTA />
+
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
+
+      {/* Benefits Comparison Table */}
+      <BenefitsComparison />
+
+      {/* Glowing Section Divider */}
+      <div className="section-divider-glowing" />
+
+      {/* FAQ Accordion Section */}
+      <FaqSection />
 
       {/* Platform Surfaces (Bento Style) */}
       <section className="py-24 bg-secondary/30 border-y border-border/50">

@@ -22,6 +22,7 @@ export const viewport: Viewport = {
 };
 
 import { MotionBackground } from "@/components/ui/motion-background";
+import { ToastProvider } from "@/components/ui/toast";
 
 export default function RootLayout({
   children,
@@ -46,10 +47,12 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <MotionBackground />
-        <SiteHeader />
-        <PageTransition>{children}</PageTransition>
-        <SiteFooter />
+        <ToastProvider>
+          <MotionBackground />
+          <SiteHeader />
+          <PageTransition>{children}</PageTransition>
+          <SiteFooter />
+        </ToastProvider>
       </body>
     </html>
   );
