@@ -5,7 +5,7 @@ export const metadata = {
   description: "Advanced recruiter Boolean search string generator, Google X-Ray builder, role blueprints, and syntax validator.",
 };
 
-export default function ToolsPage() {
+export default function BooleanSearchToolPage() {
   return (
     <div className="min-h-screen pt-20">
       <SourcingOrchestrator />

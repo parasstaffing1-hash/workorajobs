@@ -1,0 +1,14 @@
+{
+  "remote": ["remote", "telecommute", "work from home", "wfh", "virtual", "off-site"],
+  "hybrid": ["hybrid", "partially remote", "flexible", "hybrid remote"],
+  "on_site": ["on-site", "office", "in-office", "on premises"],
+  "full_time": ["full-time", "permanent", "direct hire", "frequent", "regular"],
+  "part_time": ["part-time", "hourly", "reduced hours"],
+  "contract": ["contract", "contractor", "temp", "temporary", "consultant", "freelance", "c2c", "w2"],
+  "intern": ["intern", "internship", "co-op", "trainee", "apprentice"],
+  "junior": ["junior", "jr", "entry level", "associate", "beginner", "novice"],
+  "senior": ["senior", "sr", "experienced", "expert", "advanced"],
+  "lead": ["lead", "team lead", "principal", "chief", "head"],
+  "manager": ["manager", "mgr", "supervisor", "lead manager", "coordinator"],
+  "director": ["director", "head of", "vp", "vice president", "executive"]
+}

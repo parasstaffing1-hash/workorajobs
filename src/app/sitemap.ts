@@ -17,6 +17,8 @@ const staticRoutes = [
   "/jobs",
   "/employers",
   "/candidates",
+  "/tools",
+  "/tools/boolean-search",
   "/resources",
   "/blog",
   "/contact",

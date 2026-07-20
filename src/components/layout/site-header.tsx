@@ -43,18 +43,17 @@ export function SiteHeader() {
 
           {/* Tools Dropdown */}
           <div className="relative group">
-            <Link
-              href="/tools"
+            <button
               className={cn(
                 "inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors outline-none cursor-pointer",
-                pathname.startsWith("/tools") && "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]"
+                (pathname.startsWith("/tools") || pathname.startsWith("/resume-builder") || pathname.startsWith("/prep")) && "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]"
               )}
             >
               Tools
               <svg className="h-4 w-4 opacity-70 transition-transform group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>
-            </Link>
-            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[200px] rounded-lg border border-border/70 bg-card/95 p-1.5 shadow-premium backdrop-blur-xl">
-              <Link href="/tools" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground">Recruiter Tools Library</Link>
+            </button>
+            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[240px] rounded-lg border border-border/70 bg-card/95 p-1.5 shadow-premium backdrop-blur-xl">
+              <Link href="/tools/boolean-search" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground">Boolean Search String Generator</Link>
               <Link href="/resume-builder" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground">Resume Builder</Link>
               <Link href="/prep" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground">HackerPrep (Practice)</Link>
             </div>

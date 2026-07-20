@@ -8,7 +8,7 @@ export const primaryNav = [
   { href: "/internship-jobs", label: "Internships" },
   { href: "/employers", label: "Employers" },
   { href: "/candidates", label: "Candidates" },
-  { href: "/tools", label: "Tools" },
+  { href: "/tools/boolean-search", label: "Boolean Search String Generator" },
   { href: "/resources", label: "Resources" },
 ];
 
@@ -18,11 +18,11 @@ export const footerNav = [
     links: [
       { href: "/services", label: "Services" },
       { href: "/prep", label: "HackerPrep" },
+      { href: "/tools/boolean-search", label: "Boolean Search Generator" },
       { href: "/companies", label: "Companies" },
       { href: "/industries", label: "Industries" },
       { href: "/jobs", label: "Jobs" },
       { href: "/employers", label: "Employers" },
-      { href: "/tools", label: "Tools" },
     ],
   },
   {

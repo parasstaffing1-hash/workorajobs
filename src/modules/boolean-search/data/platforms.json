@@ -1,0 +1,86 @@
+[
+  {
+    "id": "linkedin",
+    "name": "LinkedIn",
+    "placeholder": "\"Software Engineer\" AND \"React\"",
+    "description": "Standard LinkedIn search for direct profile matches.",
+    "urlTemplate": "https://www.linkedin.com/search/results/people/?keywords={query}"
+  },
+  {
+    "id": "linkedin_recruiter",
+    "name": "LinkedIn Recruiter",
+    "placeholder": "Standard recruiter boolean query.",
+    "description": "LinkedIn Recruiter specific syntax.",
+    "urlTemplate": "https://www.linkedin.com/talent/search?query={query}"
+  },
+  {
+    "id": "google",
+    "name": "Google (X-Ray)",
+    "placeholder": "site:linkedin.com/in/ \"Software Engineer\"",
+    "description": "Google X-Ray search of LinkedIn profiles.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "placeholder": "site:github.com \"joined on\"",
+    "description": "Find developers and public projects on GitHub.",
+    "urlTemplate": "https://github.com/search?q={query}&type=users"
+  },
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "placeholder": "site:gitlab.com",
+    "description": "Find developers and teams on GitLab.",
+    "urlTemplate": "https://gitlab.com/search?search={query}&group_id=&project_id=&scope=users"
+  },
+  {
+    "id": "stackoverflow",
+    "name": "Stack Overflow",
+    "placeholder": "site:stackoverflow.com/users",
+    "description": "Sift through technical contributors on Stack Overflow.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "naukri",
+    "name": "Naukri",
+    "placeholder": "site:resumes.naukri.com",
+    "description": "Sourcing Indian candidate resumes.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "indeed",
+    "name": "Indeed",
+    "placeholder": "site:indeed.com/r/",
+    "description": "Sourcing candidate resumes from Indeed.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "monster",
+    "name": "Monster",
+    "placeholder": "site:monster.com/profile",
+    "description": "General profile sourcing from Monster.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "dice",
+    "name": "Dice",
+    "placeholder": "site:dice.com/jobs/",
+    "description": "Sourcing tech candidate profiles on Dice.",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "wellfound",
+    "name": "Wellfound",
+    "placeholder": "site:wellfound.com",
+    "description": "Find startup engineers on Wellfound (AngelList).",
+    "urlTemplate": "https://www.google.com/search?q={query}"
+  },
+  {
+    "id": "x_twitter",
+    "name": "X (Twitter)",
+    "placeholder": "site:x.com \"Software Engineer\"",
+    "description": "Find professionals sharing work on X.",
+    "urlTemplate": "https://x.com/search?q={query}"
+  }
+]

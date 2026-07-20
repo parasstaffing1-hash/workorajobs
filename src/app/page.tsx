@@ -129,9 +129,9 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-sm mb-6 max-w-md">
                   A high-density command center for talent acquisition teams. Manage pipelines, parse resumes with AI, and automate outreach.
                 </p>
-                <button className="bg-secondary text-foreground px-6 py-2 rounded-full text-sm font-semibold w-fit hover:bg-secondary/80 transition-colors">
-                  View Tools
-                </button>
+                <ButtonLink href="/recruiter" variant="secondary" className="w-fit">
+                  View Portal
+                </ButtonLink>
               </div>
               <div className="flex-1 bg-secondary/50 p-6 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>

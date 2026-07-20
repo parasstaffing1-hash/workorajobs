@@ -34,3 +34,5 @@ pnpm-debug.log*
 # system
 .DS_Store
 Thumbs.db
+tool_calls_history.jsonl
+stitch_design.html
