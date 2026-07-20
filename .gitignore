@@ -36,3 +36,6 @@ pnpm-debug.log*
 Thumbs.db
 tool_calls_history.jsonl
 stitch_design.html
+build_output/
+*.zip
+
