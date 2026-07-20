@@ -214,7 +214,7 @@ export function JobBoard() {
       {/* RESUME MATCH CARD */}
       <Card className="p-5">
         <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-          <div>
+          <div className="min-w-0">
             <Badge className="bg-primary/20 text-primary">Resume Match</Badge>
             <h2 className="mt-4 text-2xl font-semibold tracking-tight">
               Find Jobs That Match Your Resume
@@ -242,7 +242,7 @@ export function JobBoard() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <input
               ref={fileInputRef}
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"

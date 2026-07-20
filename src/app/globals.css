@@ -102,6 +102,35 @@ body {
   text-wrap: balance;
 }
 
+.glass-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.2s; }
+.stagger-3 { transition-delay: 0.3s; }
+
+.search-container:focus-within {
+  box-shadow: 0 0 0 4px rgba(53, 37, 205, 0.08);
+  border-color: #3525cd;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .surface-blur {
   background: hsl(var(--background) / 0.78);
   backdrop-filter: blur(20px) saturate(1.35);

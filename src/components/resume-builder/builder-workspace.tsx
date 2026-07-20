@@ -699,7 +699,7 @@ export function BuilderWorkspace() {
         </div>
 
         {/* Outer centered canvas workspace */}
-        <div className="w-full flex justify-center bg-secondary/15 p-4 sm:p-8 rounded-xl border border-border/50 overflow-x-auto">
+        <div className="w-full flex-1 min-w-0 flex justify-center bg-secondary/15 p-4 sm:p-8 rounded-xl border border-border/50 overflow-x-auto">
           {/* Output Document Layout A4 Grid */}
           <div 
             className={cn(

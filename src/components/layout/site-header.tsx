@@ -21,8 +21,8 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="surface-blur sticky top-0 z-40 border-b border-border/60 shadow-[0_1px_0_hsl(0_0%_100%/0.08)]">
-      <Container className="flex h-16 items-center justify-between gap-4">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-2 rounded-full mt-4 mx-auto max-w-[95%] bg-background/80 backdrop-blur-xl border border-border/70 shadow-sm glass-nav">
+      <div className="flex w-full items-center justify-between gap-4">
         <SiteLogo />
         <nav
           aria-label="Primary navigation"
@@ -108,9 +108,9 @@ export function SiteHeader() {
             )}
           </Button>
         </div>
-      </Container>
+      </div>
       {open ? (
-        <div className="glass-panel border-t border-border/70 shadow-premium lg:hidden max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="glass-panel mt-2 rounded-2xl border border-border/70 shadow-premium lg:hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
           <Container className="grid gap-2 py-4">
             {primaryNav.map((item) => (
               <Link

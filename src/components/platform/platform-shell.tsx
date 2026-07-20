@@ -47,7 +47,7 @@ export function PlatformShell({
             ))}
           </nav>
         </aside>
-        <section>
+        <section className="min-w-0">
           <Reveal className="mb-8" distance={14}>
             <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
               {title}

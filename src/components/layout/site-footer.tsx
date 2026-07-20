@@ -9,7 +9,7 @@ export function SiteFooter() {
     <footer className="luxury-section border-t border-border/70 bg-[hsl(var(--navy))] text-white">
       <Container className="py-16">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">
-          <div>
+          <div className="min-w-0">
             <SiteLogo />
             <p className="mt-5 max-w-md text-sm leading-6 text-white/70">
               Workora Jobs is an AI-powered global staffing and recruitment

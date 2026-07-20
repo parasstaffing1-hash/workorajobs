@@ -10,7 +10,7 @@ export function CtaBand() {
       <Container>
         <Reveal className="animated-sheen overflow-hidden rounded-lg border border-white/10 bg-[hsl(var(--navy))] px-6 py-12 text-white shadow-premium sm:px-10 lg:px-14">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60">
                 Build your hiring foundation
               </p>
