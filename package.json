@@ -23,6 +23,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/swagger": "^11.4.6",
     "@nestjs/throttler": "^6.5.0",
+    "@next/third-parties": "^16.2.10",
     "@prisma/client": "^6.19.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",

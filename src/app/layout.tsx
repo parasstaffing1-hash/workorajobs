@@ -22,6 +22,7 @@ export const viewport: Viewport = {
 };
 
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { MotionBackground } from "@/components/ui/motion-background";
 import { ToastProvider } from "@/components/ui/toast";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
+        <GoogleAnalytics />
         <ThemeScript />
         <JsonLd
           data={{
