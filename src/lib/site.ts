@@ -96,6 +96,9 @@ export function createMetadata({
     alternates: {
       canonical: url,
     },
+    verification: {
+      google: "ZoizFnzetExF1JnQGv6uSexXzOlDCVJBZTx7SA9JwUM",
+    },
     robots: noIndex ? { index: false, follow: false } : undefined,
     openGraph: {
       title: fullTitle,
