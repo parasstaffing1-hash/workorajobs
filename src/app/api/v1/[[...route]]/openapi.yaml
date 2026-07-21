@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: WorkoraJobs Automation API Layer
+  version: 1.0.0
+  description: |
+    Production-grade backend automation layer endpoints for WorkoraJobs.
+    Provides structural integration interfaces for n8n, AI agents, mobile clients, and developer portals.
+    
+    ### Authentication
+    All API endpoints require one of the following credentials:
+    1. **API Key Authentication**: Injected via header as `x-api-key: <key>`.
+    2. **Bearer JWT Token**: Injected via header as `Authorization: Bearer <JWT>`.
+
+    ### Rate Limits
+    - Rate limits are managed via Redis and allow up to `100 requests / minute` per client IP.
+    - Rate limit headers are automatically returned in responses.
+paths:
+  /health:
+    get:
+      summary: Health check and connectivity timings
+      description: Returns health status, timestamps, and database/redis status.
+      responses:
+        '200':
+          description: Healthy status details
+          content:
+            application/json:
+              example:
+                status: "healthy"
+                timestamp: "2026-07-22T01:00:00.000Z"
+                database: "UP"
+                redis: "UP"
+                latencyMs: 15
+  /jobs:
+    get:
+      summary: List all jobs
+      responses:
+        '200':
+          description: A list of active job listings
+    post:
+      summary: Create a job listing
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                location:
+                  type: string
+                salary:
+                  type: integer
+                type:
+                  type: string
+                  enum: [FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP, FREELANCE]
+                companyId:
+                  type: string
+                postedById:
+                  type: string
+              required: [title, description, type, companyId, postedById]
+      responses:
+        '201':
+          description: Job created successfully
+        '400':
+          description: Validation error
+        '409':
+          description: Duplicate listing detected
+  /jobs/bulk:
+    post:
+      summary: Bulk create job listings
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobs:
+                  type: array
+                  items:
+                    type: object
+                    required: [title, description, type, companyId, postedById]
+  /companies:
+    post:
+      summary: Create a company profile
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                websiteUrl:
+                  type: string
+                logoUrl:
+                  type: string
+                domain:
+                  type: string
+                ownerId:
+                  type: string
+              required: [name, ownerId]
+  /companies/{id}/verify:
+    post:
+      summary: Verify a company
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+  /content/blog:
+    post:
+      summary: Create a blog post
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+  /resumes:
+    post:
+      summary: Upload and parse candidate resume metadata
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+  /applications:
+    post:
+      summary: Submit a job application
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+  /webhooks:
+    post:
+      summary: Register a new webhook subscription
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
