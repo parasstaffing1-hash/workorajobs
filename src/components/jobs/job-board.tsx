@@ -10,7 +10,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { JobCard } from "@/components/jobs/job-card";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +101,13 @@ export function JobBoard() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, department, jobType, matchThreshold, workMode, sortDirection, parsedResume]);
+
   const resumeMatches = useMemo(() => {
     return parsedResume ? matchJobsToResume(parsedResume, jobs) : [];
   }, [parsedResume]);
@@ -152,6 +159,13 @@ export function JobBoard() {
     sortDirection,
     workMode,
   ]);
+
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredJobs.slice(start, start + itemsPerPage);
+  }, [filteredJobs, currentPage]);
+
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
 
   async function processResume(file: File) {
     const validation = validateResumeFile(file);
@@ -454,11 +468,38 @@ export function JobBoard() {
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-foreground">All Active Openings</h3>
         <div className="grid gap-4">
-          {filteredJobs.map((item) => {
+          {paginatedJobs.map((item) => {
             const { job, match } = item;
             return <JobCard key={job.id} job={job} match={match} />;
           })}
         </div>
+
+        {/* PAGINATION CONTROLS */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              type="button"
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground font-semibold">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              type="button"
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
 
       {filteredJobs.length === 0 ? (

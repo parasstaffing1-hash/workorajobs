@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { FloatingJobCards } from "@/components/hero/floating-job-cards";
 
 const RecruiterDashboardMockup = dynamic(
   () =>
@@ -11,16 +12,6 @@ const RecruiterDashboardMockup = dynamic(
     loading: () => (
       <div className="w-full max-w-5xl h-[420px] mx-auto rounded-2xl glass-dashboard-mockup animate-pulse my-10 border border-slate-200/50 dark:border-white/5" />
     ),
-    ssr: false,
-  }
-);
-
-const FloatingJobCards = dynamic(
-  () =>
-    import("@/components/hero/floating-job-cards").then(
-      (mod) => mod.FloatingJobCards
-    ),
-  {
     ssr: false,
   }
 );

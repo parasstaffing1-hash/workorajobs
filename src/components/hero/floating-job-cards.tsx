@@ -1,5 +1,3 @@
-"use client";
-
 import { Sparkles, Building2, MapPin, DollarSign } from "lucide-react";
 
 export function FloatingJobCards() {

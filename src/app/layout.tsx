@@ -21,15 +21,22 @@ export const viewport: Viewport = {
   ],
 };
 
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { MotionBackground } from "@/components/ui/motion-background";
 import { ToastProvider } from "@/components/ui/toast";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${plusJakartaSans.variable} antialiased`}>
         <ThemeScript />
         <JsonLd
           data={{

@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowRight, Briefcase, Sparkles, UserCheck, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";

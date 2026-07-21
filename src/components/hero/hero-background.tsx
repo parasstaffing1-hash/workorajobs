@@ -1,5 +1,3 @@
-"use client";
-
 export function HeroBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">

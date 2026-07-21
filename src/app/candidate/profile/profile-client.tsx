@@ -1,6 +1,6 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import {
   Camera,
@@ -609,10 +609,13 @@ export function ProfileClient() {
             <div className="px-6 pb-6 relative">
               <div className="absolute -top-16 left-6">
                 <div className="relative h-32 w-32 rounded-full border-4 border-card bg-secondary overflow-hidden shadow-premium">
-                  <img 
+                  <Image 
                     src={profile.avatar} 
                     alt={`${profile.firstName} ${profile.lastName}`} 
                     className="h-full w-full object-cover"
+                    width={128}
+                    height={128}
+                    priority
                   />
                   <button 
                     onClick={openIntroEdit}
@@ -1124,7 +1127,7 @@ export function ProfileClient() {
               
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-secondary overflow-hidden shrink-0 border border-border">
-                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Priya" className="h-full w-full object-cover" />
+                  <Image src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Priya" className="h-full w-full object-cover" width={36} height={36} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-foreground hover:text-primary cursor-pointer truncate">Priya Raman</p>
@@ -1137,7 +1140,7 @@ export function ProfileClient() {
 
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-secondary overflow-hidden shrink-0 border border-border">
-                  <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Elena" className="h-full w-full object-cover" />
+                  <Image src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Elena" className="h-full w-full object-cover" width={36} height={36} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-foreground hover:text-primary cursor-pointer truncate">Elena Garcia</p>
@@ -1150,7 +1153,7 @@ export function ProfileClient() {
 
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-secondary overflow-hidden shrink-0 border border-border">
-                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80" alt="Marcus" className="h-full w-full object-cover" />
+                  <Image src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80" alt="Marcus" className="h-full w-full object-cover" width={36} height={36} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-foreground hover:text-primary cursor-pointer truncate">Marcus Lee</p>

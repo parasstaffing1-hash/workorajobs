@@ -1,5 +1,3 @@
-"use client";
-
 import { Building2, ArrowUpRight, TrendingUp, Clock, Users, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";

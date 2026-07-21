@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, X, Sparkles } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
