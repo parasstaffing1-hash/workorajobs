@@ -37,7 +37,20 @@ export function createMetadata({
 }: MetadataInput = {}): Metadata {
   const defaultTitle = "Find Jobs in India | AI Job Search Platform | WorkoraJobs";
   const fullTitle = title ? `${title} | ${siteConfig.name}` : defaultTitle;
-  const url = new URL(path, siteConfig.url).toString();
+  let cleanPath = path;
+  if (cleanPath.includes("?")) {
+    const [base, query] = cleanPath.split("?");
+    const searchParams = new URLSearchParams(query);
+    // Strip tracking parameters, sorting, and session variables
+    const stripParams = [
+      "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+      "gclid", "fbclid", "sort", "filter", "ref"
+    ];
+    stripParams.forEach((param) => searchParams.delete(param));
+    const newQuery = searchParams.toString();
+    cleanPath = newQuery ? `${base}?${newQuery}` : base;
+  }
+  const url = new URL(cleanPath, siteConfig.url).toString();
 
   return {
     title: fullTitle,
@@ -99,6 +112,9 @@ export function createMetadata({
     },
     verification: {
       google: "ZoizFnzetExF1JnQGv6uSexXzOlDCVJBZTx7SA9JwUM",
+      other: {
+        "msvalidate.01": "0F8F1EA68E6C8433EA8F7D0464673B88",
+      },
     },
     robots: noIndex ? { index: false, follow: false } : undefined,
     openGraph: {

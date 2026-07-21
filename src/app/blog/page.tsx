@@ -29,7 +29,7 @@ export default function BlogPage() {
             <Link className="group" href={`/blog/${post.slug}`} key={post.slug}>
               <Card className="h-full overflow-hidden">
                 <Image
-                  alt=""
+                  alt={post.title}
                   className="h-48 w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]"
                   height={520}
                   src={post.image}

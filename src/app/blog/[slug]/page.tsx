@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { blogPosts } from "@/data/blog";
 import { createMetadata } from "@/lib/site";
 
+import { JsonLd } from "@/components/seo/json-ld";
+
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
 };
@@ -34,8 +36,62 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (!post) notFound();
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.image.startsWith("http") ? post.image : `https://workorajobs.com${post.image}`,
+    datePublished: new Date(post.date).toISOString(),
+    dateModified: new Date(post.date).toISOString(),
+    author: {
+      "@type": "Organization",
+      name: "WorkoraJobs Sourcing Team",
+      url: "https://workorajobs.com/about",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "WorkoraJobs",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://workorajobs.com/workora-jobs-logo.png",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://workorajobs.com/blog/${post.slug}`,
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://workorajobs.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: "https://workorajobs.com/blog",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: post.title,
+        item: `https://workorajobs.com/blog/${post.slug}`,
+      },
+    ],
+  };
+
   return (
     <article>
+      <JsonLd data={articleSchema} />
+      <JsonLd data={breadcrumbSchema} />
       <Container className="py-16 sm:py-20">
         <div className="mx-auto max-w-3xl">
           <Badge>{post.category}</Badge>
@@ -53,7 +109,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </p>
         </div>
         <Image
-          alt=""
+          alt={post.title}
           className="mx-auto mt-10 max-h-[480px] rounded-lg border border-border/70 object-cover shadow-premium"
           height={720}
           priority
