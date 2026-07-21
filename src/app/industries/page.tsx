@@ -8,11 +8,11 @@ import { industries } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Industries",
+  title: "Explore Jobs Across Top Industries in India",
   description:
-    "Discover the industries Workora Jobs is positioned to support with global staffing.",
+    "Tailored recruitment solutions for Information Technology, Fintech, Healthcare, and E-commerce.",
   path: "/industries",
-});
+});;
 
 export default function IndustriesPage() {
   return (

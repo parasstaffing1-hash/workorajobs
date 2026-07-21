@@ -1,3 +1,4 @@
+import { createMetadata } from "@/lib/site";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -26,6 +27,13 @@ import { SuccessStories } from "@/components/home/success-stories";
 import { BenefitsComparison } from "@/components/home/benefits-comparison";
 import { FaqSection } from "@/components/home/faq-section";
 import { StickyCTA } from "@/components/home/sticky-cta";
+
+export const metadata = createMetadata({
+  title: "Find Jobs in India | AI Job Search Platform",
+  description:
+    "WorkoraJobs is an AI-powered global staffing and recruitment platform for companies hiring trusted talent across borders.",
+  path: "/",
+});
 
 export default function HomePage() {
   return (

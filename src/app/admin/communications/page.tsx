@@ -5,9 +5,11 @@ import { adminNav, communicationProviders } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Admin Communications",
+  title: "Admin Communications & Broadcast Center",
+  description:
+    "System notifications, broadcast emails, and candidate communication history.",
   path: "/admin/communications",
-});
+});;
 
 export default function AdminCommunicationsPage() {
   return (

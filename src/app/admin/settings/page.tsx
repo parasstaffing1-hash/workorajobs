@@ -8,9 +8,11 @@ import { adminNav, systemStats } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "System Settings",
+  title: "Admin System Settings & Configuration",
+  description:
+    "Configure core platform parameters, integrations, and operational settings.",
   path: "/admin/settings",
-});
+});;
 
 export default function AdminSettingsPage() {
   return (

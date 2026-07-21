@@ -9,11 +9,11 @@ import { blogPosts } from "@/data/blog";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Blog",
+  title: "Hiring Insights & Career Advice Blog",
   description:
-    "Articles on global staffing, candidate experience and responsible AI recruiting.",
+    "Articles, insights, and best practices on global recruitment, HR tech, and remote work.",
   path: "/blog",
-});
+});;
 
 export default function BlogPage() {
   return (

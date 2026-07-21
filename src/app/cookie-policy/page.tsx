@@ -3,10 +3,11 @@ import { PageHero } from "@/components/marketing/page-hero";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Cookie Policy",
-  description: "Cookie policy for the Workora Jobs public frontend.",
+  title: "Cookie Policy & Data Tracking Notice",
+  description:
+    "Learn how WorkoraJobs uses cookies and tracking technologies to improve your experience.",
   path: "/cookie-policy",
-});
+});;
 
 export default function CookiePolicyPage() {
   return (

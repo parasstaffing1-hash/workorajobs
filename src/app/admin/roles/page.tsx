@@ -5,9 +5,11 @@ import { adminNav, rolePermissions } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Roles and Permissions",
+  title: "Admin Roles & Access Control Permissions",
+  description:
+    "Configure administrative access controls, role-based permissions, and privileges.",
   path: "/admin/roles",
-});
+});;
 
 export default function AdminRolesPage() {
   return (

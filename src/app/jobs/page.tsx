@@ -19,10 +19,11 @@ const JobBoard = dynamic(
 );
 
 export const metadata = createMetadata({
-  title: "Jobs",
-  description: "Browse global roles and premium candidate opportunities.",
+  title: "Latest Jobs in India | Search Job Openings",
+  description:
+    "Search thousands of verified job openings across engineering, product, marketing, and sales.",
   path: "/jobs",
-});
+});
 
 export default function JobsPage() {
   return (

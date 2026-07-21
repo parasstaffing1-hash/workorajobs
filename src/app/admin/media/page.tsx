@@ -5,9 +5,11 @@ import { adminNav, mediaLibrary } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Media Library",
+  title: "Admin Media Library & Asset Management",
+  description:
+    "Manage company brand assets, candidate uploaded files, and media storage.",
   path: "/admin/media",
-});
+});;
 
 export default function AdminMediaPage() {
   return (

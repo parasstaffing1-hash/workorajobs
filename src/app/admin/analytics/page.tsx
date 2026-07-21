@@ -5,9 +5,11 @@ import { adminNav, analyticsMetrics } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Admin Analytics",
+  title: "Admin Analytics & System Performance Reports",
+  description:
+    "Platform metrics, system usage analytics, and growth performance reports.",
   path: "/admin/analytics",
-});
+});;
 
 export default function AdminAnalyticsPage() {
   return (

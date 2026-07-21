@@ -1,39 +1,13 @@
-"use client";
-import { Download } from "lucide-react";
+import { createMetadata } from "@/lib/site";
+import PageClient from "./page-client";
 
-import { PlatformShell } from "@/components/platform/platform-shell";
-import { RecordList } from "@/components/platform/record-list";
-import { WorkflowCard } from "@/components/platform/workflow-card";
-import { Button } from "@/components/ui/button";
-import { analyticsNav, reports } from "@/data/platform";
+export const metadata = createMetadata({
+  title: "Hiring Reports & Recruiter Metrics Insights",
+  description:
+    "Generate custom recruitment reports, candidate funnel dropoffs, and SLA tracking.",
+  path: "/analytics/reports",
+});
 
-
-export default function AnalyticsReportsPage() {
-  return (
-    <PlatformShell
-      badge="Analytics"
-      description="Generate reports and CSV exports for hiring, employers, candidates and recruiter performance."
-      nav={analyticsNav}
-      title="Reports"
-    >
-      <WorkflowCard
-        action={
-          <Button size="sm">
-            <Download aria-hidden="true" className="h-4 w-4" />
-            CSV
-          </Button>
-        }
-        title="Reports"
-      >
-        <RecordList
-          items={reports.map((report) => ({
-            title: report.name,
-            meta: report.type,
-            value: report.status,
-            onClick: () => alert(`Downloading ${report.name}`),
-          }))}
-        />
-      </WorkflowCard>
-    </PlatformShell>
-  );
+export default function Page(props: any) {
+  return <PageClient {...props} />;
 }

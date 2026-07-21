@@ -9,11 +9,11 @@ import { employerBenefits } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Employers",
+  title: "Hire Top Talent in India | Employer Solutions",
   description:
-    "See how Workora Jobs helps employers frame global staffing and recruitment.",
+    "Post jobs, access pre-vetted candidate profiles, and streamline global hiring.",
   path: "/employers",
-});
+});;
 
 export default function EmployersPage() {
   return (

@@ -79,7 +79,7 @@ export function parseProgrammaticSeo(pathType: "jobs" | "company" | "skills" | "
 
     const locText = location ? ` in ${location}` : "";
     h1 = `${jobTitle} Jobs${locText}`;
-    pageTitle = `${jobTitle} Jobs${locText} | Apply Now | Workora Jobs`;
+    pageTitle = `${jobTitle} Jobs${locText} | Search & Apply Online | WorkoraJobs`;
     description = `Browse active ${jobTitle} opportunities${locText}. Apply to premium roles, check salary ranges, required tech stacks, and interview pipelines.`;
 
     contentMarkdown = `Looking for your next career move as a ${jobTitle}${locText}? The demand for skilled developers and professional practitioners continues to grow as companies build modern digital infrastructure.
@@ -130,7 +130,7 @@ Ensure your resume highlights measurable business impact (e.g., % improvement in
     filteredJobs = jobs.filter((job) => job.company.toLowerCase().includes(companyName.toLowerCase()));
 
     h1 = `${companyName} Career Opportunities`;
-    pageTitle = `${companyName} Jobs & Careers | Workora Jobs`;
+    pageTitle = `Explore ${companyName} Careers & Open Positions | WorkoraJobs`;
     description = `Explore active roles at ${companyName}. View required skills, company tech stack, employee benefits, and apply directly to open positions.`;
 
     contentMarkdown = `Join ${companyName} and build the future of global enterprise workflows. ${companyName} is recognized as a leader in technical innovation, product design excellence, and collaborative team cultures.
@@ -174,7 +174,7 @@ Candidates applying to ${companyName} should prepare to undergo a rigorous struc
     );
 
     h1 = `${skillName} Developer Jobs`;
-    pageTitle = `Active ${skillName} Jobs & Roles | Workora Jobs`;
+    pageTitle = `Active ${skillName} Developer Jobs & Sourcing Guide | WorkoraJobs`;
     description = `Find jobs requiring ${skillName} expertise. Apply to active roles, check median salaries, and grow your technical career.`;
 
     contentMarkdown = `Expand your engineering career by applying for roles demanding high proficiency in ${skillName}. As software systems become more complex, companies value developers who can leverage ${skillName} to solve scaling challenges.
@@ -207,7 +207,7 @@ Candidates applying to ${companyName} should prepare to undergo a rigorous struc
     filteredJobs = jobs.filter((job) => job.workMode === "Remote" || job.type === "Remote");
 
     h1 = "Remote Sourcing & Career Jobs";
-    pageTitle = "Remote Jobs | Work From Anywhere Careers | Workora Jobs";
+    pageTitle = "Remote Jobs in India | Work From Home Careers | WorkoraJobs";
     description = "Find active, fully remote career opportunities. Work from home or anywhere, check salary benchmarks, and apply online today.";
 
     contentMarkdown = `Remote work is redefining how talent connects with global organizations. Working remotely offers unmatched flexibility, saves commute times, and opens up global job markets.
@@ -245,7 +245,7 @@ Candidates applying to ${companyName} should prepare to undergo a rigorous struc
     );
 
     h1 = "Freshers & Early Career Jobs";
-    pageTitle = "Freshers Jobs | Internship & Entry-Level Roles | Workora Jobs";
+    pageTitle = "Freshers Jobs | Entry-Level Roles & Internships | WorkoraJobs";
     description = "Find entry-level developer jobs, student internships, and early career roles. Start your professional path with Workora Jobs.";
 
     contentMarkdown = `Kickstart your professional career with entry-level opportunities and student internships. Early career programs are the best way to gain real-world project context.
@@ -278,7 +278,7 @@ Candidates applying to ${companyName} should prepare to undergo a rigorous struc
     filteredJobs = jobs.filter((job) => job.type === "Internship" || job.isFeaturedInternship);
 
     h1 = "Student & Early Career Internships";
-    pageTitle = "Internship Jobs | Student & Early Career Roles | Workora Jobs";
+    pageTitle = "Internship Jobs | Student & Graduate Roles | WorkoraJobs";
     description = "Find tech, design, marketing, and business internships. Apply to active internship roles with housing stipends and mentorship on Workora Jobs.";
 
     contentMarkdown = `Start your professional journey with structured internships. Internships offer student and early-career candidates the ideal environment to learn, build, and deliver impact under expert mentorship.

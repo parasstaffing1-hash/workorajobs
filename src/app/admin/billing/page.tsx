@@ -5,9 +5,11 @@ import { adminNav, billingPlans, invoices } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Admin Billing",
+  title: "Admin Subscription Billing & Financials",
+  description:
+    "Platform revenue tracking, subscription management, and invoice processing.",
   path: "/admin/billing",
-});
+});;
 
 export default function AdminBillingPage() {
   return (

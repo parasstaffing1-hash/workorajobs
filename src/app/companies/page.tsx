@@ -8,11 +8,11 @@ import { ButtonLink } from "@/components/ui/button";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Browse Companies",
+  title: "Explore Top Companies Hiring in India",
   description:
-    "Explore top enterprise tech companies, tech stacks, Glassdoor reviews, workplace benefits, and active hiring opportunities.",
+    "Explore top enterprise companies, startups, and remote teams hiring talent globally.",
   path: "/companies",
-});
+});;
 
 export default function CompaniesPage() {
   return (

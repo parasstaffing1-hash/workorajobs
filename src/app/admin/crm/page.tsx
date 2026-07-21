@@ -6,9 +6,11 @@ import { adminNav, crmLeads, crmMetrics } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Admin CRM",
+  title: "Admin CRM & Client Relationship Manager",
+  description:
+    "Manage enterprise client profiles, lead funnels, and account managers.",
   path: "/admin/crm",
-});
+});;
 
 export default function AdminCrmPage() {
   return (

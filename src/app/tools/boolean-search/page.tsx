@@ -1,9 +1,12 @@
+import { createMetadata } from "@/lib/site";
 import { SourcingOrchestrator } from "@/modules/boolean-search";
 
-export const metadata = {
-  title: "Boolean Search String Generator | Workora Tools",
-  description: "Advanced recruiter Boolean search string generator, Google X-Ray builder, role blueprints, and syntax validator.",
-};
+export const metadata = createMetadata({
+  title: "Boolean Search Tool for Recruiters & Sourcers",
+  description:
+    "Generate advanced boolean search strings instantly for Google X-Ray, LinkedIn, and Github.",
+  path: "/tools/boolean-search",
+});
 
 export default function BooleanSearchToolPage() {
   return (

@@ -16,11 +16,11 @@ import { Card } from "@/components/ui/card";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Professional Resume Builder",
+  title: "Free AI Resume Builder | ATS-Friendly Resumes",
   description:
-    "Build a polished, ATS-ready resume locally in the browser with Workora Jobs free resume builder.",
+    "Create deterministic, ATS-friendly professional resumes designed for high conversion.",
   path: "/resume-builder",
-});
+});;
 
 const builderHighlights = [
   {

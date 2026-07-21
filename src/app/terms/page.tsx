@@ -3,10 +3,11 @@ import { PageHero } from "@/components/marketing/page-hero";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Terms",
-  description: "Terms of use for the Workora Jobs public frontend.",
+  title: "Terms of Service & Platform Usage Conditions",
+  description:
+    "Review terms of service, conditions of use, and legal disclaimers for WorkoraJobs.",
   path: "/terms",
-});
+});;
 
 export default function TermsPage() {
   return (

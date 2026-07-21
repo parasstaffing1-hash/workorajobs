@@ -5,9 +5,11 @@ import { adminNav, adminTimeline } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Audit Logs",
+  title: "Admin Audit Logs & Security Event History",
+  description:
+    "Security access history, user activity trails, and compliance audit logs.",
   path: "/admin/audit",
-});
+});;
 
 export default function AdminAuditPage() {
   return (

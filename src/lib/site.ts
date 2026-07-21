@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 export const siteConfig = {
-  name: "Workora Jobs",
+  name: "WorkoraJobs",
   url: "https://www.workorajobs.com",
   description:
-    "Workora Jobs is an AI-powered global staffing and recruitment platform for companies hiring trusted talent across borders.",
+    "WorkoraJobs is an AI-powered global staffing and recruitment platform for companies hiring trusted talent across borders.",
   keywords: [
     "global staffing",
     "recruitment platform",
@@ -12,7 +12,7 @@ export const siteConfig = {
     "remote hiring",
     "enterprise recruiting",
     "talent marketplace",
-    "Workora Jobs",
+    "WorkoraJobs",
   ],
   links: {
     x: "https://x.com/workorajobs",
@@ -35,7 +35,8 @@ export function createMetadata({
   image = "/opengraph-image",
   noIndex = false,
 }: MetadataInput = {}): Metadata {
-  const fullTitle = title ? `${title} | ${siteConfig.name}` : siteConfig.name;
+  const defaultTitle = "Find Jobs in India | AI Job Search Platform | WorkoraJobs";
+  const fullTitle = title ? `${title} | ${siteConfig.name}` : defaultTitle;
   const url = new URL(path, siteConfig.url).toString();
 
   return {

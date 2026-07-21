@@ -5,9 +5,11 @@ import { adminNav, applicants } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Application Management",
+  title: "Admin Applications & Candidate Approvals",
+  description:
+    "Review and manage candidate job applications across all employer listings.",
   path: "/admin/applications",
-});
+});;
 
 export default function AdminApplicationsPage() {
   return (

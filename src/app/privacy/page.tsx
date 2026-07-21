@@ -3,10 +3,11 @@ import { PageHero } from "@/components/marketing/page-hero";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Privacy Policy",
-  description: "Privacy policy for the Workora Jobs public frontend.",
+  title: "Privacy Policy & Data Protection Notice",
+  description:
+    "Read the privacy policy and data protection guidelines for WorkoraJobs platform users.",
   path: "/privacy",
-});
+});;
 
 export default function PrivacyPage() {
   return (

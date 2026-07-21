@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = blogPosts.find((item) => item.slug === slug);
 
-  if (!post) return createMetadata({ title: "Blog", path: "/blog" });
+  if (!post) return createMetadata({ title: "Hiring Insights & Career Advice Articles", path: "/blog" });
 
   return createMetadata({
-    title: post.title,
+    title: `${post.title} | Career & Hiring Insights`,
     description: post.excerpt,
     path: `/blog/${post.slug}`,
     image: post.image,

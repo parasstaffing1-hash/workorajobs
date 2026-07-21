@@ -5,9 +5,11 @@ import { adminNav, contentItems } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Content Management",
+  title: "Admin Content & Marketing CMS Management",
+  description:
+    "Manage blog posts, landing page marketing copy, and SEO content.",
   path: "/admin/content",
-});
+});;
 
 export default function AdminContentPage() {
   return (

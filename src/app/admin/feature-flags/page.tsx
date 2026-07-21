@@ -5,9 +5,11 @@ import { adminNav, featureFlags } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Feature Flags",
+  title: "Admin Feature Flags & Deployment Toggles",
+  description:
+    "Toggle platform feature flags, beta modules, and experimental features.",
   path: "/admin/feature-flags",
-});
+});;
 
 export default function AdminFeatureFlagsPage() {
   return (

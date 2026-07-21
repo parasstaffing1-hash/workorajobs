@@ -6,11 +6,11 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { createMetadata, siteConfig } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "HackerPrep | Gamified AI Interview Workspace",
+  title: "AI Interview Prep & Career Guidance Tools",
   description:
-    "Simulate high-bar system design, coding, case studies, and behavioral interview tracks with dynamic test checks and overall fit scorecards.",
+    "Practice technical interview questions, system design mocks, and behavioral prep.",
   path: "/prep",
-});
+});;
 
 export default function HackerPrepPage() {
   return (

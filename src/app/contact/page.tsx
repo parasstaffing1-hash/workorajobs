@@ -7,11 +7,11 @@ import { Card } from "@/components/ui/card";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Contact",
+  title: "Contact Us | Sales & Customer Support",
   description:
-    "Contact Workora Jobs for hiring, candidate and partnership inquiries.",
+    "Get in touch with WorkoraJobs team for enterprise sales, candidate support, or partnerships.",
   path: "/contact",
-});
+});;
 
 export default function ContactPage() {
   return (

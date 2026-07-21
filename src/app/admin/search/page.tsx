@@ -9,9 +9,11 @@ import { adminNav, recruiterCandidates } from "@/data/platform";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Global Search",
+  title: "Admin Global Search & Directory Lookup",
+  description:
+    "Search across users, candidates, companies, and system records.",
   path: "/admin/search",
-});
+});;
 
 export default function AdminSearchPage() {
   return (

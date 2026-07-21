@@ -9,11 +9,11 @@ import { candidateBenefits } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Candidates",
+  title: "Browse Candidates | Pre-Vetted Talent Pool",
   description:
-    "Discover the candidate-centered experience Workora Jobs is designed to support.",
+    "Browse pre-vetted candidates and connect with global talent across tech and business domains.",
   path: "/candidates",
-});
+});;
 
 export default function CandidatesPage() {
   return (

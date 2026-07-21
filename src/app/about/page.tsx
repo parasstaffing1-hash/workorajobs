@@ -9,11 +9,11 @@ import { values } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "About",
+  title: "About Us | AI-Powered Global Staffing Platform",
   description:
-    "Learn about Workora Jobs and its trust-first approach to global staffing.",
+    "Learn about WorkoraJobs and its trust-first approach to global staffing.",
   path: "/about",
-});
+});;
 
 export default function AboutPage() {
   return (
