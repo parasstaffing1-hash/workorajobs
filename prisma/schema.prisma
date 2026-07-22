@@ -19,12 +19,14 @@ model User {
   passwordHash  String?
   name          String?
   role          Role            @default(USER)
+  deletedAt     DateTime?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
   // Existing Workora relations
   jobsPosted    Job[]           @relation("JobsPosted")
   applications  Application[]
+  savedJobs     SavedJob[]
   company       Company?
   subscription  Subscription?
 
@@ -36,6 +38,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([deletedAt])
 }
 
 enum Role {
@@ -368,6 +371,7 @@ model Company {
   logoUrl     String?
   domain      String?  @unique
   rating      Float?   @default(4.5)
+  deletedAt   DateTime?
   ownerId     String   @unique
   owner       User     @relation(fields: [ownerId], references: [id])
   jobs        Job[]
@@ -376,6 +380,7 @@ model Company {
   updatedAt   DateTime @updatedAt
 
   @@index([name])
+  @@index([deletedAt])
 }
 
 model JobCategory {
@@ -461,20 +466,59 @@ model JobPageSkill {
   @@id([jobPageId, skillId])
 }
 
-// Existing Job & Application models
 model Job {
   id           String        @id @default(cuid())
   title        String
   description  String
   location     String?
   salary       Int?
-  type         JobType
+  type         JobType       @default(FULL_TIME)
+  workMode     String?       @default("Remote") // Remote, Hybrid, On-site
+  experience   String?       @default("Mid Level")
   postedAt     DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  deletedAt    DateTime?
   companyId    String
   company      Company       @relation(fields: [companyId], references: [id])
   postedById   String
   postedBy     User          @relation("JobsPosted", fields: [postedById], references: [id])
   applications Application[]
+  savedJobs    SavedJob[]
+
+  @@index([companyId])
+  @@index([title])
+  @@index([location])
+  @@index([type])
+  @@index([postedAt])
+  @@index([updatedAt])
+  @@index([salary])
+  @@index([workMode])
+  @@index([experience])
+  @@index([deletedAt])
+}
+
+model JobSource {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  url       String?
+  apiKey    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
 }
 
 enum JobType {

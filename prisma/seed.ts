@@ -1,166 +1,132 @@
-import { PrismaClient, SearchIntentType, SeoPageStatus, SeoPageType } from "@prisma/client";
+import { PrismaClient, SearchIntentType, SeoPageStatus, SeoPageType, Role, JobType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding Enterprise SEO Database Layer...");
+  // Only run seeding in non-production environments
+  if (process.env.NODE_ENV === "production") {
+    console.log("⚠️ Skipping database seed: NODE_ENV is set to production.");
+    return;
+  }
 
-  // 1. Seed Permissions & System Settings
-  const permissions = [
-    { name: "seo:publish", description: "Allows publishing SEO pages and triggering ISR." },
-    { name: "content:edit", description: "Allows editing generated page content and metadata." },
-    { name: "analytics:view", description: "Allows viewing traffic and ranking analytics." },
-    { name: "admin:all", description: "Full administrative access." },
+  console.log("🌱 Seeding WorkoraJobs PostgreSQL Database (Development Data)...");
+
+  // 1. Seed Users
+  const adminUser = await prisma.user.upsert({
+    where: { email: "admin@workorajobs.com" },
+    update: {},
+    create: {
+      email: "admin@workorajobs.com",
+      name: "Workora Admin",
+      role: Role.ADMIN,
+    },
+  });
+
+  const recruiterUser = await prisma.user.upsert({
+    where: { email: "recruiter@northstarcloud.com" },
+    update: {},
+    create: {
+      email: "recruiter@northstarcloud.com",
+      name: "Sarah Jenkins (Recruiter)",
+      role: Role.RECRUITER,
+    },
+  });
+
+  // 2. Seed Companies
+  const companyNorthstar = await prisma.company.upsert({
+    where: { domain: "northstarcloud.com" },
+    update: {},
+    create: {
+      name: "Northstar Cloud",
+      domain: "northstarcloud.com",
+      websiteUrl: "https://northstarcloud.com",
+      description: "Enterprise cloud orchestration and workforce platform.",
+      rating: 4.9,
+      ownerId: recruiterUser.id,
+    },
+  });
+
+  // 3. Seed Skills
+  const skills = [
+    { name: "React", slug: "react", category: "Frontend" },
+    { name: "TypeScript", slug: "typescript", category: "Languages" },
+    { name: "Next.js", slug: "nextjs", category: "Frameworks" },
+    { name: "PostgreSQL", slug: "postgresql", category: "Databases" },
+    { name: "Python", slug: "python", category: "Languages" },
+    { name: "Docker", slug: "docker", category: "DevOps" },
   ];
 
-  for (const perm of permissions) {
-    await prisma.permission.upsert({
-      where: { name: perm.name },
-      update: { description: perm.description },
-      create: perm,
+  for (const s of skills) {
+    await prisma.skill.upsert({
+      where: { slug: s.slug },
+      update: {},
+      create: s,
     });
   }
 
-  await prisma.systemSetting.upsert({
-    where: { key: "seo_platform_config" },
+  // 4. Seed Locations
+  const locations = [
+    { city: "Toronto", state: "Ontario", country: "Canada", slug: "toronto-canada", geoLat: 43.6532, geoLng: -79.3832 },
+    { city: "San Francisco", state: "California", country: "USA", slug: "san-francisco-usa", geoLat: 37.7749, geoLng: -122.4194 },
+    { city: "Bangalore", state: "Karnataka", country: "India", slug: "bangalore-india", geoLat: 12.9716, geoLng: 77.5946 },
+    { city: "Remote", state: "Global", country: "Worldwide", slug: "remote-global", geoLat: 0.0, geoLng: 0.0 },
+  ];
+
+  for (const loc of locations) {
+    await prisma.location.upsert({
+      where: { slug: loc.slug },
+      update: {},
+      create: loc,
+    });
+  }
+
+  // 5. Seed Jobs
+  const sampleJobs = [
+    {
+      title: "Frontend Engineering Intern (Summer 2026)",
+      description: "Join Northstar Cloud's frontend team to build accessible, high-performance UI components using React and TypeScript.",
+      location: "Remote, North America",
+      salary: 95000,
+      type: JobType.INTERNSHIP,
+      workMode: "Remote",
+      experience: "Entry Level",
+      companyId: companyNorthstar.id,
+      postedById: recruiterUser.id,
+    },
+    {
+      title: "Senior Cloud Infrastructure Architect",
+      description: "Design resilient cross-border Kubernetes clusters and cloud security infrastructure.",
+      location: "San Francisco, CA",
+      salary: 185000,
+      type: JobType.FULL_TIME,
+      workMode: "Hybrid",
+      experience: "Senior Level",
+      companyId: companyNorthstar.id,
+      postedById: adminUser.id,
+    },
+  ];
+
+  for (const j of sampleJobs) {
+    const existing = await prisma.job.findFirst({
+      where: { title: j.title, companyId: j.companyId },
+    });
+    if (!existing) {
+      await prisma.job.create({ data: j });
+    }
+  }
+
+  // 6. Seed JobSource
+  await prisma.jobSource.upsert({
+    where: { name: "Direct Employer API" },
     update: {},
     create: {
-      key: "seo_platform_config",
-      valueJson: {
-        maxPagesPerSitemapChunk: 50000,
-        isrRevalidationWindowSeconds: 86400,
-        defaultMetaTitleSuffix: " | Workora Career Intelligence",
-        openRouterFallbackModel: "google/gemini-2.0-flash-lite-preview-02-05:free",
-        autoIndexingEnabled: true,
-      },
-      description: "Global system configuration for programmatic SEO generation.",
+      name: "Direct Employer API",
+      url: "https://workorajobs.com/api/v1/jobs",
+      isActive: true,
     },
   });
 
-  // 2. Seed Keyword Clusters & Target Keywords
-  const techCluster = await prisma.keywordCluster.create({
-    data: {
-      name: "Engineering & Software Architecture",
-      category: "Technology",
-      keywords: {
-        create: [
-          {
-            term: "Senior Product Designer salary Toronto",
-            searchVolume: 4200,
-            difficulty: 38,
-            cpcCents: 450,
-            intent: SearchIntentType.COMMERCIAL,
-          },
-          {
-            term: "Staff Backend Engineer job description",
-            searchVolume: 8900,
-            difficulty: 42,
-            cpcCents: 620,
-            intent: SearchIntentType.INFORMATIONAL,
-          },
-          {
-            term: "High volume rate limiter architecture",
-            searchVolume: 2100,
-            difficulty: 55,
-            cpcCents: 380,
-            intent: SearchIntentType.INFORMATIONAL,
-          },
-        ],
-      },
-    },
-  });
-
-  // 3. Seed Job Categories & Locations
-  const locationToronto = await prisma.location.upsert({
-    where: { slug: "toronto-canada" },
-    update: {},
-    create: {
-      city: "Toronto",
-      state: "Ontario",
-      country: "Canada",
-      slug: "toronto-canada",
-      geoLat: 43.6532,
-      geoLng: -79.3832,
-    },
-  });
-
-  const categoryDesign = await prisma.jobCategory.upsert({
-    where: { slug: "product-design" },
-    update: {},
-    create: {
-      name: "Product & UX Design",
-      slug: "product-design",
-    },
-  });
-
-  // 4. Seed Programmatic SEO Page & Content Brief
-  const brief = await prisma.contentBrief.create({
-    data: {
-      clusterId: techCluster.id,
-      primaryKeyword: "Senior Product Designer salary Toronto",
-      secondaryKeywords: ["UX Design Systems", "WCAG Accessibility", "Figma Design Tokens"],
-      targetWordCount: 1800,
-      outlineJson: {
-        sections: [
-          "Market Overview for Product Designers in Toronto",
-          "Salary CTC Breakdown & Base Compensation",
-          "Top Skills Required (Figma, Design Systems, UX Research)",
-          "Frequently Asked Questions",
-        ],
-      },
-    },
-  });
-
-  const samplePage = await prisma.seoPage.create({
-    data: {
-      slug: "senior-product-designer-salary-toronto",
-      title: "Senior Product Designer Salary in Toronto (2026 Compensation Guide)",
-      pageType: SeoPageType.SALARY_GUIDE,
-      status: SeoPageStatus.PUBLISHED,
-      qualityScore: 94,
-      canonicalUrl: "https://workorajobs.com/salary/senior-product-designer-salary-toronto",
-      clusterId: techCluster.id,
-      contentBriefId: brief.id,
-      publishedAt: new Date(),
-      generatedContent: {
-        create: {
-          markdownContent: "# Senior Product Designer Salary in Toronto\n\nThe median salary for a Senior Product Designer in Toronto is $140,000...",
-          htmlContent: "<h1>Senior Product Designer Salary in Toronto</h1><p>The median salary...</p>",
-          version: 1,
-          wordCount: 1840,
-          readabilityScore: 78.5,
-          checksum: "a8f9b2c3d4e5f67890",
-        },
-      },
-      schemaDefinitions: {
-        create: [
-          {
-            schemaType: "BreadcrumbList",
-            schemaJson: {
-              "@context": "https://schema.org",
-              "@type": "BreadcrumbList",
-              itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Home", item: "https://workorajobs.com" },
-                { "@type": "ListItem", position: 2, name: "Salaries", item: "https://workorajobs.com/salary" },
-                { "@type": "ListItem", position: 3, name: "Product Designer Toronto", item: "https://workorajobs.com/salary/senior-product-designer-salary-toronto" },
-              ],
-            },
-          },
-        ],
-      },
-      faqs: {
-        create: [
-          {
-            question: "What is the average salary for a Senior Product Designer in Toronto?",
-            answer: "The average base salary ranges between $125,000 and $155,000 annually, with total CTC reaching $175,000+ including bonuses and stock equity.",
-            order: 1,
-          },
-        ],
-      },
-    },
-  });
-
-  console.log(`✅ Seed completed successfully! Sample Page ID: ${samplePage.id}`);
+  console.log("✅ Seed completed successfully! Sample Users, Companies, Jobs, Skills, and Locations created.");
 }
 
 main()
