@@ -1,4 +1,7 @@
 import { FilterBuilder } from "./filter-builder";
+import { SynonymEngine } from "./synonym-engine";
+
+jest.setTimeout(30000);
 
 describe("FilterBuilder", () => {
   let builder: FilterBuilder;

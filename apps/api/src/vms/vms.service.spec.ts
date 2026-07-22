@@ -1,5 +1,11 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { RequisitionStatus, SubmissionStatus, VendorRole, VendorStatus } from "@prisma/client";
+import * as PrismaClientPkg from "@prisma/client";
+
+const RequisitionStatus = PrismaClientPkg.RequisitionStatus || { DRAFT: "DRAFT", VENDOR_DISTRIBUTION: "VENDOR_DISTRIBUTION", OPEN: "OPEN", CLOSED: "CLOSED" };
+const SubmissionStatus = PrismaClientPkg.SubmissionStatus || { SUBMITTED: "SUBMITTED", REVIEWED: "REVIEWED", REJECTED: "REJECTED" };
+const VendorRole = PrismaClientPkg.VendorRole || { ADMIN: "ADMIN", RECRUITER: "RECRUITER" };
+const VendorStatus = PrismaClientPkg.VendorStatus || { PENDING: "PENDING", APPROVED: "APPROVED", SUSPENDED: "SUSPENDED" };
+
 
 import { AuthenticatedUser } from "../auth/types/authenticated-user.type";
 import { VmsService } from "./vms.service";

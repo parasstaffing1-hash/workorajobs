@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from "@nestjs/common";
-import { RequisitionStatus, SubmissionStatus, VendorStatus } from "@prisma/client";
 
 import { AuthenticatedUser } from "../auth/types/authenticated-user.type";
 import { PrismaService } from "../prisma/prisma.service";
@@ -9,10 +8,15 @@ import {
   CreateRequisitionDto,
   DistributeRequisitionDto,
   RegisterVendorDto,
+  RequisitionStatus,
+  SubmissionStatus,
   SubmitCandidateDto,
   UpdateRequisitionDto,
   UpdateSubmissionStatusDto,
+  VendorRole,
+  VendorStatus,
 } from "./dto/vms.dto";
+
 
 @Injectable()
 export class VmsService implements OnModuleInit {

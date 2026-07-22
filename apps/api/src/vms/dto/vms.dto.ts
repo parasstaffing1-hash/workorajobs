@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { RequisitionStatus, SubmissionStatus, VendorRole } from "@prisma/client";
 import {
   IsArray,
   IsDateString,
@@ -11,6 +10,31 @@ import {
   IsUUID,
   Min,
 } from "class-validator";
+
+export enum VendorRole {
+  ADMIN = "ADMIN",
+  RECRUITER = "RECRUITER",
+  ACCOUNT_MANAGER = "ACCOUNT_MANAGER",
+}
+
+export enum RequisitionStatus {
+  DRAFT = "DRAFT",
+  OPEN = "OPEN",
+  VENDOR_DISTRIBUTION = "VENDOR_DISTRIBUTION",
+  CLOSED = "CLOSED",
+}
+
+export enum SubmissionStatus {
+  SUBMITTED = "SUBMITTED",
+  REVIEWED = "REVIEWED",
+  REJECTED = "REJECTED",
+}
+
+export enum VendorStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  SUSPENDED = "SUSPENDED",
+}
 
 export class RegisterVendorDto {
   @ApiProperty({ example: "Apex Staffing Solutions" })

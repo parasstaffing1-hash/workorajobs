@@ -1,5 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { EmploymentType, ExperienceLevel, RemotePolicy, JobStatus } from "@prisma/client";
+import * as PrismaClientPkg from "@prisma/client";
+
+const EmploymentType = PrismaClientPkg.EmploymentType || { FULL_TIME: "FULL_TIME", PART_TIME: "PART_TIME", CONTRACT: "CONTRACT" };
+const ExperienceLevel = PrismaClientPkg.ExperienceLevel || { SENIOR: "SENIOR", MID: "MID", JUNIOR: "JUNIOR" };
+const RemotePolicy = PrismaClientPkg.RemotePolicy || { HYBRID: "HYBRID", REMOTE: "REMOTE", ONSITE: "ONSITE" };
+const JobStatus = PrismaClientPkg.JobStatus || { PUBLISHED: "PUBLISHED", DRAFT: "DRAFT", CLOSED: "CLOSED" };
+
 import { SearchIndexService } from "./search-index.service";
 import { CandidateMatchingService } from "./candidate-matching.service";
 import { TalentPoolService } from "./talent-pool.service";

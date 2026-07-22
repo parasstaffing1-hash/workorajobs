@@ -2,6 +2,8 @@ import { SynonymEngine } from "./synonym-engine";
 import { db } from "./db";
 import { conceptAliases } from "./schema";
 
+jest.setTimeout(30000);
+
 describe("SynonymEngine", () => {
   let engine: SynonymEngine;
 

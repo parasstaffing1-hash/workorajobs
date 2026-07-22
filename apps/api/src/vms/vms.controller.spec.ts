@@ -1,6 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { Reflector } from "@nestjs/core";
-import { SubmissionStatus, VendorRole } from "@prisma/client";
+import * as PrismaClientPkg from "@prisma/client";
+
+const VendorRole = PrismaClientPkg.VendorRole || { ADMIN: "ADMIN", RECRUITER: "RECRUITER", ACCOUNT_MANAGER: "ACCOUNT_MANAGER" };
+const SubmissionStatus = PrismaClientPkg.SubmissionStatus || { SUBMITTED: "SUBMITTED", SHORTLISTED: "SHORTLISTED", REVIEWED: "REVIEWED", REJECTED: "REJECTED" };
+
 
 import { VmsController } from "./vms.controller";
 import { VmsService } from "./vms.service";

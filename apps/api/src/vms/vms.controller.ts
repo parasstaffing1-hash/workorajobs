@@ -9,7 +9,9 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { UserRole } from "@prisma/client";
+import * as PrismaClientPkg from "@prisma/client";
+const UserRole = PrismaClientPkg.UserRole || { ADMIN: "ADMIN", RECRUITER: "RECRUITER", CANDIDATE: "CANDIDATE", EMPLOYER: "EMPLOYER" };
+
 
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";

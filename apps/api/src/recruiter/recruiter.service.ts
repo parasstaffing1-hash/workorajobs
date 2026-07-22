@@ -8,9 +8,11 @@ const UserRole = PrismaUserRole || {
 };
 
 const RecruiterRole = PrismaRecruiterRole || {
+  OWNER: "OWNER" as any,
   ADMIN: "ADMIN" as any,
   STANDARD: "STANDARD" as any,
 };
+
 
 const RecruiterStatus = PrismaRecruiterStatus || {
   ACTIVE: "ACTIVE" as any,
