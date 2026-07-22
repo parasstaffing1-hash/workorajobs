@@ -8,11 +8,11 @@ import { ButtonLink } from "@/components/ui/button";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Explore Top Companies Hiring in India",
+  title: "Technology Companies Hiring Now | WorkoraJobs",
   description:
-    "Explore top enterprise companies, startups, and remote teams hiring talent globally.",
+    "Explore top technology companies, enterprise engineering teams, and startups hiring global remote talent on WorkoraJobs.",
   path: "/companies",
-});;
+});
 
 export default function CompaniesPage() {
   return (
@@ -20,7 +20,7 @@ export default function CompaniesPage() {
       <PageHero
         description="Discover top engineering employers, modern tech stacks, workplace benefits, Glassdoor reviews, and verified hiring opportunities."
         eyebrow="Browse by Company"
-        title="Find the right company culture and engineering team."
+        title="Technology Companies Hiring Now"
       >
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <ButtonLink href="#directory" size="lg" variant="accent">

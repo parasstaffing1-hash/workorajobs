@@ -9,19 +9,19 @@ import { employerBenefits } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Hire Top Talent in India | Employer Solutions",
+  title: "Hire Verified Tech Talent Globally | WorkoraJobs",
   description:
-    "Post jobs, access pre-vetted candidate profiles, and streamline global hiring.",
+    "Post jobs, access pre-vetted international candidate profiles, and streamline global technology hiring on WorkoraJobs.",
   path: "/employers",
-});;
+});
 
 export default function EmployersPage() {
   return (
     <>
       <PageHero
         description="A public employer experience for teams that want structured global hiring without adding operational drag."
-        eyebrow="For employers"
-        title="Hire with better signal, better structure and better candidate trust."
+        eyebrow="For Employers"
+        title="Hire Verified Tech Talent Globally"
       >
         <ButtonLink href="/contact" size="lg">
           Plan hiring support
@@ -29,7 +29,7 @@ export default function EmployersPage() {
         </ButtonLink>
       </PageHero>
       <Section
-        description="Workora bridges strategic headcount planning and candidate-ready execution."
+        description="Workora Jobs bridges strategic headcount planning and candidate-ready execution."
         eyebrow="Employer outcomes"
         title="What hiring teams can expect."
       >

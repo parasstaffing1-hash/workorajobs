@@ -9,11 +9,11 @@ import { candidateBenefits } from "@/data/marketing";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Browse Candidates | Pre-Vetted Talent Pool",
+  title: "Find Remote & Global Tech Jobs | WorkoraJobs",
   description:
-    "Browse pre-vetted candidates and connect with global talent across tech and business domains.",
+    "Discover top remote and international tech jobs, build ATS-optimized resumes, and apply directly to verified employers.",
   path: "/candidates",
-});;
+});
 
 export default function CandidatesPage() {
   return (
@@ -21,19 +21,15 @@ export default function CandidatesPage() {
       <PageHero
         description="A respectful public experience for global talent seeking roles with clearer expectations, communication and momentum."
         eyebrow="For candidates"
-        title="Find opportunities with a hiring process that respects your time."
+        title="Find Remote & Global Tech Jobs"
       >
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <ButtonLink href="/resume-builder" size="lg" variant="accent">
-            Build your resume
+          <ButtonLink href="/resume-builder" size="lg" variant="primary">
+            Build ATS Resume
             <FileText aria-hidden="true" className="h-4 w-4" />
           </ButtonLink>
-          <ButtonLink href="/resume-builder" size="lg" variant="primary">
-            Build your resume
-            <ArrowRight aria-hidden="true" className="h-4 w-4" />
-          </ButtonLink>
           <ButtonLink href="/jobs" size="lg" variant="outline">
-            Browse jobs
+            Browse All Jobs
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </ButtonLink>
         </div>

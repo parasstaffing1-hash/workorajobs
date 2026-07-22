@@ -19,11 +19,11 @@ const JobBoard = dynamic(
 );
 
 export const metadata = createMetadata({
-  title: "Latest Jobs in India | Search Job Openings",
+  title: "Global Tech Jobs & Remote Opportunities | WorkoraJobs",
   description:
-    "Search thousands of verified job openings across engineering, product, marketing, and sales.",
+    "Explore active global tech jobs, remote engineering roles, check salary insights, and apply to top technology employers on WorkoraJobs.",
   path: "/jobs",
-});
+});
 
 export default function JobsPage() {
   return (
@@ -31,7 +31,7 @@ export default function JobsPage() {
       <PageHero
         description="Search curated global opportunities with clear role context, location signal and compensation expectations."
         eyebrow="Jobs"
-        title="Explore global opportunities."
+        title="Global Tech Jobs & Remote Opportunities"
       />
       <Container className="py-16">
         <JobBoard />

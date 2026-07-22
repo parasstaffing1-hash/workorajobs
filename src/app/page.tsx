@@ -29,15 +29,51 @@ import { FaqSection } from "@/components/home/faq-section";
 import { StickyCTA } from "@/components/home/sticky-cta";
 
 export const metadata = createMetadata({
-  title: "Find Jobs in India | AI Job Search Platform",
+  title: "AI Recruitment & Global Tech Staffing Platform | WorkoraJobs",
   description:
-    "WorkoraJobs is an AI-powered global staffing and recruitment platform for companies hiring trusted talent across borders.",
+    "WorkoraJobs is a global technology staffing and AI recruitment platform that helps employers hire verified tech talent and candidates find remote and international jobs.",
   path: "/",
 });
 
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://workorajobs.com/#organization",
+        "name": "WorkoraJobs",
+        "url": "https://workorajobs.com",
+        "logo": "https://workorajobs.com/workora-jobs-logo-scraped.png",
+        "sameAs": [
+          "https://www.linkedin.com/company/workorajobs",
+          "https://twitter.com/workorajobs"
+        ],
+        "description": "Global technology staffing and AI recruitment platform connecting verified tech professionals with remote and international career opportunities."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://workorajobs.com/#website",
+        "url": "https://workorajobs.com",
+        "name": "WorkoraJobs",
+        "publisher": {
+          "@id": "https://workorajobs.com/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://workorajobs.com/jobs?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Sticky Conversion Bar */}
       <StickyCTA />
 

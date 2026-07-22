@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
+  const searchParams = url.searchParams;
 
   // 1. Skip system files, static files, APIs, and Next.js internals
   if (
@@ -27,10 +28,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // Let Next.js trailingSlash: false config handle trailing slash redirects natively.
-  // Apply production security headers
   const response = NextResponse.next();
 
+  // 4. Control filter parameters & search queries indexing (Prompt 7)
+  // Search and multi-filter combinations are set to noindex, follow
+  const filterKeys = ["search", "salary", "experience", "skill", "role", "company", "sort"];
+  const hasFilterParams = filterKeys.some((key) => searchParams.has(key));
+
+  if (hasFilterParams) {
+    response.headers.set("X-Robots-Tag", "noindex, follow");
+  }
+
+  // 5. Apply production security headers
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -49,14 +58,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - workora-jobs-logo.png (assets)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg).*)",
   ],
 };
