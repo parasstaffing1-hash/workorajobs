@@ -1063,6 +1063,21 @@ model NotificationDeliveryLog {
   @@index([sentAt(sort: Desc)])
 }
 
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  eventType   String   // JOB_VIEW, APPLY_CLICK, SEARCH_QUERY, RESUME_DOWNLOAD, COMPANY_VIEW
+  userId      String?
+  entityId    String?  // jobId, companyId, searchKeyword
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  @@index([eventType, timestamp(sort: Desc)])
+  @@index([userId])
+  @@index([entityId])
+}
+
 model SystemSetting {
   id          String   @id @default(cuid())
   key         String   @unique
