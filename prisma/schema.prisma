@@ -42,6 +42,11 @@ model User {
   notifications   Notification[]
   jobAlerts       JobAlert[]
   notificationPref NotificationPreference?
+  billingSubscriptions BillingSubscription[]
+  invoices        Invoice[]
+  paymentTransactions PaymentTransaction[]
+  wallet          Wallet?
+  couponRedemptions CouponRedemption[]
 
   @@index([email])
   @@index([role])
@@ -1181,6 +1186,160 @@ model ModerationReport {
   createdAt    DateTime @default(now())
 
   @@index([status])
+}
+
+model BillingPlan {
+  id                String                @id @default(cuid())
+  name              String                // FREE, STARTER, PROFESSIONAL, BUSINESS, ENTERPRISE
+  slug              String                @unique
+  description       String?
+  priceMonthlyCents Int                 @default(0)
+  priceYearlyCents  Int                 @default(0)
+  currency          String                @default("USD")
+  maxJobs           Int                   @default(5)
+  maxRecruiters     Int                   @default(1)
+  maxResumeViews    Int                   @default(20)
+  hasApiAccess      Boolean               @default(false)
+  hasAiCredits      Boolean               @default(false)
+  isActive          Boolean               @default(true)
+  subscriptions     BillingSubscription[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+}
+
+model BillingSubscription {
+  id               String               @id @default(cuid())
+  userId           String
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId           String
+  plan             BillingPlan          @relation(fields: [planId], references: [id])
+  billingCycle     String               @default("MONTHLY") // MONTHLY, YEARLY
+  status           String               @default("ACTIVE")  // ACTIVE, CANCELLED, PAUSED, PAST_DUE
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  providerSubscriptionId String?
+  invoices         Invoice[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PaymentTransaction {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountCents      Int
+  currency         String            @default("USD")
+  provider         String            @default("STRIPE") // STRIPE, RAZORPAY, PAYPAL
+  providerPaymentId String?
+  status           String            @default("SUCCESS") // SUCCESS, FAILED, PENDING
+  description      String?
+  refunds          BillingRefund[]
+  createdAt        DateTime          @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Invoice {
+  id                  String               @id @default(cuid())
+  invoiceNumber       String               @unique
+  userId              String
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId      String?
+  subscription        BillingSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  amountSubtotalCents Int
+  amountTaxCents      Int                  @default(0)
+  amountDiscountCents Int                  @default(0)
+  amountTotalCents    Int
+  currency            String               @default("USD")
+  status              String               @default("PAID") // PAID, UNPAID, VOID
+  pdfUrl              String?
+  items               InvoiceItem[]
+  createdAt           DateTime             @default(now())
+
+  @@index([userId])
+  @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  amountCents Int
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+}
+
+model BillingRefund {
+  id            String             @id @default(cuid())
+  transactionId String
+  transaction   PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  amountCents   Int
+  reason        String?
+  status        String             @default("COMPLETED")
+  createdAt     DateTime           @default(now())
+}
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balanceCents Int                 @default(0)
+  currency     String              @default("USD")
+  transactions WalletTransaction[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amountCents Int
+  type        String   // CREDIT, DEBIT
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([walletId])
+}
+
+model Coupon {
+  id                  String             @id @default(cuid())
+  code                String             @unique
+  discountPercent     Int?
+  discountAmountCents Int?
+  currency            String             @default("USD")
+  maxRedemptions      Int?
+  currentRedemptions  Int                @default(0)
+  expiresAt           DateTime?
+  isActive            Boolean            @default(true)
+  redemptions         CouponRedemption[]
+  createdAt           DateTime           @default(now())
+}
+
+model CouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redeemedAt DateTime @default(now())
+
+  @@unique([couponId, userId])
+}
+
+model TaxRate {
+  id          String   @id @default(cuid())
+  countryCode String   @unique // US, IN, GB, DE, CA
+  name        String   // GST, VAT, Sales Tax
+  percentage  Float    // e.g. 18.0
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }
 
 enum EmployerUserRole {
