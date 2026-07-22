@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 
 import { BuilderWorkspace } from "@/components/resume-builder/builder-workspace";
-import { ThemeSelector } from "@/components/theme/theme-selector";
 import { Section } from "@/components/layout/section";
 import { CtaBand } from "@/components/marketing/cta-band";
 import { PageHero } from "@/components/marketing/page-hero";
@@ -20,7 +19,7 @@ export const metadata = createMetadata({
   description:
     "Create deterministic, ATS-friendly professional resumes designed for high conversion.",
   path: "/resume-builder",
-});;
+});
 
 const builderHighlights = [
   {
@@ -47,9 +46,9 @@ export default function ResumeBuilderPage() {
   return (
     <>
       <PageHero
-        description="Build a premium, ATS-ready resume with standard formatting rules, style templates, and print-ready downloads."
-        eyebrow="Resume Builder Workspace"
-        title="Create a resume that looks sharp and reads like evidence."
+        description="Build, tailor, and download a polished resume with live ATS guidance. Your draft stays private in your browser."
+        eyebrow="Free AI Resume Builder"
+        title="Build the resume that gets you to the interview."
       >
         <ButtonLink href="#builder" size="lg" variant="accent">
           Start building
@@ -58,16 +57,13 @@ export default function ResumeBuilderPage() {
       </PageHero>
 
       <Section
-        className="bg-secondary/40"
-        eyebrow="Builder"
-        title="Tailor your resume to the role."
-        description="Fill in your sections, adjust margins and sizing presets, and export your polished resume draft instantly."
+        className="bg-secondary/40 py-12 sm:py-16"
+        eyebrow="Resume Studio"
+        title="Everything you need, in one focused workspace."
+        description="Edit every section, match a target job, customize the design, and export an ATS-friendly PDF without creating an account."
         id="builder"
       >
         <BuilderWorkspace />
-        <div className="mt-8">
-          <ThemeSelector />
-        </div>
       </Section>
 
       <Section

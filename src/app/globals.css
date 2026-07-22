@@ -638,6 +638,58 @@ textarea {
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
+/* Resume builder document and print isolation */
+.resume-print-root {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.resume-print-root section,
+.resume-print-root .break-inside-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media (max-width: 767px) {
+  .resume-preview-stage .resume-print-root {
+    min-width: 620px;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .resume-print-root,
+  .resume-print-root * {
+    visibility: visible !important;
+  }
+
+  .resume-print-root {
+    border: 0 !important;
+    box-shadow: none !important;
+    left: 0;
+    margin: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    position: absolute;
+    top: 0;
+    width: 100% !important;
+  }
+
+  .resume-placeholder {
+    display: none !important;
+  }
+}
+
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   .animate-skeleton-shimmer::after,

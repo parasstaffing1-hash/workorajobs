@@ -26,7 +26,9 @@ export const PersonalInfoSchema = z.object({
 
 // Work Experience schema (and Internships schema)
 export const WorkExperienceSchema = z.object({
-  id: z.string().uuid(),
+  // Entry IDs are client-side list keys, not database identifiers. Accepting any
+  // non-empty stable ID keeps older locally saved drafts importable.
+  id: z.string().min(1),
   role: z.string().min(1, "Role title is required"),
   company: z.string().min(1, "Company name is required"),
   location: z.string().optional(),
@@ -39,7 +41,7 @@ export const WorkExperienceSchema = z.object({
 
 // Education schema
 export const EducationSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   degree: z.string().min(1, "Degree name is required"),
   institution: z.string().min(1, "Institution name is required"),
   location: z.string().optional(),
@@ -58,7 +60,7 @@ export const SkillSchema = z.object({
 
 // Projects schema
 export const ProjectSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   name: z.string().min(1, "Project name is required"),
   role: z.string().optional(),
   url: z.string().url().optional().or(z.literal("")),
@@ -79,7 +81,7 @@ export const CertificationSchema = z.object({
 
 // Volunteer Experience schema
 export const VolunteerExperienceSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   role: z.string().min(1, "Role is required"),
   organization: z.string().min(1, "Organization is required"),
   startDate: z.string(),
@@ -108,7 +110,7 @@ export const PatentSchema = z.object({
 
 // Custom section schema
 export const CustomSectionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   title: z.string().min(1, "Custom section title is required"),
   items: z.array(
     z.object({
