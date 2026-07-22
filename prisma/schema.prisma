@@ -26,6 +26,7 @@ model User {
   // Existing Workora relations
   jobsPosted    Job[]           @relation("JobsPosted")
   applications  Application[]
+  resumes       Resume[]
   savedJobs     SavedJob[]
   company       Company?
   subscription  Subscription?
@@ -610,23 +611,97 @@ enum JobType {
   FREELANCE
 }
 
-model Application {
-  id          String            @id @default(cuid())
-  status      ApplicationStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  applicantId String
-  applicant   User              @relation(fields: [applicantId], references: [id])
-  jobId       String
-  job         Job               @relation(fields: [jobId], references: [id])
-  resumeUrl   String?
+enum ApplicationStatus {
+  APPLIED
+  PENDING
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  OFFER_EXTENDED
+  HIRED
+  REJECTED
+  WITHDRAWN
 }
 
-enum ApplicationStatus {
-  PENDING
-  REVIEWED
-  REJECTED
-  ACCEPTED
+model Resume {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  fileUrl          String
+  fileSize         Int
+  fileType         String        @default("application/pdf")
+  isDefault        Boolean       @default(false)
+  parsedText       String?
+  extractedData    Json?
+  applications     Application[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model Application {
+  id            String                   @id @default(cuid())
+  status        ApplicationStatus        @default(APPLIED)
+  coverLetter   String?
+  applicantId   String
+  applicant     User                     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  jobId         String
+  job           Job                      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resumeId      String?
+  resume        Resume?                  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeUrl     String?
+  statusHistory ApplicationStatusHistory[]
+  interviews    Interview[]
+  attachments   Attachment[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@unique([applicantId, jobId])
+  @@index([applicantId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model ApplicationStatusHistory {
+  id            String            @id @default(cuid())
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    ApplicationStatus
+  toStatus      ApplicationStatus
+  note          String?
+  changedById   String?
+  createdAt     DateTime          @default(now())
+
+  @@index([applicationId])
+}
+
+model Interview {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  scheduledAt   DateTime
+  durationMins  Int         @default(45)
+  locationUrl   String?
+  status        String      @default("SCHEDULED")
+  notes         String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
+
+model Attachment {
+  id            String       @id @default(cuid())
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  filename      String
+  fileUrl       String
+  createdAt     DateTime     @default(now())
+
+  @@index([applicationId])
 }
 
 model Subscription {
