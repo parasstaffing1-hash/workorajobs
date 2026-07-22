@@ -38,4 +38,6 @@ tool_calls_history.jsonl
 stitch_design.html
 build_output/
 *.zip
+user_extracted_ats/
+ats-resume-checker-package/
 
