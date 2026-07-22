@@ -462,6 +462,7 @@ model Company {
   jobs        Job[]
   jobPages    JobPage[]
   companyUsers CompanyUser[]
+  verification CompanyVerification?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -571,6 +572,7 @@ model Job {
   postedBy     User          @relation("JobsPosted", fields: [postedById], references: [id])
   applications Application[]
   savedJobs    SavedJob[]
+  qualityScore JobQualityScore?
 
   @@index([companyId])
   @@index([title])
@@ -1108,6 +1110,77 @@ model CandidateProfile {
   source        String   @default("DIRECT")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model CompanyVerification {
+  id            String   @id @default(cuid())
+  companyId     String   @unique
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  status        String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  businessEmail  String?
+  domain        String?
+  documentsUrl  String?
+  verifiedAt    DateTime?
+  verifiedById  String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+}
+
+model JobQualityScore {
+  id              String   @id @default(cuid())
+  jobId           String   @unique
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  score           Int      @default(100) // 0 - 100
+  isFlagged       Boolean  @default(false)
+  isScam          Boolean  @default(false)
+  isDuplicate     Boolean  @default(false)
+  rejectionReason String?
+  evaluatedAt     DateTime @default(now())
+
+  @@index([score])
+  @@index([isFlagged])
+}
+
+model FeatureFlag {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  description   String?
+  isEnabled     Boolean  @default(false)
+  rolloutPercent Int     @default(100)
+  targetUserIds String[] @default([])
+  targetRoles   String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BackgroundTask {
+  id           String   @id @default(cuid())
+  taskType     String   // CRAWL, EMAIL, RESUME_PARSE, SEO_GEN
+  payloadJson  Json
+  status       String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, DEAD_LETTER
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(3)
+  error        String?
+  scheduledAt  DateTime @default(now())
+  processedAt  DateTime?
+
+  @@index([status, taskType])
+}
+
+model ModerationReport {
+  id           String   @id @default(cuid())
+  reporterId   String
+  targetType   String   // JOB, USER, COMPANY, REVIEW
+  targetId     String
+  reason       String
+  status       String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  adminNote    String?
+  createdAt    DateTime @default(now())
+
+  @@index([status])
 }
 
 enum EmployerUserRole {
