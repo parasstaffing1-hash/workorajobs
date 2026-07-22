@@ -29,6 +29,7 @@ model User {
   resumes       Resume[]
   savedJobs     SavedJob[]
   company       Company?
+  companyUsers  CompanyUser[]
   subscription  Subscription?
 
   // Authentication & Profile relations
@@ -455,10 +456,11 @@ model Company {
   rating      Float?   @default(4.5)
   deletedAt   DateTime?
   ownerId     String   @unique
-  owner       User     @relation(fields: [ownerId], references: [id])
+  owner       User          @relation(fields: [ownerId], references: [id])
   jobs        Job[]
   jobPages    JobPage[]
-  createdAt   DateTime @default(now())
+  companyUsers CompanyUser[]
+  createdAt   DateTime      @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([name])
@@ -656,6 +658,9 @@ model Application {
   statusHistory ApplicationStatusHistory[]
   interviews    Interview[]
   attachments   Attachment[]
+  ratings       CandidateRating[]
+  tags          CandidateTag[]
+  notes         CandidateNote[]
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
 
@@ -1028,12 +1033,62 @@ model CandidateProfile {
   updatedAt     DateTime @updatedAt
 }
 
+enum EmployerUserRole {
+  OWNER
+  ADMIN
+  RECRUITER
+  HIRING_MANAGER
+  VIEWER
+}
+
+model CompanyUser {
+  id        String           @id @default(cuid())
+  companyId String
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      EmployerUserRole @default(RECRUITER)
+  createdAt DateTime         @default(now())
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model CandidateRating {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorId      String
+  rating        Int         // 1-5 stars
+  feedback      String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
+
+model CandidateTag {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  tag           String
+  createdAt     DateTime    @default(now())
+
+  @@unique([applicationId, tag])
+  @@index([applicationId])
+}
+
 model CandidateNote {
-  id          String   @id @default(cuid())
-  candidateId String
-  authorId    String
-  content     String
-  createdAt   DateTime @default(now())
+  id            String       @id @default(cuid())
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidateId   String
+  authorId      String
+  content       String
+  createdAt     DateTime     @default(now())
+
+  @@index([applicationId])
+  @@index([candidateId])
 }
 
 model RecruiterTask {
