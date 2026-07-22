@@ -40,6 +40,8 @@ model User {
   activityLogs    ActivityLog[]
   auditLogs       AuditLog[]
   notifications   Notification[]
+  jobAlerts       JobAlert[]
+  notificationPref NotificationPreference?
 
   @@index([email])
   @@index([role])
@@ -988,6 +990,13 @@ model AuditLog {
   @@index([userId, timestamp(sort: Desc)])
 }
 
+enum AlertFrequency {
+  INSTANT
+  HOURLY
+  DAILY
+  WEEKLY
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -999,6 +1008,59 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+model JobAlert {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  keywords        String?
+  skills          String[]       @default([])
+  location        String?
+  workMode        String?
+  minSalary       Int?
+  maxSalary       Int?
+  experience      String?
+  frequency       AlertFrequency @default(DAILY)
+  isActive        Boolean        @default(true)
+  lastTriggeredAt  DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled      Boolean  @default(true)
+  inAppEnabled      Boolean  @default(true)
+  telegramEnabled   Boolean  @default(false)
+  discordEnabled    Boolean  @default(false)
+  telegramChatId    String?
+  discordWebhookUrl String?
+  quietHoursStart   String? // e.g. "22:00"
+  quietHoursEnd     String? // e.g. "08:00"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model NotificationDeliveryLog {
+  id             String   @id @default(cuid())
+  notificationId String?
+  recipient      String
+  channel        String   // IN_APP, EMAIL, TELEGRAM, DISCORD
+  status         String   // SUCCESS, FAILED, RETRYING
+  error          String?
+  sentAt         DateTime @default(now())
+
+  @@index([channel, status])
+  @@index([sentAt(sort: Desc)])
 }
 
 model SystemSetting {
