@@ -16,7 +16,9 @@ import {
   Star,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
+
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
@@ -238,14 +240,24 @@ export function CompanyDirectory({ className }: { className?: string }) {
       <div className="grid gap-4 rounded-xl border border-border/70 bg-card p-4 sm:p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
         {/* Search Bar */}
         <div className="lg:col-span-2 relative">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search company, ticker (e.g. AAPL, MSFT, RELIANCE)..."
+            placeholder="Search company name, ticker (e.g. AAPL, MSFT), tech stack..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 text-xs"
+            className="pl-10 text-xs rounded-full h-11 border-border/80 focus-within:ring-2 focus-within:ring-primary/40"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
+
 
         {/* Stock Exchange Filter */}
         <div>
