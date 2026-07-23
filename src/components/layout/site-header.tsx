@@ -1,30 +1,33 @@
 "use client";
 
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Sparkles, Home, Briefcase, Building2, Layers, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
-import { Container } from "@/components/layout/container";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { primaryNav } from "@/data/navigation";
 import { cn } from "@/lib/utils";
+
+const mainNavItems = [
+  { label: "Home", href: "/", icon: Home },
+  { label: "Jobs", href: "/jobs", icon: Briefcase },
+  { label: "Companies", href: "/companies", icon: Building2 },
+  { label: "Industries", href: "/industries", icon: Layers },
+  { label: "Tools", href: "/tools/boolean-search", icon: Wrench },
+];
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    if (latest > 20) {
-      setScrolled(true);
-    } else {
-      setScrolled(false);
-    }
+    setScrolled(latest > 20);
   });
 
   useEffect(() => {
@@ -35,133 +38,121 @@ export function SiteHeader() {
     <motion.header
       initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 flex flex-col items-center justify-between mx-auto max-w-[95%] lg:max-w-6xl transition-all duration-300 gpu-accelerated",
-        scrolled ? "mt-2 px-4 py-2 bg-background/85 backdrop-blur-2xl border border-border/80 shadow-lg rounded-full" : "mt-4 px-6 py-2.5 bg-background/70 backdrop-blur-xl border border-border/60 shadow-sm rounded-full"
-      )}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-3 left-0 right-0 z-50 flex flex-col items-center mx-auto max-w-[95%] lg:max-w-5xl px-2 select-none gpu-layer"
     >
-      <div className="flex w-full items-center justify-between gap-4">
+      {/* Premium Harmonious Floating Island Navbar */}
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+        className={cn(
+          "relative flex w-full items-center justify-between transition-all duration-300 rounded-full border px-4 py-2",
+          scrolled
+            ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-slate-200/90 dark:border-slate-800/90 shadow-xl shadow-slate-900/5 dark:shadow-black/40"
+            : "bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl border-slate-200/70 dark:border-slate-800/70 shadow-lg shadow-slate-900/5"
+        )}
+      >
         <SiteLogo />
 
-        <nav
-          aria-label="Primary navigation"
-          className="hidden items-center gap-1 lg:flex"
-        >
-          {/* Platform Dropdown */}
-          <div className="relative group flex items-center">
-            <button className="inline-flex items-center justify-center h-9 gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-all duration-200 outline-none cursor-pointer">
-              <span>Platform</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform duration-200 group-hover:rotate-180 shrink-0" />
-            </button>
-            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[190px] rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-xl backdrop-blur-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-              <Link href="/services" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Services</Link>
-              <Link href="/employers" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">For Employers</Link>
-              <Link href="/candidates" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">For Candidates</Link>
-            </div>
-          </div>
+        {/* Floating Spotlight Navigation Links matching Scene.mp4 */}
+        <nav aria-label="Primary navigation" className="hidden items-center gap-1 lg:flex relative">
+          {mainNavItems.map((item, idx) => {
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            const isHovered = hoveredIndex === idx;
 
-          {/* Tools Dropdown */}
-          <div className="relative group flex items-center">
-            <button
-              className={cn(
-                "inline-flex items-center justify-center h-9 gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-all duration-200 outline-none cursor-pointer",
-                (pathname.startsWith("/tools") || pathname.startsWith("/resume-builder") || pathname.startsWith("/prep")) && "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]"
-              )}
-            >
-              <span>Tools</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform duration-200 group-hover:rotate-180 shrink-0" />
-            </button>
-            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[240px] rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-xl backdrop-blur-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-              <Link href="/tools/boolean-search" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Boolean Search Generator</Link>
-              <Link href="/resume-builder" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Resume Builder</Link>
-              <Link href="/prep" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">HackerPrep (Practice)</Link>
-            </div>
-          </div>
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                className={cn(
+                  "relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors z-10",
+                  isActive || isHovered
+                    ? "text-primary dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                )}
+              >
+                {/* Active / Hovered Motion Spotlight Glider matching Scene.mp4 */}
+                {(isActive || isHovered) && (
+                  <motion.div
+                    layoutId="activeNavSpotlight"
+                    className="absolute inset-0 rounded-full bg-primary/10 dark:bg-primary/25 border border-primary/25 dark:border-primary/40 z-[-1]"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <item.icon className={cn("h-3.5 w-3.5 transition-colors", isActive ? "text-primary dark:text-blue-400" : "text-slate-400")} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
 
-          {/* Careers Dropdown */}
-          <div className="relative group flex items-center">
-            <button className="inline-flex items-center justify-center h-9 gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-all duration-200 outline-none cursor-pointer">
-              <span>Explore Careers</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform duration-200 group-hover:rotate-180 shrink-0" />
+          {/* Tools & Resources Dropdown */}
+          <div className="relative group flex items-center ml-1">
+            <button className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-all outline-none cursor-pointer">
+              <span>More</span>
+              <ChevronDown className="h-3 w-3 opacity-70 group-hover:rotate-180 transition-transform" />
             </button>
-            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[190px] rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-xl backdrop-blur-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-              <Link href="/jobs" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Search Jobs</Link>
-              <Link href="/internship-jobs" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Internships</Link>
-              <Link href="/companies" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Companies</Link>
-              <Link href="/industries" className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground transition-colors">Industries</Link>
+            <div className="absolute left-0 top-full hidden group-hover:block z-50 min-w-[200px] mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-2 shadow-2xl backdrop-blur-2xl">
+              <Link href="/resume-builder" className="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">Resume Builder</Link>
+              <Link href="/prep" className="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">HackerPrep Practice</Link>
+              <Link href="/services" className="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">Services</Link>
+              <Link href="/employers" className="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">For Employers</Link>
             </div>
-          </div>
-
-          {/* Resources Link */}
-          <div className="relative flex items-center">
-            <Link
-              className={cn(
-                "inline-flex items-center justify-center h-9 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-secondary/80 hover:text-foreground",
-                pathname === "/resources" && "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]",
-              )}
-              href="/resources"
-            >
-              Resources
-            </Link>
           </div>
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        {/* Right Action Buttons */}
+        <div className="hidden items-center gap-2.5 lg:flex">
           <ThemeToggle />
-          <ButtonLink href="/contact" variant="accent" className="rounded-full px-5">
+          <ButtonLink href="/contact" variant="accent" className="rounded-full px-5 text-xs font-bold h-9 shadow-md shadow-primary/20">
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
             Talk to us
           </ButtonLink>
         </div>
 
-        <div className="flex items-center gap-1 lg:hidden">
+        {/* Mobile Toggle */}
+        <div className="flex items-center gap-1.5 lg:hidden">
           <ThemeToggle />
           <Button
             aria-expanded={open}
             aria-label="Toggle navigation"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpen((val) => !val)}
             size="icon"
             type="button"
             variant="ghost"
-            className="rounded-full"
+            className="rounded-full h-9 w-9"
           >
-            {open ? (
-              <X aria-hidden="true" className="h-5 w-5" />
-            ) : (
-              <Menu aria-hidden="true" className="h-5 w-5" />
-            )}
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full overflow-hidden border-t border-border/50 mt-3 pt-2 pb-3 lg:hidden"
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="w-full overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl mt-2 p-4 lg:hidden shadow-2xl"
           >
-            <div className="grid gap-1.5 px-2">
-              {primaryNav.map((item) => (
+            <div className="grid gap-1.5">
+              {mainNavItems.map((item) => (
                 <Link
-                  className={cn(
-                    "rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground",
-                    pathname === item.href && "bg-primary/10 text-primary font-semibold",
-                  )}
-                  href={item.href}
                   key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors",
+                    pathname === item.href && "bg-primary/15 text-primary font-bold"
+                  )}
                 >
+                  <item.icon className="h-4 w-4 text-primary" />
                   {item.label}
                 </Link>
               ))}
-              <ButtonLink
-                className="mt-2 w-full rounded-xl"
-                href="/contact"
-                variant="primary"
-              >
+              <ButtonLink href="/contact" variant="primary" className="mt-2 w-full rounded-xl text-xs font-bold">
                 Talk to us
               </ButtonLink>
             </div>

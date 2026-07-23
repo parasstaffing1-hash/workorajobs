@@ -35,7 +35,8 @@ const sizes: Record<ButtonSize, string> = {
 };
 
 const base =
-  "btn-ripple-container animated-sheen inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium ring-offset-background transition-[background,border-color,box-shadow,color,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gpu-accelerated";
+  "btn-ripple-container animated-sheen inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium ring-offset-background transition-[background,border-color,box-shadow,color,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 cursor-pointer gpu-accelerated";
+
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;

@@ -343,7 +343,8 @@ export function CompanyDirectory({ className }: { className?: string }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.03 }}
             >
-              <Card className="group relative flex h-full flex-col justify-between overflow-hidden border-border/70 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg content-visibility-auto gpu-layer">
+              <Card className="group relative flex h-full flex-col justify-between overflow-hidden border-border/70 bg-card p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl content-visibility-auto gpu-layer">
+
 
                 <div>
                   {/* Card Header: Logo, Name, Ticker, Exchange */}

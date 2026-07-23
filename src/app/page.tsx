@@ -13,7 +13,9 @@ import { Reveal } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
+import { JobDiscoveryHero } from "@/components/hero/job-discovery-hero";
 import { HeroBackground } from "@/components/hero/hero-background";
+
 import { HeroBadge } from "@/components/hero/hero-badge";
 import { AnimatedHeroHeadline } from "@/components/hero/animated-hero-headline";
 import { AnimatedSearchBar } from "@/components/hero/animated-search-bar";
@@ -77,21 +79,18 @@ export default function HomePage() {
       {/* Sticky Conversion Bar */}
       <StickyCTA />
 
-      {/* Hero Section */}
-      <header className="relative min-h-screen flex flex-col items-center justify-start pt-28 sm:pt-36 pb-20 px-4 md:px-6 overflow-hidden">
-        <HeroBackground />
-
-        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
-          <HeroBadge />
-          <AnimatedHeroHeadline />
-          <AnimatedSearchBar />
-          <HeroCTA />
-          <LiveHiringMetrics />
-
-          {/* Interactive Mockup Container with Levitating Job Cards */}
-          <HeroMockupSection />
-        </div>
+      {/* Career-Focused Job Discovery Hero */}
+      <header className="relative pt-20 overflow-hidden">
+        <JobDiscoveryHero
+          headline="Find the right job. Build your future."
+          description="Search verified opportunities from leading companies and discover roles that match your skills, location, and career goals."
+          showJobCards={true}
+          showSkillChips={true}
+          showCareerPath={true}
+          enableMotion={true}
+        />
       </header>
+
 
       {/* Glowing Section Divider */}
       <div className="section-divider-glowing" />

@@ -15,14 +15,14 @@ export function PageTransition({ children }: PageTransitionProps) {
   return (
     <motion.div
       key={pathname}
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
       transition={{
-        duration: 0.28,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.18,
+        ease: [0.2, 0, 0, 1],
       }}
-      className="w-full flex-1 flex flex-col gpu-accelerated"
+      className="w-full flex-1 flex flex-col gpu-accelerated page-enter"
     >
       {children}
     </motion.div>
