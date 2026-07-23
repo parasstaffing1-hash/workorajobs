@@ -1,7 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { StorageProvider } from "./storage-provider";
 import { ResumeParser } from "./resume-parser";
-import { ApplicationStatus } from "@prisma/client";
+
+export const ApplicationStatus = {
+  APPLIED: "APPLIED",
+  UNDER_REVIEW: "UNDER_REVIEW",
+  SHORTLISTED: "SHORTLISTED",
+  INTERVIEW_SCHEDULED: "INTERVIEW_SCHEDULED",
+  HIRED: "HIRED",
+  REJECTED: "REJECTED",
+  WITHDRAWN: "WITHDRAWN"
+} as const;
+
+export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus];
 
 export class ApplicationService {
   // 1. Resume Management

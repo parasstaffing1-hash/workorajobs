@@ -69,13 +69,36 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <JsonLd
           data={{
             "@context": "https://schema.org",
-            "@type": "Organization",
-            name: siteConfig.name,
-            url: siteConfig.url,
-            logo: `${siteConfig.url}/workora-jobs-logo.png`,
-            sameAs: [siteConfig.links.x, siteConfig.links.linkedin],
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": `${siteConfig.url}/#organization`,
+                name: siteConfig.name,
+                url: siteConfig.url,
+                logo: `${siteConfig.url}/workora-jobs-logo-scraped.png`,
+                sameAs: [siteConfig.links.x, siteConfig.links.linkedin],
+              },
+              {
+                "@type": "WebSite",
+                "@id": `${siteConfig.url}/#website`,
+                url: siteConfig.url,
+                name: siteConfig.name,
+                publisher: {
+                  "@id": `${siteConfig.url}/#organization`,
+                },
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: `${siteConfig.url}/jobs?search={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              },
+            ],
           }}
         />
+
         <a
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:shadow-soft-lg"
           href="#main-content"

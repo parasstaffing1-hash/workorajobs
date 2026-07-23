@@ -11,7 +11,7 @@ export class RevenueDashboardService {
     });
 
     let mrrCents = 0;
-    activeSubscriptions.forEach((sub) => {
+    activeSubscriptions.forEach((sub: any) => {
       if (sub.billingCycle === "YEARLY") {
         mrrCents += Math.round(sub.plan.priceYearlyCents / 12);
       } else {
@@ -40,9 +40,9 @@ export class RevenueDashboardService {
       arpuFormatted: `$${(arpuCents / 100).toFixed(2)}`,
       churnRatePercent: "1.8%",
       revenueByPlan: {
-        free: activeSubscriptions.filter((s) => s.plan.slug === "free").length,
-        professional: activeSubscriptions.filter((s) => s.plan.slug === "professional").length,
-        enterprise: activeSubscriptions.filter((s) => s.plan.slug === "enterprise").length,
+        free: activeSubscriptions.filter((s: any) => s.plan.slug === "free").length,
+        professional: activeSubscriptions.filter((s: any) => s.plan.slug === "professional").length,
+        enterprise: activeSubscriptions.filter((s: any) => s.plan.slug === "enterprise").length,
       },
     };
   }

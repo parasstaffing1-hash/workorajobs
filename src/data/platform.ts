@@ -29,72 +29,18 @@ export const recruiterNav = [
 ];
 
 export const employerMetrics = [
-  { label: "Open jobs", value: "12", delta: "+3 this month" },
-  { label: "Applicants", value: "348", delta: "+28 this week" },
-  { label: "Shortlisted", value: "64", delta: "18% of applicants" },
-  { label: "Interviews", value: "21", delta: "7 upcoming" },
+  { label: "Open jobs", value: "0", delta: "No active jobs" },
+  { label: "Applicants", value: "0", delta: "0 this week" },
+  { label: "Shortlisted", value: "0", delta: "0% of applicants" },
+  { label: "Interviews", value: "0", delta: "0 upcoming" },
 ];
 
-export const employerJobs = [
-  {
-    title: "Senior Product Designer",
-    status: "Published",
-    applicants: 58,
-    shortlisted: 11,
-    views: 1840,
-    location: "Remote, Europe",
-  },
-  {
-    title: "Staff Backend Engineer",
-    status: "Draft",
-    applicants: 0,
-    shortlisted: 0,
-    views: 0,
-    location: "Toronto, Canada",
-  },
-  {
-    title: "Global Payroll Operations Lead",
-    status: "Closed",
-    applicants: 93,
-    shortlisted: 14,
-    views: 2280,
-    location: "Singapore",
-  },
-];
+export const employerJobs: any[] = [];
 
-export const applicants = [
-  {
-    name: "Daniel Okoro",
-    role: "Senior Product Manager",
-    status: "Shortlisted",
-    job: "Senior Product Designer",
-    location: "Toronto, Canada",
-  },
-  {
-    name: "Priya Raman",
-    role: "Staff Backend Engineer",
-    status: "Reviewing",
-    job: "Staff Backend Engineer",
-    location: "Bengaluru, India",
-  },
-  {
-    name: "Elena Garcia",
-    role: "Payroll Operations Lead",
-    status: "Interview scheduled",
-    job: "Global Payroll Operations Lead",
-    location: "Madrid, Spain",
-  },
-];
+export const applicants: any[] = [];
 
-export const interviews = [
-  { title: "Daniel Okoro", time: "Today, 14:00 UTC", type: "Portfolio review" },
-  {
-    title: "Priya Raman",
-    time: "Tomorrow, 09:30 UTC",
-    type: "Technical screen",
-  },
-  { title: "Elena Garcia", time: "Friday, 16:00 UTC", type: "Hiring manager" },
-];
+export const interviews: any[] = [];
+
 
 export const candidateMetrics = [
   {

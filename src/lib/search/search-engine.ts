@@ -66,7 +66,7 @@ export class JobSearchEngine {
       }),
     ]);
 
-    const formattedJobs: JobSearchResultItem[] = jobs.map((job) => ({
+    const formattedJobs: JobSearchResultItem[] = jobs.map((job: any) => ({
       id: job.id,
       title: job.title,
       companyName: job.company.name,
@@ -110,7 +110,7 @@ export class JobSearchEngine {
       select: { title: true },
       take: 4,
     });
-    matchingJobs.forEach((j) => {
+    matchingJobs.forEach((j: any) => {
       suggestions.push({ text: j.title, type: "JOB_TITLE" });
     });
 
@@ -120,7 +120,7 @@ export class JobSearchEngine {
       select: { name: true },
       take: 3,
     });
-    matchingCompanies.forEach((c) => {
+    matchingCompanies.forEach((c: any) => {
       suggestions.push({ text: c.name, type: "COMPANY" });
     });
 
@@ -130,7 +130,7 @@ export class JobSearchEngine {
       select: { city: true },
       take: 3,
     });
-    matchingLocations.forEach((l) => {
+    matchingLocations.forEach((l: any) => {
       suggestions.push({ text: l.city, type: "LOCATION" });
     });
 
@@ -163,7 +163,7 @@ export class JobSearchEngine {
       orderBy: { postedAt: "desc" },
     });
 
-    return similar.map((j) => ({
+    return similar.map((j: any) => ({
       id: j.id,
       title: j.title,
       companyName: j.company.name,
@@ -195,8 +195,8 @@ export class JobSearchEngine {
     ]);
 
     return {
-      companies: companies.map((c) => ({ name: c.name, count: c._count.jobs })),
-      locations: locations.map((l) => ({ name: l.city, count: 1 })),
+      companies: companies.map((c: any) => ({ name: c.name, count: c._count.jobs })),
+      locations: locations.map((l: any) => ({ name: l.city, count: 1 })),
       workModes: [
         { name: "Remote", count: 18 },
         { name: "Hybrid", count: 12 },

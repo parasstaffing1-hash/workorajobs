@@ -1,5 +1,19 @@
 import { prisma } from "@/lib/prisma";
-import { ApplicationStatus, EmployerUserRole } from "@prisma/client";
+
+export const ApplicationStatus = {
+  APPLIED: "APPLIED",
+  UNDER_REVIEW: "UNDER_REVIEW",
+  SHORTLISTED: "SHORTLISTED",
+  INTERVIEW_SCHEDULED: "INTERVIEW_SCHEDULED",
+  OFFER_EXTENDED: "OFFER_EXTENDED",
+  HIRED: "HIRED",
+  REJECTED: "REJECTED",
+  WITHDRAWN: "WITHDRAWN"
+} as const;
+
+export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus];
+
+export type EmployerUserRole = "OWNER" | "ADMIN" | "RECRUITER" | "HIRING_MANAGER" | "VIEWER";
 
 export class EmployerAtsService {
   // 1. Multi-tenant Tenant Isolation & Authorization Guard
@@ -33,7 +47,7 @@ export class EmployerAtsService {
       throw new Error("Forbidden. You do not have access to this employer workspace.");
     }
 
-    return { companyId: companyUser.companyId, role: companyUser.role };
+    return { companyId: companyUser.companyId, role: companyUser.role as EmployerUserRole };
   }
 
   // 2. Company Profile Management

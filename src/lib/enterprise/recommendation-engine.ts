@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getJobSlug, slugify } from "@/data/jobs";
+import { getJobSlug } from "@/data/jobs";
 
 export class RecommendationEngine {
   /**
@@ -27,7 +27,7 @@ export class RecommendationEngine {
       orderBy: { postedAt: "desc" },
     });
 
-    return recommendedJobs.map((j) => ({
+    return recommendedJobs.map((j: any) => ({
       id: j.id,
       title: j.title,
       companyName: j.company.name,

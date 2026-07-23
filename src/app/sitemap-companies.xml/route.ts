@@ -1,25 +1,23 @@
 import { NextResponse } from "next/server";
 
-import { jobs, slugify } from "@/data/jobs";
+import { companiesData } from "@/data/companies";
 import { siteConfig } from "@/lib/site";
 
 export async function GET() {
   const now = new Date().toISOString();
 
-  // Extract unique active company names
-  const companies = Array.from(new Set(jobs.map((j) => j.company)));
-
-  const urls = companies
+  const urls = companiesData
     .map((company) => {
-      const slug = slugify(company);
       return `  <url>
-    <loc>${siteConfig.url}/company/${slug}</loc>
+    <loc>${siteConfig.url}/companies/${company.slug}</loc>
+
     <lastmod>${now}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>`;
     })
     .join("\n");
+
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

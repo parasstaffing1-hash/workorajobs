@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { AlertFrequency } from "@prisma/client";
 import { NotificationChannelDispatcher } from "./channels";
+
+export const AlertFrequency = {
+  INSTANT: "INSTANT",
+  DAILY: "DAILY",
+  WEEKLY: "WEEKLY"
+} as const;
+
+export type AlertFrequency = typeof AlertFrequency[keyof typeof AlertFrequency];
 
 export class JobAlertEngine {
   /**

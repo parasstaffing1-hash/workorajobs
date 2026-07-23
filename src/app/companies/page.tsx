@@ -8,9 +8,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { createMetadata } from "@/lib/site";
 
 export const metadata = createMetadata({
-  title: "Technology Companies Hiring Now | WorkoraJobs",
+  title: "Company Directory | WorkoraJobs",
   description:
-    "Explore top technology companies, enterprise engineering teams, and startups hiring global remote talent on WorkoraJobs.",
+    "Explore top enterprise market leaders, technology stacks, workplace benefits, stock exchanges, and corporate profiles on WorkoraJobs.",
   path: "/companies",
 });
 
@@ -18,9 +18,9 @@ export default function CompaniesPage() {
   return (
     <>
       <PageHero
-        description="Discover top engineering employers, modern tech stacks, workplace benefits, Glassdoor reviews, and verified hiring opportunities."
-        eyebrow="Browse by Company"
-        title="Technology Companies Hiring Now"
+        description="Discover leading enterprise employers across Information Technology, Banking, Energy, Automotive, FMCG, and Infrastructure."
+        eyebrow="Company Directory"
+        title="Company Directory"
       >
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <ButtonLink href="#directory" size="lg" variant="accent">
@@ -36,13 +36,15 @@ export default function CompaniesPage() {
       <Section
         id="directory"
         eyebrow="Company Directory"
-        title="Filter by tech stack, industry & headquarters."
-        description="Inspect employer culture, workplace benefits, employee ratings, and active hiring roles in real-time."
+        title="Filter by Industry, Country & Tech Stack"
+        description="Explore corporate profiles, tech stack tools, Glassdoor ratings, workplace benefits, and active job vacancies in real-time."
       >
         <CompanyDirectory />
       </Section>
+
 
       <CtaBand />
     </>
   );
 }
+

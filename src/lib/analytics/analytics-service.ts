@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { ApplicationStatus } from "@prisma/client";
+
+export const ApplicationStatus = {
+  APPLIED: "APPLIED",
+  UNDER_REVIEW: "UNDER_REVIEW",
+  SHORTLISTED: "SHORTLISTED",
+  INTERVIEW_SCHEDULED: "INTERVIEW_SCHEDULED",
+  HIRED: "HIRED",
+  REJECTED: "REJECTED"
+} as const;
 
 export type EventType =
   | "JOB_VIEW"
@@ -155,7 +163,7 @@ export class AnalyticsService {
       const header = "ID,Title,Company,Location,Salary,WorkMode,PostedAt\n";
       const rows = jobs
         .map(
-          (j) =>
+          (j: any) =>
             `"${j.id}","${j.title.replace(/"/g, '""')}","${j.company.name.replace(/"/g, '""')}","${j.location || "Remote"}",${j.salary},"${j.workMode}","${j.postedAt.toISOString()}"`
         )
         .join("\n");
@@ -171,7 +179,7 @@ export class AnalyticsService {
       const header = "ID,JobTitle,ApplicantName,ApplicantEmail,Status,AppliedAt\n";
       const rows = apps
         .map(
-          (a) =>
+          (a: any) =>
             `"${a.id}","${a.job.title.replace(/"/g, '""')}","${(a.applicant.name || "Candidate").replace(/"/g, '""')}","${a.applicant.email}","${a.status}","${a.createdAt.toISOString()}"`
         )
         .join("\n");
@@ -181,7 +189,7 @@ export class AnalyticsService {
     const users = await prisma.user.findMany({ take: 100 });
     const header = "ID,Name,Email,Role,CreatedAt\n";
     const rows = users
-      .map((u) => `"${u.id}","${(u.name || "User").replace(/"/g, '""')}","${u.email}","${u.role}","${u.createdAt.toISOString()}"`)
+      .map((u: any) => `"${u.id}","${(u.name || "User").replace(/"/g, '""')}","${u.email}","${u.role}","${u.createdAt.toISOString()}"`)
       .join("\n");
     return header + rows;
   }

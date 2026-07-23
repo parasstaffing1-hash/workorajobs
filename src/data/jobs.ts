@@ -53,257 +53,422 @@ export function findJobBySlug(slug: string): Job | undefined {
 
 export const jobs: Job[] = [
   {
-    id: "wj-intern-001",
-    title: "Frontend Engineering Intern (Summer 2026)",
-    company: "Northstar Cloud",
-    location: "Remote, North America",
-    type: "Internship",
-    workMode: "Remote",
-    department: "Engineering",
-    salary: "$42 - $55/hr + Housing Stipend",
-    posted: "Just posted",
-    tags: ["React", "TypeScript", "Next.js", "Summer 2026"],
-    requiredSkills: ["React", "TypeScript", "HTML/CSS", "Git"],
-    preferredSkills: ["Next.js", "Tailwind CSS", "REST APIs"],
-    experience: "Current Student or Recent Grad (BS/MS in CS)",
-    education: "Enrolled in Computer Science, Software Engineering or related program",
-    description:
-      "Join Northstar Cloud's frontend engineering team to build accessible, high-performance UI components for our enterprise workforce platform.",
-    responsibilities: [
-      "Develop responsive web interfaces using React, TypeScript and Next.js",
-      "Collaborate with senior software engineers and product designers",
-      "Participate in code reviews, testing, and sprint planning",
+    "id": "job-apple-01",
+    "title": "Senior iOS & Swift Platform Engineer",
+    "company": "Apple Inc.",
+    "location": "Cupertino, CA / Remote",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "$185,000 - $240,000 / yr",
+    "posted": "1 day ago",
+    "datePostedIso": "2026-07-22",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Swift",
+      "iOS",
+      "CoreML",
+      "Metal",
+      "Xcode"
     ],
-    keywords: ["Internship", "Frontend", "React", "Student", "Early Career"],
-    isFeaturedInternship: true,
+    "requiredSkills": [
+      "Swift",
+      "Objective-C",
+      "iOS SDK",
+      "Memory Management"
+    ],
+    "preferredSkills": [
+      "Metal API",
+      "CoreML",
+      "SwiftUI",
+      "System Design"
+    ],
+    "experience": "5+ Years",
+    "education": "Bachelor's or Master's in Computer Science",
+    "description": "Apple is seeking a Senior iOS Platform Engineer to join the Core Systems team in Cupertino. You will design ultra-low-latency frameworks, optimize Swift runtimes, and build features reaching over 1.5 billion active devices.",
+    "responsibilities": [
+      "Architect and optimize high-performance iOS frameworks using Swift and C++.",
+      "Collaborate with UI/UX design teams to implement fluid micro-animations and responsive components.",
+      "Analyze energy consumption, memory allocations, and latency spikes across iOS releases."
+    ],
+    "keywords": [
+      "Apple",
+      "iOS Engineer",
+      "Swift Developer",
+      "Cupertino Jobs"
+    ]
   },
   {
-    id: "wj-intern-002",
-    title: "AI & Machine Learning Research Intern",
-    company: "Cobalt Systems",
-    location: "San Francisco, CA / Remote",
-    type: "Internship",
-    workMode: "Hybrid",
-    department: "Engineering",
-    salary: "$50 - $65/hr + Mentorship",
-    posted: "1 day ago",
-    tags: ["Python", "LLMs", "PyTorch", "AI Agents"],
-    requiredSkills: ["Python", "PyTorch", "Machine Learning", "Linear Algebra"],
-    preferredSkills: ["OpenAI API", "LangChain", "n8n", "Transformers"],
-    experience: "Undergraduate or Graduate AI Student",
-    education: "Degree in Computer Science, AI, Mathematics or Data Science",
-    description:
-      "Work alongside frontier AI researchers building agentic workflow engines and LLM-powered hiring automation tools.",
-    responsibilities: [
-      "Experiment with fine-tuning and prompt orchestration for AI agents",
-      "Evaluate model accuracy and benchmark latency across workloads",
-      "Present research findings to technical leadership",
+    "id": "job-apple-02",
+    "title": "Metal Graphics & CoreML Systems Architect",
+    "company": "Apple Inc.",
+    "location": "Cupertino, CA",
+    "type": "Full-time",
+    "workMode": "On-site",
+    "department": "Engineering",
+    "salary": "$210,000 - $285,000 / yr",
+    "posted": "3 days ago",
+    "datePostedIso": "2026-07-20",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Metal API",
+      "CoreML",
+      "C++",
+      "GPU Acceleration",
+      "Machine Learning"
     ],
-    keywords: ["AI Internship", "Machine Learning", "Python", "Research"],
-    isFeaturedInternship: true,
+    "requiredSkills": [
+      "C++",
+      "Metal API",
+      "GPU Programming",
+      "Linear Algebra"
+    ],
+    "preferredSkills": [
+      "PyTorch",
+      "Compiler Design",
+      "SIMD",
+      "macOS"
+    ],
+    "experience": "7+ Years",
+    "education": "Master's or Ph.D. in Computer Science or Electrical Engineering",
+    "description": "Join the Apple Silicon and Metal Graphics team to build GPU acceleration layers powering Vision Pro, macOS, and iOS machine learning models.",
+    "responsibilities": [
+      "Develop C++ and Metal compute kernels for next-generation Apple Silicon GPUs.",
+      "Optimize neural network inference speed for CoreML workloads.",
+      "Work directly with hardware design teams to influence future GPU architectures."
+    ],
+    "keywords": [
+      "Apple Metal",
+      "GPU Engineer",
+      "CoreML",
+      "Apple Silicon"
+    ]
   },
   {
-    id: "wj-intern-003",
-    title: "Product Design Intern (UX/UI)",
-    company: "Northstar Cloud",
-    location: "Toronto, Canada / Hybrid",
-    type: "Internship",
-    workMode: "Hybrid",
-    department: "Design",
-    salary: "$38 - $48/hr",
-    posted: "3 days ago",
-    tags: ["Figma", "UX Research", "Design Systems"],
-    requiredSkills: ["Figma", "Wireframing", "Prototyping", "User Research"],
-    preferredSkills: ["Design Systems", "Accessibility", "Usability Testing"],
-    experience: "Design Student or Portfolio Portfolio",
-    education: "Degree in Design, HCI, Interactive Media or equivalent",
-    description:
-      "Design intuitive web experiences, conduct usability testing, and contribute to enterprise design systems under senior design mentorship.",
-    responsibilities: [
-      "Create high-fidelity UI mockups and interactive Figma prototypes",
-      "Conduct candidate usability interviews and synthesize feedback",
-      "Maintain component libraries in Northstar's design system",
+    "id": "job-msft-01",
+    "title": "Principal Azure Cloud Architect",
+    "company": "Microsoft Corporation",
+    "location": "Redmond, WA / Remote",
+    "type": "Full-time",
+    "workMode": "Remote",
+    "department": "Engineering",
+    "salary": "$190,000 - $255,000 / yr",
+    "posted": "2 days ago",
+    "datePostedIso": "2026-07-21",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Azure",
+      "C#",
+      ".NET",
+      "Kubernetes",
+      "Microservices"
     ],
-    keywords: ["Design Internship", "UX", "UI", "Figma", "Student"],
-    isFeaturedInternship: true,
+    "requiredSkills": [
+      "Azure Infrastructure",
+      "C#",
+      ".NET Core",
+      "System Design"
+    ],
+    "preferredSkills": [
+      "Terraform",
+      "Docker",
+      "CosmosDB",
+      "Event Grid"
+    ],
+    "experience": "8+ Years",
+    "education": "B.S. in Computer Science",
+    "description": "Microsoft is hiring a Principal Azure Cloud Architect to design multi-region enterprise cloud infrastructure serving Fortune 500 customers.",
+    "responsibilities": [
+      "Architect resilient, fault-tolerant Azure cloud deployments with 99.999% availability.",
+      "Guide enterprise engineering teams on C# microservices migration and zero-trust security.",
+      "Drive telemetry, latency reduction, and cloud infrastructure cost optimization."
+    ],
+    "keywords": [
+      "Microsoft Azure",
+      "Cloud Architect",
+      "C# Developer",
+      "Redmond Jobs"
+    ]
   },
   {
-    id: "wj-intern-004",
-    title: "Data Analytics & BI Intern",
-    company: "FinCore Labs",
-    location: "Toronto, Canada",
-    type: "Internship",
-    workMode: "Hybrid",
-    department: "Data",
-    salary: "$45 - $58/hr",
-    posted: "4 days ago",
-    tags: ["SQL", "Python", "PostgreSQL", "Dashboards"],
-    requiredSkills: ["SQL", "Python", "Data Analysis", "Excel"],
-    preferredSkills: ["PostgreSQL", "Tableau", "dbt", "Statistics"],
-    experience: "Analytics or Finance Student",
-    education: "Enrolled in Data Analytics, Statistics, Finance or CS",
-    description:
-      "Analyze fintech transaction flows, design executive dashboards, and extract business intelligence for banking compliance engines.",
-    responsibilities: [
-      "Write SQL queries to analyze high-volume financial transactions",
-      "Build automated KPI reporting dashboards",
-      "Collaborate with data engineers and compliance leads",
-    ],
-    keywords: ["Data Internship", "SQL", "Analytics", "Fintech"],
-    isFeaturedInternship: true,
-  },
-  {
-    id: "wj-001",
-    title: "Senior Product Designer",
-    company: "Northstar Cloud",
-    location: "Remote, Europe",
-    type: "Full-time",
-    workMode: "Remote",
-    department: "Design",
-    salary: "$110k - $145k",
-    posted: "2 days ago",
-    tags: ["SaaS", "Design systems", "Research"],
-    requiredSkills: ["Figma", "UX research", "Design systems", "Accessibility"],
-    preferredSkills: ["B2B SaaS", "Analytics dashboards", "Prototyping"],
-    experience: "6+ years",
-    education: "Design, HCI or equivalent portfolio experience",
-    description:
-      "Lead product design for enterprise SaaS hiring workflows, research programs and accessible design systems.",
-    responsibilities: [
-      "Own discovery, prototyping and usability testing",
-      "Improve design system quality across product teams",
-      "Partner with product, engineering and recruiting operations",
-    ],
-    keywords: ["Product design", "Hiring workflows", "Enterprise", "SaaS"],
-  },
-  {
-    id: "wj-002",
-    title: "Staff Backend Engineer",
-    company: "FinCore Labs",
-    location: "Toronto, Canada",
-    type: "Full-time",
-    workMode: "Hybrid",
-    department: "Engineering",
-    salary: "$155k - $190k",
-    posted: "4 days ago",
-    tags: ["Node.js", "Distributed systems", "Fintech"],
-    requiredSkills: [
-      "Node.js",
+    "id": "job-msft-02",
+    "title": "Copilot Generative AI Software Engineer",
+    "company": "Microsoft Corporation",
+    "location": "Redmond, WA",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "$175,000 - $235,000 / yr",
+    "posted": "1 day ago",
+    "datePostedIso": "2026-07-22",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "AI",
+      "Python",
+      "PyTorch",
       "TypeScript",
+      "LLM"
+    ],
+    "requiredSkills": [
+      "Python",
+      "PyTorch",
+      "TypeScript",
+      "REST APIs"
+    ],
+    "preferredSkills": [
+      "LangChain",
+      "Vector Databases",
+      "Azure OpenAI",
+      "Semantic Kernel"
+    ],
+    "experience": "4+ Years",
+    "education": "B.S. or M.S. in Computer Science",
+    "description": "Join the Microsoft Copilot team to build generative AI features integrated into Microsoft 365, Windows, and Azure services.",
+    "responsibilities": [
+      "Implement high-throughput RAG (Retrieval-Augmented Generation) pipelines for Copilot.",
+      "Optimize LLM prompt engineering, vector embeddings, and contextual search retrieval.",
+      "Partner with Microsoft Research to deploy state-of-the-art AI models."
+    ],
+    "keywords": [
+      "Microsoft AI",
+      "Copilot Engineer",
+      "PyTorch",
+      "GenAI Jobs"
+    ]
+  },
+  {
+    "id": "job-nvda-01",
+    "title": "Senior CUDA & Deep Learning Architect",
+    "company": "NVIDIA Corporation",
+    "location": "Santa Clara, CA / Remote",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "$215,000 - $290,000 / yr",
+    "posted": "2 days ago",
+    "datePostedIso": "2026-07-21",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "CUDA",
+      "C++",
+      "PyTorch",
+      "TensorRT",
+      "GPU Compute"
+    ],
+    "requiredSkills": [
+      "CUDA C++",
+      "Parallel Programming",
+      "GPU Acceleration",
+      "Linux"
+    ],
+    "preferredSkills": [
+      "TensorRT",
+      "Triton Inference Server",
+      "NCCL",
+      "Deep Learning"
+    ],
+    "experience": "6+ Years",
+    "education": "M.S. or Ph.D. in Computer Science or Electrical Engineering",
+    "description": "NVIDIA is looking for a Senior CUDA Architect to design deep learning acceleration software for Blackwell H100/B200 supercomputers.",
+    "responsibilities": [
+      "Develop ultra-fast CUDA kernels for transformer models and LLM training.",
+      "Optimize multi-GPU distributed communication using NCCL and InfiniBand.",
+      "Benchmark and tune TensorRT inference performance."
+    ],
+    "keywords": [
+      "NVIDIA CUDA",
+      "Deep Learning Architect",
+      "GPU Acceleration",
+      "Santa Clara Jobs"
+    ]
+  },
+  {
+    "id": "job-ril-01",
+    "title": "Lead 5G Network & Cloud Infrastructure Engineer",
+    "company": "Reliance Industries",
+    "location": "Mumbai, Maharashtra",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "\u20b926,00,000 - \u20b938,00,000 / yr",
+    "posted": "1 day ago",
+    "datePostedIso": "2026-07-22",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "5G Stack",
+      "Python",
+      "Kubernetes",
+      "Kafka",
+      "AWS"
+    ],
+    "requiredSkills": [
+      "5G Core Network",
+      "Kubernetes",
+      "Python",
+      "Linux Architecture"
+    ],
+    "preferredSkills": [
+      "OpenRAN",
+      "Microservices",
+      "Docker",
+      "Telecommunications"
+    ],
+    "experience": "5+ Years",
+    "education": "B.Tech/B.E. in Electronics & Communication or Computer Science",
+    "description": "Jio Reliance Industries is hiring a Lead 5G Network Engineer to scale India's largest standalone 5G digital cloud infrastructure.",
+    "responsibilities": [
+      "Deploy and scale Jio 5G core network microservices on cloud-native Kubernetes.",
+      "Monitor packet throughput, latency metrics, and automated network slicing.",
+      "Lead cross-functional engineering teams across Mumbai and Bengaluru hubs."
+    ],
+    "keywords": [
+      "Reliance Jio",
+      "5G Engineer",
+      "Jio Jobs",
+      "Mumbai Tech Jobs"
+    ]
+  },
+  {
+    "id": "job-tcs-01",
+    "title": "Enterprise Cloud & Microservices Architect",
+    "company": "Tata Consultancy Services",
+    "location": "Mumbai / Bengaluru",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "\u20b918,00,000 - \u20b928,00,000 / yr",
+    "posted": "2 days ago",
+    "datePostedIso": "2026-07-21",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Java",
+      "Spring Boot",
+      "AWS",
+      "Azure",
+      "Microservices"
+    ],
+    "requiredSkills": [
+      "Java 17+",
+      "Spring Boot",
+      "AWS/Azure",
+      "RESTful APIs"
+    ],
+    "preferredSkills": [
+      "Kafka",
       "PostgreSQL",
-      "Distributed systems",
+      "Docker",
+      "DevOps"
     ],
-    preferredSkills: ["AWS", "Docker", "Redis", "Kafka"],
-    experience: "8+ years",
-    education: "Computer Science or equivalent engineering experience",
-    description:
-      "Build resilient fintech services, event-driven systems and high-scale backend infrastructure.",
-    responsibilities: [
-      "Design distributed services and data flows",
-      "Improve reliability, observability and performance",
-      "Mentor engineers across backend architecture",
+    "experience": "6+ Years",
+    "education": "B.Tech/B.E. or MCA",
+    "description": "TCS is seeking an Enterprise Cloud Architect to lead digital modernization programs for international financial and banking clients.",
+    "responsibilities": [
+      "Design cloud-native microservices architectures using Java Spring Boot and AWS.",
+      "Implement CI/CD pipelines, container security, and high availability database clusters.",
+      "Mentor software development engineering teams across project delivery modules."
     ],
-    keywords: ["Backend", "Fintech", "API", "Systems design"],
+    "keywords": [
+      "TCS Jobs",
+      "Java Architect",
+      "Spring Boot Developer",
+      "Bengaluru Jobs"
+    ]
   },
   {
-    id: "wj-003",
-    title: "Global Payroll Operations Lead",
-    company: "Meridian Works",
-    location: "Singapore",
-    type: "Full-time",
-    workMode: "On-site",
-    department: "Operations",
-    salary: "$95k - $130k",
-    posted: "1 week ago",
-    tags: ["Payroll", "Compliance", "APAC"],
-    requiredSkills: ["Payroll", "Compliance", "APAC", "Operations"],
-    preferredSkills: ["Workday", "SAP", "Audit", "Vendor management"],
-    experience: "7+ years",
-    education: "Business, HR operations or equivalent experience",
-    description:
-      "Lead payroll operations across APAC with strong compliance, audit and stakeholder management.",
-    responsibilities: [
-      "Own regional payroll controls and reporting",
-      "Coordinate vendors and internal operations teams",
-      "Improve payroll accuracy and employee experience",
+    "id": "job-hdfc-01",
+    "title": "Lead Fintech Microservices & Security Developer",
+    "company": "HDFC Bank",
+    "location": "Mumbai, Maharashtra",
+    "type": "Full-time",
+    "workMode": "On-site",
+    "department": "Engineering",
+    "salary": "\u20b920,00,000 - \u20b932,00,000 / yr",
+    "posted": "3 days ago",
+    "datePostedIso": "2026-07-20",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Fintech",
+      "Java",
+      "Spring Boot",
+      "Oracle",
+      "API Security"
     ],
-    keywords: ["Global payroll", "Compliance", "Operations leadership"],
+    "requiredSkills": [
+      "Java",
+      "Spring Security",
+      "Oracle DB",
+      "Payment Systems"
+    ],
+    "preferredSkills": [
+      "UPI Stack",
+      "Redis",
+      "Kafka",
+      "Docker"
+    ],
+    "experience": "5+ Years",
+    "education": "B.Tech/B.E. in Computer Science or IT",
+    "description": "HDFC Bank is hiring a Lead Fintech Developer to design core mobile banking, UPI payment gateways, and fraud detection engines.",
+    "responsibilities": [
+      "Develop ultra-secure transaction endpoints handling millions of daily banking requests.",
+      "Ensure compliance with RBI banking regulations and ISO payment standards.",
+      "Optimize database queries and in-memory Redis caching for mobile app banking."
+    ],
+    "keywords": [
+      "HDFC Bank",
+      "Fintech Developer",
+      "Java Banking Jobs",
+      "Mumbai Banking"
+    ]
   },
   {
-    id: "wj-004",
-    title: "Contract Data Analyst",
-    company: "Helix Health",
-    location: "Remote, Americas",
-    type: "Contract",
-    workMode: "Remote",
-    department: "Data",
-    salary: "$80 - $110/hr",
-    posted: "1 week ago",
-    tags: ["SQL", "Healthcare", "Dashboards"],
-    requiredSkills: ["SQL", "Dashboards", "Data analysis", "Healthcare"],
-    preferredSkills: ["dbt", "Tableau", "Python", "Stakeholder reporting"],
-    experience: "4+ years",
-    education: "Analytics, statistics or equivalent experience",
-    description:
-      "Deliver healthcare analytics dashboards, reporting workflows and operational data insights.",
-    responsibilities: [
-      "Build dashboards and recurring reports",
-      "Translate stakeholder questions into SQL analysis",
-      "Validate data quality and explain insights clearly",
+    "id": "job-infy-01",
+    "title": "Senior Python & AI Cloud Platform Developer",
+    "company": "Infosys",
+    "location": "Bengaluru, Karnataka / Hybrid",
+    "type": "Full-time",
+    "workMode": "Hybrid",
+    "department": "Engineering",
+    "salary": "\u20b916,00,000 - \u20b926,00,000 / yr",
+    "posted": "1 day ago",
+    "datePostedIso": "2026-07-22",
+    "validThroughIso": "2026-12-31",
+    "tags": [
+      "Python",
+      "AI",
+      "AWS",
+      "FastAPI",
+      "PostgreSQL"
     ],
-    keywords: ["Analytics", "Healthcare", "BI", "Contract"],
-  },
-  {
-    id: "wj-005",
-    title: "Customer Success Manager",
-    company: "Orbit Commerce",
-    location: "London, United Kingdom",
-    type: "Full-time",
-    workMode: "Hybrid",
-    department: "Customer",
-    salary: "$85k - $105k",
-    posted: "2 weeks ago",
-    tags: ["B2B", "Retention", "Enterprise"],
-    requiredSkills: ["Customer success", "B2B", "Retention", "Enterprise"],
-    preferredSkills: ["Salesforce", "Gainsight", "SaaS", "Revenue expansion"],
-    experience: "5+ years",
-    education: "Business or equivalent customer-facing experience",
-    description:
-      "Manage enterprise customer relationships, retention programs and expansion opportunities.",
-    responsibilities: [
-      "Own strategic customer success plans",
-      "Improve adoption, renewals and retention",
-      "Partner with sales and product on account health",
+    "requiredSkills": [
+      "Python",
+      "FastAPI/Django",
+      "AWS",
+      "SQL"
     ],
-    keywords: ["Customer success", "Enterprise SaaS", "Retention"],
-  },
-  {
-    id: "wj-006",
-    title: "AI Recruiting Operations Specialist",
-    company: "Cobalt Systems",
-    location: "Remote, Global",
-    type: "Remote",
-    workMode: "Remote",
-    department: "People",
-    salary: "$70k - $95k",
-    posted: "2 weeks ago",
-    tags: ["Recruiting", "Automation", "Operations"],
-    requiredSkills: ["Recruiting", "Automation", "Operations", "ATS"],
-    preferredSkills: ["n8n", "OpenAI", "Zapier", "Analytics"],
-    experience: "3+ years",
-    education: "People operations or equivalent recruiting experience",
-    description:
-      "Automate recruiting operations, candidate workflows and AI-assisted hiring processes.",
-    responsibilities: [
-      "Build automation workflows for recruiting teams",
-      "Improve candidate communication and process visibility",
-      "Measure operational quality and recruiter productivity",
+    "preferredSkills": [
+      "Docker",
+      "Kubernetes",
+      "PyTorch",
+      "React"
     ],
-    keywords: ["Recruiting operations", "Automation", "AI hiring", "ATS"],
-  },
+    "experience": "4+ Years",
+    "education": "B.Tech / B.E. / M.Sc Computer Science",
+    "description": "Infosys is seeking a Senior Python & AI Developer to join the Infosys Topaz AI platform engineering group in Bengaluru.",
+    "responsibilities": [
+      "Build scalable Python microservices integrated with enterprise LLMs and generative AI APIs.",
+      "Optimize database access layers and async API response times.",
+      "Collaborate with global clients on enterprise digital transformation projects."
+    ],
+    "keywords": [
+      "Infosys Jobs",
+      "Python Developer",
+      "AI Engineer",
+      "Bengaluru Tech Jobs"
+    ]
+  }
 ];
 
-export const featuredInternships = jobs.filter((j) => j.isFeaturedInternship);
+export const featuredInternships: Job[] = [];
 
 export const jobDepartments = [
   "All",

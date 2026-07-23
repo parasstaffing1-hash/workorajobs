@@ -41,19 +41,14 @@ export default function CandidateDashboardPage() {
     const history = localStorage.getItem("workora_application_history");
     
     const parsedSaved = saved ? JSON.parse(saved) : [];
-    const parsedApplied = applied ? JSON.parse(applied) : ["wj-001"]; // default seed
+    const parsedApplied = applied ? JSON.parse(applied) : [];
 
     setSavedJobsCount(parsedSaved.length);
     setAppliedJobsCount(parsedApplied.length);
 
     // Map history to timeline list
-    const parsedHistory: Record<string, AppHistoryItem> = history ? JSON.parse(history) : {
-      "wj-001": {
-        jobId: "wj-001",
-        appliedAt: "Jul 10, 2026",
-        status: "Shortlisted"
-      }
-    };
+    const parsedHistory: Record<string, AppHistoryItem> = history ? JSON.parse(history) : {};
+
 
     const timelineItems = Object.values(parsedHistory).map((app) => {
       const job = jobs.find(j => j.id === app.jobId);

@@ -28,30 +28,20 @@ export default function CandidateApplicationsPage() {
     const history = localStorage.getItem("workora_application_history");
     
     if (applied) {
-      const parsedApplied = JSON.parse(applied);
-      setAppliedJobs(parsedApplied);
+      setAppliedJobs(JSON.parse(applied));
     } else {
-      // Initialize with default application from seed data if first time
-      const initialApplied = ["wj-001"];
-      setAppliedJobs(initialApplied);
-      localStorage.setItem("workora_applied_jobs", JSON.stringify(initialApplied));
+      setAppliedJobs([]);
+      localStorage.setItem("workora_applied_jobs", JSON.stringify([]));
     }
 
     if (history) {
       setAppHistory(JSON.parse(history));
     } else {
-      // Default initial history for seeded item wj-001
-      const initialHistory = {
-        "wj-001": {
-          jobId: "wj-001",
-          appliedAt: "Jul 10, 2026",
-          status: "Shortlisted"
-        }
-      };
-      setAppHistory(initialHistory);
-      localStorage.setItem("workora_application_history", JSON.stringify(initialHistory));
+      setAppHistory({});
+      localStorage.setItem("workora_application_history", JSON.stringify({}));
     }
   }, []);
+
 
   // Sync state to localStorage
   const syncAppliedJobs = (newApplied: string[]) => {

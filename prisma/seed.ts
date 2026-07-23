@@ -81,39 +81,8 @@ async function main() {
   }
 
   // 5. Seed Jobs
-  const sampleJobs = [
-    {
-      title: "Frontend Engineering Intern (Summer 2026)",
-      description: "Join Northstar Cloud's frontend team to build accessible, high-performance UI components using React and TypeScript.",
-      location: "Remote, North America",
-      salary: 95000,
-      type: JobType.INTERNSHIP,
-      workMode: "Remote",
-      experience: "Entry Level",
-      companyId: companyNorthstar.id,
-      postedById: recruiterUser.id,
-    },
-    {
-      title: "Senior Cloud Infrastructure Architect",
-      description: "Design resilient cross-border Kubernetes clusters and cloud security infrastructure.",
-      location: "San Francisco, CA",
-      salary: 185000,
-      type: JobType.FULL_TIME,
-      workMode: "Hybrid",
-      experience: "Senior Level",
-      companyId: companyNorthstar.id,
-      postedById: adminUser.id,
-    },
-  ];
+  const sampleJobs: any[] = [];
 
-  for (const j of sampleJobs) {
-    const existing = await prisma.job.findFirst({
-      where: { title: j.title, companyId: j.companyId },
-    });
-    if (!existing) {
-      await prisma.job.create({ data: j });
-    }
-  }
 
   // 6. Seed JobSource
   await prisma.jobSource.upsert({
