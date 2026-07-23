@@ -1,4 +1,4 @@
-import { NextResponse } from "next";
+import { NextResponse } from "next/server";
 
 import { industriesData } from "@/data/industries";
 import { siteConfig } from "@/lib/site";
