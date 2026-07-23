@@ -6,7 +6,13 @@ import {
   HeartPulse, 
   Building2, 
   HardHat, 
-  Network, 
+  Network,
+  Cpu,
+  ShoppingBag,
+  Plane,
+  Gamepad2,
+  ShieldCheck,
+  Zap, 
   ArrowRight, 
   Briefcase, 
   TrendingUp, 
@@ -29,7 +35,7 @@ import { createMetadata } from "@/lib/site";
 export const metadata = createMetadata({
   title: "Browse Jobs & Enterprise Employers by Industry | WorkoraJobs",
   description:
-    "Explore top hiring industries including Information Technology, Banking & Finance, Healthcare, FMCG, Automotive, and Telecommunications on WorkoraJobs.",
+    "Explore top hiring industries including Information Technology, Banking & Finance, Semiconductors, E-Commerce, Healthcare, Automotive, Aerospace, and Cybersecurity on WorkoraJobs.",
   path: "/industries",
 });
 
@@ -40,7 +46,14 @@ const iconMap: Record<string, any> = {
   Building2,
   HardHat,
   Network,
+  Cpu,
+  ShoppingBag,
+  Plane,
+  Gamepad2,
+  ShieldCheck,
+  Zap,
 };
+
 
 export default function IndustriesPage() {
   return (
