@@ -83,16 +83,30 @@ body {
 
 /* Mobile & Touch Accessibility Utilities */
 button, 
-a, 
+a.button-link,
+a.nav-link,
 input, 
 select, 
 textarea {
   min-height: 44px;
 }
 
+/* GPU Hardware Acceleration & Rendering Containment */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 320px;
+}
+
 .text-fluid-hero {
   font-size: clamp(2.25rem, 5vw + 1rem, 5rem);
 }
+
 
 .pb-safe {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));

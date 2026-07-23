@@ -13,7 +13,11 @@ interface CompanyLogoProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function CompanyLogo({ company, className = "h-12 w-12", size = "md" }: CompanyLogoProps) {
+export const CompanyLogo = React.memo(function CompanyLogo({
+  company,
+  className = "h-12 w-12",
+  size = "md",
+}: CompanyLogoProps) {
   const [fallbackLevel, setFallbackLevel] = useState(0);
 
   const getDomain = (url?: string) => {
@@ -67,4 +71,5 @@ export function CompanyLogo({ company, className = "h-12 w-12", size = "md" }: C
       }}
     />
   );
-}
+});
+

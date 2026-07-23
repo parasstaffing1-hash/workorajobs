@@ -18,7 +18,8 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+
 
 import { CompanyDetailDrawer } from "@/components/company/company-detail-drawer";
 import { CompanyLogo } from "@/components/company/company-logo";
@@ -60,8 +61,8 @@ const sizeOptions = ["All", "1,000-5,000", "5,000-10,000", "10,000+"];
 
 
 export function CompanyDirectory({ className }: { className?: string }) {
-  const [companies, setCompanies] = useState<Company[]>(companiesData);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [selectedIndustry, setSelectedIndustry] = useState("All");
   const [selectedExchange, setSelectedExchange] = useState("All");
   const [selectedCountry, setSelectedCountry] = useState("All");
@@ -73,18 +74,17 @@ export function CompanyDirectory({ className }: { className?: string }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 24;
 
-
   // Drawer state
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Filter & Sort companies instantly
-  useEffect(() => {
+  // Compute filtered companies in useMemo for zero input lag & single-pass rendering
+  const companies = useMemo(() => {
     let result = [...companiesData];
 
-    // Search
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
+    // Search query using deferredSearch
+    if (deferredSearch.trim()) {
+      const q = deferredSearch.trim().toLowerCase();
       result = result.filter(
         (c) =>
           c.name.toLowerCase().includes(q) ||
@@ -141,9 +141,14 @@ export function CompanyDirectory({ className }: { className?: string }) {
       result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    setCompanies(result);
-    setCurrentPage(1); // Reset to page 1 on filter change
-  }, [search, selectedIndustry, selectedExchange, selectedCountry, selectedSize, selectedLetter, sortOrder]);
+    return result;
+  }, [deferredSearch, selectedIndustry, selectedExchange, selectedCountry, selectedSize, selectedLetter, sortOrder]);
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredSearch, selectedIndustry, selectedExchange, selectedCountry, selectedSize, selectedLetter, sortOrder]);
+
 
   const resetFilters = () => {
     setSearch("");
@@ -326,7 +331,8 @@ export function CompanyDirectory({ className }: { className?: string }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.03 }}
             >
-              <Card className="group relative flex h-full flex-col justify-between overflow-hidden border-border/70 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg">
+              <Card className="group relative flex h-full flex-col justify-between overflow-hidden border-border/70 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg content-visibility-auto gpu-layer">
+
                 <div>
                   {/* Card Header: Logo, Name, Ticker, Exchange */}
                   <div className="flex items-start justify-between gap-3">
