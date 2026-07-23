@@ -21,6 +21,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { CompanyDetailDrawer } from "@/components/company/company-detail-drawer";
+import { CompanyLogo } from "@/components/company/company-logo";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -326,22 +328,10 @@ export function CompanyDirectory({ className }: { className?: string }) {
                   {/* Card Header: Logo, Name, Ticker, Exchange */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-white p-1.5 shadow-sm grid place-items-center">
-                        {company.logoUrl ? (
-                          <img
-                            src={company.logoUrl}
-                            alt={`${company.name} logo`}
-                            className="h-full w-full object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary via-blue-600 to-[hsl(var(--violet))] text-xs font-extrabold text-primary-foreground">
-                            {company.logo}
-                          </div>
-                        )}
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-white p-1 shadow-sm grid place-items-center">
+                        <CompanyLogo company={company} size="md" />
                       </div>
+
 
                       <div>
 

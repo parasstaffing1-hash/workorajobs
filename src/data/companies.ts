@@ -5090,3 +5090,19 @@ export const companiesData: Company[] = [
     "featured": true
   }
 ];
+
+export function slugifyCompany(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function findCompanyBySlug(slug: string): Company | undefined {
+  const clean = slug.toLowerCase().trim();
+  return companiesData.find(
+    (c) => c.slug === clean || c.id === clean || slugifyCompany(c.name) === clean
+  );
+}
+

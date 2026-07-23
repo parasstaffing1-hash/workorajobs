@@ -16,7 +16,9 @@ import {
   Globe
 } from "lucide-react";
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import { findIndustryBySlug, industriesData } from "@/data/industries";
+
 import { companiesData } from "@/data/companies";
 import { jobs, getJobSlug } from "@/data/jobs";
 import { Badge } from "@/components/ui/badge";
@@ -302,13 +304,10 @@ export default async function DynamicIndustryPage({ params }: Props) {
                         className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/20 p-3 hover:border-primary/40 hover:bg-secondary/40 transition-all group"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-white p-1 grid place-items-center">
-                            {c.logoUrl ? (
-                              <img src={c.logoUrl} alt={`${c.name} logo`} className="h-full w-full object-contain" />
-                            ) : (
-                              <span className="text-xs font-bold text-primary">{c.logo}</span>
-                            )}
+                          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-white p-0.5 grid place-items-center">
+                            <CompanyLogo company={c} size="sm" />
                           </div>
+
                           <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                             {c.name}
                           </span>

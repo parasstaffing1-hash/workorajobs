@@ -24,7 +24,9 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { companiesData, type Company } from "@/data/companies";
+import { CompanyLogo } from "@/components/company/company-logo";
+import { findCompanyBySlug, companiesData } from "@/data/companies";
+
 import { jobs, getJobSlug } from "@/data/jobs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -203,18 +205,9 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="flex items-start gap-4 sm:gap-5">
               <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border/80 bg-white p-2 shadow-xl grid place-items-center">
-                {company.logoUrl ? (
-                  <img
-                    src={company.logoUrl}
-                    alt={`${company.name} logo`}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary via-blue-600 to-[hsl(var(--violet))] text-xl font-extrabold text-primary-foreground">
-                    {company.logo}
-                  </div>
-                )}
+                <CompanyLogo company={company} size="lg" />
               </div>
+
 
               <div>
                 <div className="flex items-center gap-2 flex-wrap">

@@ -21,7 +21,9 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import { type Company } from "@/data/companies";
 import { type Job } from "@/data/jobs";
@@ -127,22 +129,10 @@ export function CompanyDetailDrawer({
               <div className="rounded-xl border border-border/70 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.15),transparent_45%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--secondary)/0.4))] p-6 shadow-sm">
                 <div className="flex items-start gap-4">
                   {/* Avatar Initials Badge */}
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-white p-1.5 shadow-lg grid place-items-center">
-                    {company.logoUrl ? (
-                      <img
-                        src={company.logoUrl}
-                        alt={`${company.name} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary via-blue-600 to-[hsl(var(--violet))] text-base font-extrabold text-primary-foreground">
-                        {company.logo}
-                      </div>
-                    )}
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-white p-1 shadow-lg grid place-items-center">
+                    <CompanyLogo company={company} size="lg" />
                   </div>
+
 
 
                   <div className="min-w-0 flex-1">
