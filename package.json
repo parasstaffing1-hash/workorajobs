@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "next dev -p 3000 -H 0.0.0.0",
     "dev:api": "pnpm --filter @workora/api start:dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
+
     "start": "next start -p 3000 -H 0.0.0.0",
     "preview": "next start -p 3000 -H 0.0.0.0",
     "seed": "tsx prisma/seed.ts",
