@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { 
   Building2, 
   MapPin, 
@@ -21,12 +20,14 @@ import {
   HelpCircle,
   Share2,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Clock,
+  GraduationCap,
+  FileText
 } from "lucide-react";
 
 import { CompanyLogo } from "@/components/company/company-logo";
 import { findCompanyBySlug, companiesData } from "@/data/companies";
-
 import { jobs, getJobSlug } from "@/data/jobs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,10 +47,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const cleanSlug = slug.toLowerCase().trim().replace("-jobs", "");
-  const company = companiesData.find(
-    (c) => c.slug === cleanSlug || c.id === cleanSlug || c.ticker.toLowerCase() === cleanSlug
-  );
+  const company = findCompanyBySlug(slug);
 
   if (!company) {
     return {
@@ -58,8 +56,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${company.name} (${company.ticker}) Careers, Tech Stack & Company Profile | WorkoraJobs`;
-  const description = `${company.shortDescription} View Glassdoor rating (${company.glassdoorRating}/5.0), workplace benefits, tech stack, and open vacancies at ${company.name}.`;
+  const title = `${company.name} Jobs, Careers and Remote Opportunities | WorkoraJobs`;
+  const description = `Explore verified ${company.name} jobs, career opportunities, internships, hiring locations and remote roles. View the latest ${company.name} openings on WorkoraJobs.`;
   const canonicalUrl = `${siteConfig.url}/companies/${company.slug}`;
 
   return {
@@ -69,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${company.name} - ${company.tagline}`,
+      title: `${company.name} Jobs & Careers - WorkoraJobs`,
       description,
       url: canonicalUrl,
       type: "website",
@@ -86,11 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EnterpriseCompanyPage({ params }: Props) {
   const { slug } = await params;
-  const cleanSlug = slug.toLowerCase().trim().replace("-jobs", "");
-  
-  const company = companiesData.find(
-    (c) => c.slug === cleanSlug || c.id === cleanSlug || c.ticker.toLowerCase() === cleanSlug
-  );
+  const company = findCompanyBySlug(slug);
 
   if (!company) {
     return (
@@ -99,7 +93,7 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
           <Building2 className="h-16 w-16 text-muted-foreground mx-auto opacity-50" />
           <h1 className="text-2xl font-bold text-foreground">Company Profile Not Found</h1>
           <p className="text-sm text-muted-foreground">
-            We couldn't find a matching corporate profile for "{slug}".
+            We couldn't find a company profile matching "{slug}".
           </p>
           <div>
             <Link href="/companies">
@@ -114,20 +108,17 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
     );
   }
 
-  // Filter open jobs for this company
+  // Find active jobs for this company
   const companyJobs = jobs.filter(
-    (j) =>
-      j.company.toLowerCase().includes(company.name.toLowerCase()) ||
-      company.name.toLowerCase().includes(j.company.toLowerCase()) ||
-      j.company.toLowerCase().includes(company.slug)
+    (j) => j.company.toLowerCase().includes(company.name.toLowerCase()) || company.name.toLowerCase().includes(j.company.toLowerCase())
   );
 
-  // Related Companies (same industry or exchange)
-  const relatedCompanies = companiesData
-    .filter((c) => c.id !== company.id && (c.industry === company.industry || c.stockExchange === company.stockExchange))
-    .slice(0, 3);
+  // Similar companies in same industry
+  const similarCompanies = companiesData
+    .filter((c) => c.slug !== company.slug && c.industry === company.industry)
+    .slice(0, 4);
 
-  // Structured Data (JSON-LD)
+  // Structured Data Schemas
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -155,6 +146,15 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
     },
   };
 
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${siteConfig.url}/companies/${company.slug}#webpage`,
+    url: `${siteConfig.url}/companies/${company.slug}`,
+    name: `${company.name} Jobs and Careers`,
+    description: `Explore verified ${company.name} jobs, career opportunities, internships, hiring locations and remote roles.`,
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -168,12 +168,12 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: company.faqs.map((f) => ({
+    mainEntity: company.faqs.map((faq) => ({
       "@type": "Question",
-      name: f.question,
+      name: faq.question,
       acceptedAnswer: {
         "@type": "Answer",
-        text: f.answer,
+        text: faq.answer,
       },
     })),
   };
@@ -181,12 +181,13 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
   return (
     <main className="min-h-screen py-10 bg-background">
       <JsonLd data={organizationSchema} />
+      <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
-      <JsonLd data={faqSchema} />
+      {company.faqs.length > 0 && <JsonLd data={faqSchema} />}
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-8">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between">
+        {/* Navigation Breadcrumb & Last Updated */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <Link
             href="/companies"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
@@ -195,9 +196,15 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
             Back to Company Directory
           </Link>
 
-          <span className="text-xs text-muted-foreground font-medium">
-            Stock Ticker: <strong className="text-primary font-mono">{company.ticker} ({company.stockExchange})</strong>
-          </span>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-primary" /> Last updated: July 2026
+            </span>
+            •
+            <span className="font-medium">
+              Ticker: <strong className="text-primary font-mono">{company.ticker} ({company.stockExchange})</strong>
+            </span>
+          </div>
         </div>
 
         {/* Hero Banner Card */}
@@ -208,255 +215,265 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
                 <CompanyLogo company={company} size="lg" />
               </div>
 
-
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
+                  {/* Single H1 Tag per SEO instructions */}
                   <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                    {company.name}
+                    {company.name} Jobs and Careers
                   </h1>
-                  <Badge className="bg-secondary text-primary font-mono text-xs font-bold border-border/80">
-                    {company.ticker}
-                  </Badge>
                   {company.verified && (
-                    <Badge className="flex items-center gap-1 text-xs text-green-500 border-green-500/30 bg-green-500/10">
-                      <BadgeCheck className="h-3.5 w-3.5" /> Verified Enterprise
-                    </Badge>
+                    <BadgeCheck className="h-5 w-5 text-green-500 shrink-0" aria-label="Verified Employer" />
                   )}
                 </div>
-                <p className="text-xs font-semibold text-primary mt-1">{company.industry} • {company.subIndustry}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground max-w-2xl">
+                <p className="mt-1 text-xs font-semibold text-primary">
+                  {company.legalName} • {company.industry}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-w-2xl">
                   {company.tagline}
                 </p>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <a href={company.careersUrl} target="_blank" rel="noreferrer">
-                <Button variant="accent" size="sm" className="w-full sm:w-auto">
-                  <Briefcase className="h-4 w-4 mr-1.5" />
-                  Careers Portal
-                  <ExternalLink className="h-3 w-3 ml-1" />
+            <div className="flex flex-col gap-2.5 sm:flex-row md:flex-col shrink-0">
+              <a href={company.careersUrl} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="accent" className="w-full">
+                  Official Careers Portal
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
               </a>
-              <a href={company.website} target="_blank" rel="noreferrer">
-                <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                  <Globe className="h-4 w-4 mr-1.5" />
-                  Website
+              <a href={company.website} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="w-full">
+                  Official Website
+                  <Globe className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
               </a>
             </div>
           </div>
 
-          {/* Core Metrics Grid */}
+          {/* Metrics Grid */}
           <div className="mt-8 grid grid-cols-2 gap-4 border-t border-border/60 pt-6 text-xs sm:grid-cols-4">
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground block">Headquarters</span>
-              <span className="font-semibold text-foreground flex items-center gap-1 mt-1">
+              <span className="font-bold text-foreground flex items-center gap-1 mt-1">
                 <MapPin className="h-3.5 w-3.5 text-primary" /> {company.headquarters}
               </span>
             </div>
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground block">Workforce Size</span>
-              <span className="font-semibold text-foreground flex items-center gap-1 mt-1">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block">Global Workforce</span>
+              <span className="font-bold text-foreground flex items-center gap-1 mt-1">
                 <Users className="h-3.5 w-3.5 text-primary" /> {company.employeeCount}
               </span>
             </div>
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground block">Glassdoor Rating</span>
-              <span className="font-semibold text-foreground flex items-center gap-1 mt-1">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> {company.glassdoorRating} ({company.reviewCount.toLocaleString()} reviews)
+              <span className="font-bold text-amber-500 flex items-center gap-1 mt-1">
+                <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {company.glassdoorRating} / 5.0 ({company.reviewCount} reviews)
               </span>
             </div>
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground block">Market Cap</span>
-              <span className="font-semibold text-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3.5 w-3.5 text-green-500" /> {company.marketCap} ({company.stockExchange})
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block">Verified Openings</span>
+              <span className="font-bold text-primary flex items-center gap-1 mt-1">
+                <Briefcase className="h-3.5 w-3.5" /> {companyJobs.length > 0 ? `${companyJobs.length} Active Roles` : "Portal Active"}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Content Layout */}
+        {/* Content Layout Grid */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-8">
-
-
-
-            {/* OPEN JOBS SECTION */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-primary" /> Active Job Vacancies at {company.name}
-                  <Badge className="bg-primary/20 text-primary">{companyJobs.length || company.openJobsCount}</Badge>
-                </h2>
-                <Link href={`/candidate/jobs?search=${encodeURIComponent(company.name)}`}>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Search All Roles
-                  </Button>
-                </Link>
+            {/* Section 1: About Company */}
+            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" /> About {company.name}
+              </h2>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {company.overview}
+              </p>
+              <div className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-2 text-xs">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <HeartHandshake className="h-4 w-4 text-primary" /> Work Culture & Work Environment
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {company.name} fosters a high-impact, collaborative work culture focused on innovation, integrity, and career progression. Employees benefit from global talent mapping, structured performance scorecards, and continuous learning programs.
+                </p>
               </div>
+            </Card>
+
+            {/* Section 2: Latest Jobs */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-primary" /> Latest jobs at {company.name}
+              </h2>
 
               {companyJobs.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {companyJobs.map((job) => (
-                    <Card
-                      key={job.id}
-                      className="p-5 border-border/70 bg-card transition-all hover:border-primary/50 hover:shadow-md space-y-3"
-                    >
+                    <Card key={job.id} className="p-5 border-border/70 bg-card space-y-3 hover:border-primary/40 transition-all">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <h3 className="text-base font-bold text-foreground hover:text-primary transition-colors">
-                            {job.title}
-                          </h3>
+                          <Link href={`/jobs/${getJobSlug(job)}`} className="hover:underline">
+                            <h3 className="text-base font-bold text-foreground hover:text-primary transition-colors">
+                              {job.title}
+                            </h3>
+                          </Link>
                           <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground">{job.company}</span>
+                            •
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-primary" /> {job.location}
                             </span>
                             •
                             <span className="text-primary font-bold">{job.salary}</span>
-                            •
-                            <Badge className="text-[10px] bg-secondary text-foreground">{job.workMode}</Badge>
                           </p>
                         </div>
-
                         <Link href={`/jobs/${getJobSlug(job)}`}>
                           <Button size="sm" variant="accent" className="text-xs shrink-0">
-                            Apply Now
-                            <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                            Apply Role <ArrowRight className="h-3.5 w-3.5 ml-1" />
                           </Button>
                         </Link>
-                      </div>
-
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {job.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {job.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded bg-secondary/80 px-2 py-0.5 text-[10px] font-medium text-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
                       </div>
                     </Card>
                   ))}
                 </div>
               ) : (
-                <Card className="p-6 text-center border-border/60 bg-secondary/10 space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    Currently accepting direct candidate talent applications for open roles at {company.name}.
+                <Card className="p-6 text-center border-border/60 bg-secondary/10 space-y-3">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    There are currently no verified {company.name} jobs listed on WorkoraJobs. Explore similar companies and related opportunities below.
                   </p>
-                  <a href={company.careersUrl} target="_blank" rel="noreferrer" className="inline-block">
-                    <Button variant="accent" size="sm" className="text-xs mt-2">
-                      Visit Official {company.name} Careers Portal →
-                    </Button>
-                  </a>
+                  <div>
+                    <a href={company.careersUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        View Direct Jobs on {company.name} Careers <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </a>
+                  </div>
                 </Card>
               )}
             </div>
 
-            {/* Corporate Overview & Mission */}
+            {/* Section 3: Popular Job Categories */}
             <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-              <h2 className="text-base font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-primary" /> Corporate Overview & Culture
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Code2 className="h-5 w-5 text-primary" /> Popular job categories at {company.name}
               </h2>
-              <p className="text-xs leading-6 text-muted-foreground">
-                {company.overview}
-              </p>
-
-              <div className="grid gap-3 sm:grid-cols-2 pt-2">
-                <div className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-primary">Company Mission</span>
-                  <p className="text-xs leading-5 text-foreground">{company.mission}</p>
-                </div>
-                <div className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-accent">Company Vision</span>
-                  <p className="text-xs leading-5 text-foreground">{company.vision}</p>
-                </div>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " software engineering")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  Software engineering jobs at {company.name}
+                </Link>
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " product manager")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  Product management jobs at {company.name}
+                </Link>
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " data science")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  Data science & AI roles at {company.name}
+                </Link>
               </div>
             </Card>
 
-            {/* Tech Stack */}
+            {/* Section 4: Hiring Locations */}
             <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-              <h2 className="text-base font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Code2 className="h-4 w-4 text-accent" /> Engineering Tech Stack & Tools
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" /> Hiring locations
               </h2>
               <p className="text-xs text-muted-foreground">
-                Technologies, cloud platforms, and developer frameworks actively utilized by engineering teams at {company.name}.
+                {company.name} actively hires across major global tech hubs and regional operational centers:
               </p>
-              <div className="flex flex-wrap gap-2 font-mono">
-                {company.techStack.map((tech) => (
-                  <span
-                    key={tech}
-                    className="rounded-lg border border-border/80 bg-secondary/60 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm hover:border-primary/40 transition-colors"
-                  >
-                    <code>{tech}</code>
-                  </span>
-                ))}
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " India")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  {company.name} jobs in India
+                </Link>
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " United States")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  {company.name} jobs in United States
+                </Link>
+                <Link
+                  href={`/jobs?search=${encodeURIComponent(company.name + " Europe")}`}
+                  className="rounded-lg border border-border/80 bg-secondary/40 px-3 py-1.5 font-medium text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  {company.name} jobs in Europe
+                </Link>
               </div>
             </Card>
 
-            {/* Workplace Benefits */}
+            {/* Section 5: Remote Opportunities */}
             <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-              <h2 className="text-base font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <HeartHandshake className="h-4 w-4 text-primary" /> Workplace Perks & Compensation Benefits
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" /> Remote opportunities
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {company.benefits.map((b, idx) => (
-                  <div key={idx} className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      <span className="text-[10px] font-bold text-accent uppercase">{b.category}</span>
-                    </div>
-                    <h3 className="text-xs font-bold text-foreground">{b.title}</h3>
-                    <p className="text-[11px] leading-4 text-muted-foreground">{b.description}</p>
-                  </div>
-                ))}
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {company.remoteFriendly
+                  ? `${company.name} supports remote work flexibility and distributed hiring for eligible engineering, product, and enterprise functions.`
+                  : `${company.name} operates primarily on-site and hybrid office models across its global headquarters and regional research centers.`}
+              </p>
+              <div>
+                <Link
+                  href={`/remote-jobs?search=${encodeURIComponent(company.name)}`}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  Explore remote jobs at {company.name} →
+                </Link>
               </div>
             </Card>
 
-            {/* Glassdoor Reviews */}
-            {company.reviews.length > 0 && (
-              <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-                <h2 className="text-base font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" /> Glassdoor Employee Reviews
-                </h2>
-                <div className="space-y-3">
-                  {company.reviews.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-foreground">{r.role}</span>
-                          <span className="text-[10px] text-muted-foreground block">{r.employmentStatus} • {r.date}</span>
-                        </div>
-                        <Badge className="bg-amber-400/10 text-amber-500 border-amber-400/30">
-                          ★ {r.rating}.0
-                        </Badge>
-                      </div>
-                      <div className="text-xs space-y-1 pt-2 border-t border-border/50">
-                        <p className="text-green-500 font-medium">
-                          <strong className="text-foreground">Pros:</strong> {r.pros}
-                        </p>
-                        <p className="text-muted-foreground">
-                          <strong className="text-foreground">Cons:</strong> {r.cons}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+            {/* Section 6: Internships and Graduate Roles */}
+            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-primary" /> Internships and graduate roles
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {company.name} offers structured summer internships, co-ops, and university graduate trainee programs across engineering, business operations, and research disciplines.
+              </p>
+              <div>
+                <Link
+                  href={`/internship-jobs?search=${encodeURIComponent(company.name)}`}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  Explore internship opportunities at {company.name} →
+                </Link>
+              </div>
+            </Card>
 
-            {/* Company FAQs */}
+            {/* Section 7: How to Apply */}
+            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" /> How to apply for jobs at {company.name}
+              </h2>
+              <div className="space-y-3 text-xs text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <span className="rounded-full bg-primary/20 text-primary h-5 w-5 flex items-center justify-center text-[11px] font-bold shrink-0">1</span>
+                  <p>Browse verified openings listed above or visit {company.name}'s official portal at <a href={company.careersUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{company.careersUrl}</a>.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="rounded-full bg-primary/20 text-primary h-5 w-5 flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
+                  <p>Tailor your resume to match the required technical skills ({company.techStack.slice(0, 4).join(", ")}) and highlight relevant accomplishments.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="rounded-full bg-primary/20 text-primary h-5 w-5 flex items-center justify-center text-[11px] font-bold shrink-0">3</span>
+                  <p>Submit your application directly online to receive automated status updates and recruiter follow-ups.</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Section 8: Frequently Asked Questions */}
             {company.faqs.length > 0 && (
               <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-                <h2 className="text-base font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-primary" /> Frequently Asked Questions
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-primary" /> Frequently asked questions
                 </h2>
                 <div className="space-y-3">
                   {company.faqs.map((faq, idx) => (
@@ -470,86 +487,72 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
                 </div>
               </Card>
             )}
-          </div>
 
-          {/* Sidebar Column */}
-          <div className="space-y-6">
-            {/* Quick Links Card */}
-            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                Corporate Data & Links
-              </h3>
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Stock Ticker</span>
-                  <span className="font-bold text-primary font-mono">{company.ticker}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Exchange</span>
-                  <span className="font-semibold text-foreground">{company.stockExchange}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">ISIN</span>
-                  <span className="font-mono text-[11px] text-foreground">{company.isin || "N/A"}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Country</span>
-                  <span className="font-semibold text-foreground">{company.country}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Founded</span>
-                  <span className="font-semibold text-foreground">{company.foundedYear}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-muted-foreground">Hiring Status</span>
-                  <span className="font-bold text-green-500">{company.hiringStatus}</span>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <a href={company.careersUrl} target="_blank" rel="noreferrer" className="block w-full">
-                  <Button variant="accent" size="sm" className="w-full text-xs">
-                    Search Open Careers
-                    <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                  </Button>
-                </a>
-              </div>
-            </Card>
-
-            {/* Related Employers */}
-            {relatedCompanies.length > 0 && (
+            {/* Section 9: Similar Companies */}
+            {similarCompanies.length > 0 && (
               <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Similar {company.industry} Companies
-                </h3>
-                <div className="space-y-3">
-                  {relatedCompanies.map((rel) => (
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" /> Similar companies in {company.industry}
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {similarCompanies.map((sim) => (
                     <Link
-                      key={rel.id}
-                      href={`/companies/${rel.slug}`}
+                      key={sim.id}
+                      href={`/companies/${sim.slug}`}
                       className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/20 p-3 hover:border-primary/40 hover:bg-secondary/40 transition-all group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-white p-1 grid place-items-center">
-                          {rel.logoUrl ? (
-                            <img src={rel.logoUrl} alt={`${rel.name} logo`} className="h-full w-full object-contain" />
-                          ) : (
-                            <span className="text-xs font-bold text-primary">{rel.logo}</span>
-                          )}
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-white p-1 grid place-items-center">
+                          <CompanyLogo company={sim} size="sm" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
-                            {rel.name}
-                          </h4>
-                          <span className="text-[10px] text-muted-foreground font-mono">{rel.ticker} • {rel.stockExchange}</span>
+                          <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                            {sim.name}
+                          </h3>
+                          <p className="text-[10px] text-muted-foreground">{sim.headquarters}</p>
                         </div>
                       </div>
-                      <ArrowLeft className="h-3.5 w-3.5 rotate-180 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </Link>
                   ))}
                 </div>
               </Card>
             )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Tech Stack */}
+            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <Code2 className="h-4 w-4 text-primary" /> In-Demand Tech Stack
+              </h3>
+              <div className="flex flex-wrap gap-1.5 font-mono">
+                {company.techStack.map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded-lg border border-border/80 bg-secondary/60 px-2.5 py-1 text-[11px] font-semibold text-foreground"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </Card>
+
+            {/* Workplace Benefits */}
+            <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Verified Workplace Benefits
+              </h3>
+              <div className="space-y-2.5">
+                {company.benefits.map((b, idx) => (
+                  <div key={idx} className="rounded-xl border border-border/60 bg-secondary/20 p-3 text-xs space-y-1">
+                    <span className="font-bold text-foreground block">{b.title}</span>
+                    <span className="text-muted-foreground block text-[11px] leading-normal">{b.description}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         </div>
       </div>

@@ -37,24 +37,27 @@ const alphabet = [
   "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 ];
 
-const exchangeOptions = ["All", "NSE", "BSE", "NASDAQ", "NYSE"];
+const exchangeOptions = ["All", "NASDAQ", "NYSE", "NSE", "BSE", "XETRA", "KRX", "Euronext Paris", "Private"];
 
-const countryOptions = ["All", "India", "United States"];
+const countryOptions = ["All", "United States", "India", "Germany", "Japan", "United Kingdom", "Sweden", "France", "South Korea", "China", "Australia", "Switzerland", "Canada", "Spain", "Italy", "Netherlands"];
 
 const industryOptions = [
   "All",
   "Information Technology",
-  "Banking & Finance",
-  "Energy & Oil",
-  "Automotive & Transport",
+  "Banking & Financial Services",
+  "Semiconductors",
+  "Automotive & Mobility",
+  "Retail & Commerce",
   "Healthcare & Pharmaceuticals",
-  "FMCG & Consumer Goods",
-  "E-Commerce & Cloud",
-  "Telecommunications",
-  "Infrastructure & Engineering",
+  "FMCG & Food",
+  "Apparel & Sportswear",
+  "Media & Technology",
+  "Fintech & Software",
+  "Aerospace & Defense"
 ];
 
-const sizeOptions = ["All", "5,000-10,000", "10,000+"];
+const sizeOptions = ["All", "1,000-5,000", "5,000-10,000", "10,000+"];
+
 
 export function CompanyDirectory({ className }: { className?: string }) {
   const [companies, setCompanies] = useState<Company[]>(companiesData);
