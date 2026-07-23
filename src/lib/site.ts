@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 export const siteConfig = {
   name: "WorkoraJobs",
-  url: "https://www.workorajobs.com",
+  url: "https://workorajobs.com",
+
   description:
     "WorkoraJobs is an AI-powered global staffing and recruitment platform for companies hiring trusted talent across borders.",
   keywords: [

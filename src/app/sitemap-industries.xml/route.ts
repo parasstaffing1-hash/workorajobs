@@ -1,28 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next";
 
+import { industriesData } from "@/data/industries";
 import { siteConfig } from "@/lib/site";
 
 export async function GET() {
   const now = new Date().toISOString();
-  const industries = [
-    "software-engineering",
-    "ai-machine-learning",
-    "cloud-infrastructure",
-    "cybersecurity",
-    "data-analytics",
-    "product-management",
-    "ui-ux-design",
-    "fintech",
-    "healthtech",
-  ];
 
-  const urls = industries
+  const urls = industriesData
     .map(
       (ind) => `  <url>
-    <loc>${siteConfig.url}/industries/${ind}</loc>
+    <loc>${siteConfig.url}/industries/${ind.slug}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>`
     )
     .join("\n");

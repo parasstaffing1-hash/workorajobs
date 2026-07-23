@@ -59,7 +59,8 @@ export function JobDetail({ job }: JobDetailProps) {
     "hiringOrganization": {
       "@type": "Organization",
       "name": job.company,
-      "sameAs": `https://workorajobs.com/company/${slugify(job.company)}`,
+      "sameAs": `https://workorajobs.com/companies/${slugify(job.company)}`,
+
     },
     "jobLocation": {
       "@type": "Place",

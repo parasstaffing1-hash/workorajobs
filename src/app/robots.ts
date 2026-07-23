@@ -48,11 +48,22 @@ export default function robots(): MetadataRoute.Robots {
           "Amazonbot",
           "Applebot-Extended",
         ],
-        allow: ["/", "/jobs", "/companies", "/company/*", "/freshers-jobs", "/internship-jobs", "/remote-jobs"],
+        allow: [
+          "/",
+          "/jobs",
+          "/companies",
+          "/companies/*",
+          "/industries",
+          "/industries/*",
+          "/freshers-jobs",
+          "/internship-jobs",
+          "/remote-jobs",
+          "/skills",
+          "/blog",
+        ],
         disallow: privateDisallows,
       },
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }
-
