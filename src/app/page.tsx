@@ -84,7 +84,7 @@ export default function HomePage() {
         <JobDiscoveryHero
           headline="Find the right job. Build your future."
           description="Search verified opportunities from leading companies and discover roles that match your skills, location, and career goals."
-          showJobCards={true}
+          showJobCards={false}
           showSkillChips={true}
           showCareerPath={true}
           enableMotion={true}

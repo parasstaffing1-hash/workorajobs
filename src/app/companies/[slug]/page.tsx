@@ -165,10 +165,12 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
     ],
   };
 
+  const faqsList = company.faqs || [];
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: company.faqs.map((faq) => ({
+    mainEntity: faqsList.map((faq) => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
@@ -183,7 +185,8 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
       <JsonLd data={organizationSchema} />
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
-      {company.faqs.length > 0 && <JsonLd data={faqSchema} />}
+      {faqsList.length > 0 && <JsonLd data={faqSchema} />}
+
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-8">
         {/* Navigation Breadcrumb & Last Updated */}
@@ -470,13 +473,13 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
             </Card>
 
             {/* Section 8: Frequently Asked Questions */}
-            {company.faqs.length > 0 && (
+            {faqsList.length > 0 && (
               <Card className="p-6 border-border/70 bg-card space-y-4 shadow-sm">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <HelpCircle className="h-5 w-5 text-primary" /> Frequently asked questions
                 </h2>
                 <div className="space-y-3">
-                  {company.faqs.map((faq, idx) => (
+                  {faqsList.map((faq, idx) => (
                     <div key={idx} className="rounded-xl border border-border/60 bg-secondary/15 p-4 space-y-1">
                       <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
                         <span className="text-primary font-mono">Q.</span> {faq.question}
@@ -545,7 +548,7 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
                 <Sparkles className="h-4 w-4 text-primary" /> Verified Workplace Benefits
               </h3>
               <div className="space-y-2.5">
-                {company.benefits.map((b, idx) => (
+                {(company.benefits || []).map((b, idx) => (
                   <div key={idx} className="rounded-xl border border-border/60 bg-secondary/20 p-3 text-xs space-y-1">
                     <span className="font-bold text-foreground block">{b.title}</span>
                     <span className="text-muted-foreground block text-[11px] leading-normal">{b.description}</span>
@@ -553,6 +556,7 @@ export default async function EnterpriseCompanyPage({ params }: Props) {
                 ))}
               </div>
             </Card>
+
           </div>
         </div>
       </div>

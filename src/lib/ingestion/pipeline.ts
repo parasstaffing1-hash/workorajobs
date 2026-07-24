@@ -93,11 +93,13 @@ export class JobIngestionPipeline {
         company = await prisma.company.create({
           data: {
             name: target.companyName,
+            slug: target.companyName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-"),
             domain: target.domain,
             websiteUrl: `https://${target.domain}`,
             ownerId: adminUser.id,
           },
         });
+
       }
 
       const activeFingerprints: string[] = [];

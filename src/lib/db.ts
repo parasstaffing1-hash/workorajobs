@@ -92,11 +92,17 @@ export class DatabaseService {
     logoUrl?: string;
     domain?: string;
     ownerId: string;
+    slug?: string;
   }) {
+    const slug = data.slug || data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-");
     return prisma.company.create({
-      data,
+      data: {
+        ...data,
+        slug,
+      },
     });
   }
+
 
   // 4. Locations & Skills Repository
   static async getLocations() {

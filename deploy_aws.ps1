@@ -16,17 +16,14 @@ npx next build
 
 # 2. Package standalone build & static assets
 Write-Host "Step 2/4: Creating release bundle..." -ForegroundColor Yellow
-if (Test-Path build_output) { Remove-Item -Recurse -Force build_output }
 if (Test-Path release_bundle.tar.gz) { Remove-Item -Force release_bundle.tar.gz }
 
-New-Item -ItemType Directory -Path build_output | Out-Null
-Copy-Item -Recurse -Force .next\standalone\* build_output\
-New-Item -ItemType Directory -Force -Path build_output\.next | Out-Null
-Copy-Item -Recurse -Force .next\static build_output\.next\
-Copy-Item -Recurse -Force public build_output\
+# Copy static assets into standalone folder directly before archiving
+Copy-Item -Recurse -Force .next\static .next\standalone\.next\ -ErrorAction SilentlyContinue
+Copy-Item -Recurse -Force public .next\standalone\ -ErrorAction SilentlyContinue
 
-tar -czf release_bundle.tar.gz -C build_output .
-Remove-Item -Recurse -Force build_output
+tar -czf release_bundle.tar.gz -C .next\standalone .
+
 
 # 3. Upload package via SCP
 Write-Host "Step 3/4: Uploading release bundle to EC2..." -ForegroundColor Yellow

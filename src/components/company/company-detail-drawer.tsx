@@ -200,11 +200,12 @@ export function CompanyDetailDrawer({
                 {(
                   [
                     { id: "overview", label: "Overview & Tech Stack", icon: Building2 },
-                    { id: "benefits", label: `Benefits (${company.benefits.length})`, icon: HeartHandshake },
-                    { id: "reviews", label: `Reviews (${company.reviews.length})`, icon: MessageSquare },
+                    { id: "benefits", label: `Benefits (${(company.benefits || []).length})`, icon: HeartHandshake },
+                    { id: "reviews", label: `Reviews (${(company.reviews || []).length})`, icon: MessageSquare },
                     { id: "jobs", label: `Open Jobs (${companyJobs.length || company.openJobsCount})`, icon: Briefcase },
                   ] as const
                 ).map((tab) => {
+
                   const Icon = tab.icon;
                   const active = activeTab === tab.id;
 
@@ -267,7 +268,7 @@ export function CompanyDetailDrawer({
                     Verified workplace perks, compensation structure, and health benefits offered by {company.name}.
                   </p>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {company.benefits.map((benefit, idx) => (
+                    {(company.benefits || []).map((benefit, idx) => (
                       <div
                         key={idx}
                         className="rounded-xl border border-border/70 bg-secondary/15 p-4 space-y-1.5"
@@ -304,7 +305,8 @@ export function CompanyDetailDrawer({
                   </div>
 
                   <div className="space-y-3">
-                    {company.reviews.map((rev) => (
+                    {(company.reviews || []).map((rev) => (
+
                       <div
                         key={rev.id}
                         className="rounded-xl border border-border/70 bg-card p-4 space-y-2"

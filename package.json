@@ -22,8 +22,15 @@
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
     "test": "jest",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "companies:discover-countries": "tsx scripts/companies-cli.ts discover-countries",
+    "companies:import-country": "tsx scripts/companies-cli.ts import-country",
+    "companies:import-all-countries": "tsx scripts/companies-cli.ts import-all-countries",
+    "companies:verify": "tsx scripts/companies-cli.ts verify",
+    "companies:apply": "tsx scripts/companies-cli.ts apply",
+    "companies:report": "tsx scripts/companies-cli.ts report"
   },
+
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },

@@ -454,26 +454,101 @@ model FaqItem {
 // ==========================================
 
 model Company {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  websiteUrl  String?
-  logoUrl     String?
-  domain      String?  @unique
-  rating      Float?   @default(4.5)
-  deletedAt   DateTime?
-  ownerId     String   @unique
-  owner       User          @relation(fields: [ownerId], references: [id])
-  jobs        Job[]
-  jobPages    JobPage[]
-  companyUsers CompanyUser[]
-  verification CompanyVerification?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime @updatedAt
+  id                      String     @id @default(cuid())
+  slug                    String?    @unique
 
+  name                    String
+  officialName            String?
+  displayName             String?
+  legalName               String?
+  alternateNames          String[]   @default([])
+  formerNames             String[]   @default([])
+  description             String?
+  shortDescription        String?
+  officialDomain          String?    @unique
+  websiteUrl              String?
+  careersUrl              String?
+  logoUrl                 String?
+  logoSource              String?
+  logoAltText             String?
+  domain                  String?    @unique
+  rating                  Float?     @default(4.5)
+  countryCode             String?    @default("US")
+  headquartersCity        String?
+  headquartersState       String?
+  headquartersCountry     String?    @default("United States")
+  operatingCountries      String[]   @default([])
+  industry                String?
+  subIndustries           String[]   @default([])
+  companyType             String?    @default("Enterprise")
+  ownershipType           String?    @default("Public")
+  publicPrivateStatus     String?    @default("Public")
+  startupStage            String?
+  foundedYear             Int?
+  employeeRange           String?
+  companySizeSource       String?
+  exchangeListings        Json?
+  tickerSymbols           String[]   @default([])
+  secCik                  String?
+  nseSymbol               String?
+  bseScripCode            String?
+  isin                    String?
+  qualificationReason     String?
+  linkedinUrl             String?
+  otherVerifiedSocialUrls Json?
+  remoteWorkStatus        String?    @default("Hybrid")
+  internshipStatus        Boolean    @default(true)
+  graduateProgramStatus   Boolean    @default(true)
+  activeJobCount          Int        @default(0)
+  lastJobVerifiedAt       DateTime?
+  lastCompanyVerifiedAt   DateTime?
+  dataSources             Json?
+  fieldProvenance         Json?
+  verificationStatus      String?    @default("VERIFIED")
+  seoTitle                String?
+  metaDescription         String?
+  canonicalUrl            String?
+  indexingStatus          String?    @default("published_indexable")
+  contentQualityScore     Int        @default(90)
+  deletedAt               DateTime?
+  ownerId                 String?    @unique
+  owner                   User?      @relation(fields: [ownerId], references: [id])
+  jobs                    Job[]
+  jobPages                JobPage[]
+  companyUsers            CompanyUser[]
+  verification            CompanyVerification?
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  @@index([slug])
   @@index([name])
+  @@index([countryCode])
+  @@index([industry])
+  @@index([publicPrivateStatus])
+  @@index([indexingStatus])
   @@index([deletedAt])
 }
+
+model CompanyImportLog {
+  id              String   @id @default(cuid())
+  sourceName      String
+  recordsFetched  Int      @default(0)
+  recordsImported Int      @default(0)
+  recordsExcluded Int      @default(0)
+  exclusionReason String?
+  status          String   @default("COMPLETED")
+  createdAt       DateTime @default(now())
+}
+
+model CompanyDuplicateQueue {
+  id                String   @id @default(cuid())
+  primaryCompanyId  String
+  duplicateCandidate String
+  confidenceScore   Float    @default(0.0)
+  status            String   @default("PENDING_REVIEW")
+  createdAt         DateTime @default(now())
+}
+
 
 model JobCategory {
   id               String        @id @default(cuid())

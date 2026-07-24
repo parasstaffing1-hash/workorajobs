@@ -91,7 +91,7 @@ export function JobDiscoveryHero({
   searchPlaceholder = "Job title, skill, or company",
   popularSearches = defaultPopularSearches,
   featuredJobs = defaultFeaturedJobs,
-  showJobCards = true,
+  showJobCards = false,
   showSkillChips = true,
   showCareerPath = true,
   enableMotion = true,

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Worksheet ss:Name="1000s Companies MarketCap INR">
+  <Table>
+   <Row>
+    <Cell><Data ss:Type="String">Rank</Data></Cell>
+    <Cell><Data ss:Type="String">Company Name</Data></Cell>
+    <Cell><Data ss:Type="String">Slug</Data></Cell>
+    <Cell><Data ss:Type="String">Ticker Symbol</Data></Cell>
+    <Cell><Data ss:Type="String">Market Cap Currency</Data></Cell>
+    <Cell><Data ss:Type="String">Country</Data></Cell>
+    <Cell><Data ss:Type="String">Official Website URL</Data></Cell>
+    <Cell><Data ss:Type="String">Official Careers Portal URL</Data></Cell>
+   </Row>
+
+  </Table>
+ </Worksheet>
+</Workbook>
