@@ -1,62 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { signJwt } from "@/lib/jwt";
-import { SessionStore } from "@/lib/auth/session-store";
+import { EnterpriseAuthController } from "@/lib/auth/enterprise-auth-controller";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password, rememberMe } = body;
+    const body = await request.json().catch(() => ({}));
+    const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+    const userAgent = request.headers.get("user-agent") || "";
 
-    if (!email || !password) {
-      return NextResponse.json({ success: false, error: "Email and password are required." }, { status: 400 });
-    }
+    const result = await EnterpriseAuthController.login(body, ip, userAgent);
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    const dbUser = await prisma.user.findUnique({ where: { email: cleanEmail } }).catch(() => null);
-
-    if (dbUser && dbUser.passwordHash) {
-      const isMatch = await bcrypt.compare(password, dbUser.passwordHash).catch(() => false);
-      if (!isMatch) {
-        return NextResponse.json({ success: false, error: "Invalid email or password." }, { status: 401 });
-      }
-    }
-
-    const user = dbUser || {
-      id: `seeker-demo-id`,
-      email: cleanEmail,
-      name: cleanEmail.split("@")[0],
-      role: "JOB_SEEKER",
-    };
-
-    const session = await SessionStore.createSession({
-      userId: user.id,
-      email: user.email,
-      role: "JOB_SEEKER",
-      rememberMe,
-    }).catch(() => ({ sessionToken: `dev-session-${Date.now()}` }));
-
-    const token = signJwt({ userId: user.id, email: user.email, role: "JOB_SEEKER" });
-
-    const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+    const maxAge = body.rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
 
     const response = NextResponse.json({
       success: true,
       message: "Login successful!",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: "JOB_SEEKER",
-      },
-      token,
+      user: result.user,
+      token: result.accessToken,
+      sessionToken: result.sessionToken,
     });
 
-    response.cookies.set("sessionToken", session.sessionToken, {
+    response.cookies.set("sessionToken", result.sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -64,7 +29,7 @@ export async function POST(request: NextRequest) {
       path: "/",
     });
 
-    response.cookies.set("userRole", "JOB_SEEKER", {
+    response.cookies.set("userRole", result.user.role, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -74,6 +39,15 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || "Login failed." }, { status: 400 });
+    const statusCode = err.statusCode || 401;
+    const errorMessage = err.message || "Invalid email or password.";
+    return NextResponse.json(
+      {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      },
+      { status: statusCode }
+    );
   }
 }

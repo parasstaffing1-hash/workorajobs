@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
     const userAgent = request.headers.get("user-agent") || "";
 
@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
         message: "Registration successful!",
         user: result.user,
         token: result.accessToken,
+        sessionToken: result.sessionToken,
+        verificationToken: result.verificationToken,
       },
       { status: 201 }
     );
@@ -40,9 +42,15 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err: any) {
+    const statusCode = err.statusCode || 500;
+    const errorMessage = err.message || "Registration failed.";
     return NextResponse.json(
-      { success: false, error: err.message || "Registration failed." },
-      { status: 400 }
+      {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      },
+      { status: statusCode }
     );
   }
 }

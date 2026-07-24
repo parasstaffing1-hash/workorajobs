@@ -137,18 +137,17 @@ describe("SessionStore", () => {
       expect(diffDays).toBe(1);
     });
 
-    it("succeeds even when DB write fails (fault tolerance)", async () => {
+    it("throws database error when DB write fails during session creation", async () => {
       (prisma.userSession.create as jest.Mock).mockRejectedValue(new Error("DB offline"));
       (redis.set as jest.Mock).mockRejectedValue(new Error("Redis offline"));
 
-      const result = await SessionStore.createSession({
-        userId: "user-1",
-        email: "fallback@example.com",
-        role: "JOB_SEEKER",
-      });
-
-      expect(result.sessionToken).toBeDefined();
-      expect(result.sessionToken.length).toBe(64);
+      await expect(
+        SessionStore.createSession({
+          userId: "user-1",
+          email: "fallback@example.com",
+          role: "JOB_SEEKER",
+        })
+      ).rejects.toThrow("Database session creation failed.");
     });
   });
 
@@ -222,13 +221,12 @@ describe("SessionStore", () => {
       expect(result).toBeNull();
     });
 
-    it("provides dev fallback session for long tokens when DB is offline", async () => {
+    it("returns null when DB is offline and token not in cache", async () => {
       (redis.get as jest.Mock).mockRejectedValue(new Error("Redis down"));
       (prisma.userSession.findUnique as jest.Mock).mockRejectedValue(new Error("DB down"));
 
       const result = await SessionStore.getSession("dev-very-long-fallback-token-string");
-      expect(result).not.toBeNull();
-      expect(result!.userId).toBe("demo-user-id");
+      expect(result).toBeNull();
     });
   });
 

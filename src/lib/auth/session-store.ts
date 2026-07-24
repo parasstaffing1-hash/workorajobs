@@ -5,10 +5,9 @@ import { redis } from "@/lib/redis";
 /**
  * In-process LRU session cache to avoid Redis/DB round trips on hot paths.
  * TTL: 10 seconds. Max entries: 500.
- * This cache is per-process and automatically evicts expired entries.
  */
 const SESSION_CACHE = new Map<string, { data: SessionData; expireAt: number }>();
-const SESSION_CACHE_TTL_MS = 10_000; // 10 seconds
+const SESSION_CACHE_TTL_MS = 10_000;
 const SESSION_CACHE_MAX = 500;
 
 function getCachedSession(token: string): SessionData | undefined {
@@ -22,7 +21,6 @@ function getCachedSession(token: string): SessionData | undefined {
 }
 
 function setCachedSession(token: string, data: SessionData): void {
-  // Evict oldest entry if at capacity
   if (SESSION_CACHE.size >= SESSION_CACHE_MAX) {
     const firstKey = SESSION_CACHE.keys().next().value;
     if (firstKey) SESSION_CACHE.delete(firstKey);
@@ -74,7 +72,7 @@ export class SessionStore {
   }
 
   /**
-   * Creates a new user session in DB and Redis cache with Fallback Isolation
+   * Creates a new user session in DB and Redis cache
    */
   static async createSession(data: {
     userId: string;
@@ -89,9 +87,9 @@ export class SessionStore {
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
     const parsedUa = this.parseUserAgent(data.userAgent || "");
 
-    // Try PostgreSQL session creation
+    let session: any = null;
     try {
-      const session = await prisma.userSession.create({
+      session = await prisma.userSession.create({
         data: {
           userId: data.userId,
           sessionToken,
@@ -102,42 +100,47 @@ export class SessionStore {
           os: parsedUa.os,
           expiresAt,
         },
-      }).catch(() => null);
+      });
+    } catch (err: any) {
+      console.error("Failed to persist session in PostgreSQL:", err);
+      const dbErr: any = new Error("Database session creation failed.");
+      dbErr.statusCode = 500;
+      throw dbErr;
+    }
 
-      const sessionPayload: SessionData = {
-        sessionId: session?.id || "demo-session-id",
-        userId: data.userId,
-        email: data.email,
-        role: data.role,
-        deviceType: parsedUa.deviceType,
-        browser: parsedUa.browser,
-        os: parsedUa.os,
-        ipAddress: data.ipAddress || "127.0.0.1",
-        expiresAt: expiresAt.toISOString(),
-        isRevoked: false,
-      };
+    const sessionPayload: SessionData = {
+      sessionId: session.id,
+      userId: data.userId,
+      email: data.email,
+      role: data.role,
+      deviceType: parsedUa.deviceType,
+      browser: parsedUa.browser,
+      os: parsedUa.os,
+      ipAddress: data.ipAddress || "127.0.0.1",
+      expiresAt: expiresAt.toISOString(),
+      isRevoked: false,
+    };
 
-      try {
-        const ttlSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
-        await redis.set(
-          `session:${sessionToken}`,
-          JSON.stringify(sessionPayload),
-          "EX",
-          ttlSeconds
-        );
-      } catch (_) {}
+    try {
+      const ttlSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
+      await redis.set(
+        `session:${sessionToken}`,
+        JSON.stringify(sessionPayload),
+        "EX",
+        ttlSeconds
+      );
     } catch (_) {}
 
     return { sessionToken, expiresAt };
   }
 
   /**
-   * Validates active session token from Redis cache, PostgreSQL, or Fallback Payload
+   * Validates active session token from Redis cache or PostgreSQL
    */
   static async getSession(sessionToken: string): Promise<SessionData | null> {
     if (!sessionToken) return null;
 
-    // 0. In-process LRU cache (sub-microsecond, avoids Redis/DB entirely)
+    // 0. In-process LRU cache
     const lruHit = getCachedSession(sessionToken);
     if (lruHit) return lruHit;
 
@@ -154,7 +157,7 @@ export class SessionStore {
       }
     } catch (_) {}
 
-    // 2. Try PostgreSQL fallback — optimized: select only needed user columns
+    // 2. Try PostgreSQL fallback
     try {
       const session = await prisma.userSession.findUnique({
         where: { sessionToken },
@@ -163,9 +166,9 @@ export class SessionStore {
             select: { id: true, email: true, role: true, deletedAt: true },
           },
         },
-      }).catch(() => null);
+      });
 
-      if (session && !session.isRevoked && session.expiresAt >= new Date() && !session.user.deletedAt) {
+      if (session && !session.isRevoked && session.expiresAt >= new Date() && !session.user?.deletedAt) {
         const sessionPayload: SessionData = {
           sessionId: session.id,
           userId: session.user.id,
@@ -179,7 +182,6 @@ export class SessionStore {
           isRevoked: session.isRevoked,
         };
 
-        // Back-fill Redis cache asynchronously (fire-and-forget)
         const ttlSeconds = Math.floor((session.expiresAt.getTime() - Date.now()) / 1000);
         if (ttlSeconds > 0) {
           redis.set(`session:${sessionToken}`, JSON.stringify(sessionPayload), "EX", ttlSeconds).catch(() => {});
@@ -188,24 +190,9 @@ export class SessionStore {
         setCachedSession(sessionToken, sessionPayload);
         return sessionPayload;
       }
-    } catch (_) {}
-
-    // 3. Fallback demo session payload for dev preview mode
-    if (sessionToken.startsWith("dev-") || sessionToken.length > 10) {
-      const fallback: SessionData = {
-        sessionId: "demo-session-id",
-        userId: "demo-user-id",
-        email: "user@workorajobs.example.com",
-        role: "EMPLOYER",
-        deviceType: "Desktop",
-        browser: "Chrome",
-        os: "Windows",
-        ipAddress: "127.0.0.1",
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        isRevoked: false,
-      };
-      setCachedSession(sessionToken, fallback);
-      return fallback;
+    } catch (err: any) {
+      console.error("Database query failed during session retrieval:", err);
+      return null;
     }
 
     return null;
@@ -217,7 +204,6 @@ export class SessionStore {
   static async revokeSession(sessionToken: string): Promise<void> {
     if (!sessionToken) return;
 
-    // Invalidate all cache layers
     invalidateCachedSession(sessionToken);
 
     try {
@@ -228,7 +214,7 @@ export class SessionStore {
       await prisma.userSession.updateMany({
         where: { sessionToken },
         data: { isRevoked: true },
-      }).catch(() => null);
+      });
     } catch (_) {}
   }
 
@@ -244,7 +230,7 @@ export class SessionStore {
           isRevoked: false,
         },
         select: { sessionToken: true },
-      }).catch(() => []);
+      });
 
       for (const sess of otherSessions) {
         try {
@@ -258,7 +244,7 @@ export class SessionStore {
           sessionToken: { not: currentSessionToken },
         },
         data: { isRevoked: true },
-      }).catch(() => null);
+      });
     } catch (_) {}
   }
 
@@ -274,33 +260,21 @@ export class SessionStore {
           expiresAt: { gt: new Date() },
         },
         orderBy: { lastActiveAt: "desc" },
-      }).catch(() => []);
+      });
 
-      if (sessions.length > 0) {
-        return sessions.map((s) => ({
-          id: s.id,
-          deviceType: s.deviceType || "Desktop",
-          browser: s.browser || "Unknown Browser",
-          os: s.os || "Unknown OS",
-          ipAddress: s.ipAddress || "Hidden IP",
-          lastActiveAt: s.lastActiveAt,
-          createdAt: s.createdAt,
-          isCurrent: s.sessionToken === currentSessionToken,
-        }));
-      }
-    } catch (_) {}
-
-    return [
-      {
-        id: "sess-demo-1",
-        deviceType: "Desktop",
-        browser: "Chrome 122",
-        os: "Windows 11",
-        ipAddress: "127.0.0.1",
-        lastActiveAt: new Date(),
-        createdAt: new Date(),
-        isCurrent: true,
-      },
-    ];
+      return sessions.map((s) => ({
+        id: s.id,
+        deviceType: s.deviceType || "Desktop",
+        browser: s.browser || "Unknown Browser",
+        os: s.os || "Unknown OS",
+        ipAddress: s.ipAddress || "Hidden IP",
+        lastActiveAt: s.lastActiveAt,
+        createdAt: s.createdAt,
+        isCurrent: s.sessionToken === currentSessionToken,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch user sessions:", err);
+      return [];
+    }
   }
 }

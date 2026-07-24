@@ -12,6 +12,12 @@ jest.mock("@/lib/prisma", () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
+    userSession: {
+      create: jest.fn().mockResolvedValue({ id: "sess-1" }),
+      findUnique: jest.fn(),
+      updateMany: jest.fn(),
+      findMany: jest.fn(),
+    },
     passwordReset: {
       create: jest.fn(),
       findFirst: jest.fn(),
@@ -198,7 +204,7 @@ describe("EnterpriseAuthController", () => {
           email: "test@example.com",
           password: "wrong-password",
         })
-      ).rejects.toThrow("Invalid email address or password.");
+      ).rejects.toThrow("Invalid email or password.");
     });
 
     it("records failed login attempt in LoginHistory", async () => {

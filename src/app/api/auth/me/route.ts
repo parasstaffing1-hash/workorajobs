@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SessionStore } from "@/lib/auth/session-store";
 import { verifyJwt } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -10,16 +11,20 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-session-token");
 
   if (sessionToken) {
-    const session = await SessionStore.getSession(sessionToken);
+    const session = await SessionStore.getSession(sessionToken).catch(() => null);
     if (session) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { id: true, email: true, name: true, role: true, isEmailVerified: true },
+      }).catch(() => null);
+
       return NextResponse.json({
         success: true,
-        user: {
+        user: user || {
           id: session.userId,
           email: session.email,
           role: session.role,
         },
-        session,
       });
     }
   }
@@ -28,9 +33,14 @@ export async function GET(request: NextRequest) {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const jwt = verifyJwt(authHeader.substring(7));
     if (jwt) {
+      const user = await prisma.user.findUnique({
+        where: { id: jwt.userId },
+        select: { id: true, email: true, name: true, role: true, isEmailVerified: true },
+      }).catch(() => null);
+
       return NextResponse.json({
         success: true,
-        user: {
+        user: user || {
           id: jwt.userId,
           email: jwt.email,
           role: jwt.role || "JOB_SEEKER",
@@ -39,12 +49,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({
-    success: true,
-    user: {
-      id: "demo-user-id",
-      email: "user@workorajobs.example.com",
-      role: "EMPLOYER",
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Unauthenticated",
+      error: "Authentication required",
     },
-  });
+    { status: 401 }
+  );
 }

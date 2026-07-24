@@ -1,3 +1,11 @@
+/**
+ * ============================================================================
+ * ENTERPRISE AUTHENTICATION CONTROLLER (PRODUCTION-GRADE)
+ * Standardized Signup, Login, Password Reset, and Email Verification logic.
+ * Zero demo/fallback mock users. Real DB & bcrypt validation.
+ * ============================================================================
+ */
+
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +15,7 @@ import { signJwt } from "@/lib/jwt";
 export interface SignupInput {
   email: string;
   password: string;
-  role: "JOB_SEEKER" | "EMPLOYER" | "RECRUITER";
+  role?: "JOB_SEEKER" | "EMPLOYER" | "RECRUITER";
   name?: string;
   companyName?: string;
   companySize?: string;
@@ -23,39 +31,54 @@ export interface LoginInput {
 
 export class EnterpriseAuthController {
   /**
-   * Universal Signup Handler (Job Seeker / Employer / Recruiter)
+   * Universal Signup Handler
    */
   static async signup(input: SignupInput, ipAddress = "127.0.0.1", userAgent = "Browser") {
-    const cleanEmail = input.email.toLowerCase().trim();
-
-    // 1. Check existing user (optimized select)
-    let existingUser = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-      select: { id: true },
-    }).catch(() => null);
-
-    if (existingUser) {
-      throw new Error("An account with this email address already exists.");
+    if (!input.email || !input.password) {
+      const err: any = new Error("Email and password are required.");
+      err.statusCode = 400;
+      throw err;
     }
 
-    // 2. Hash password securely
-    const passwordHash = await bcrypt.hash(input.password, 12);
+    const cleanEmail = input.email.toLowerCase().trim();
 
-    // 3. Create user with role profile
-    let dbUser: any = null;
+    // 1. Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+      select: { id: true },
+    }).catch((err) => {
+      console.error("Database connection error during signup check:", err);
+      const dbErr: any = new Error("Database service unavailable.");
+      dbErr.statusCode = 500;
+      throw dbErr;
+    });
+
+    if (existingUser) {
+      const dupErr: any = new Error("An account with this email address already exists.");
+      dupErr.statusCode = 409; // Conflict
+      throw dupErr;
+    }
+
+    // 2. Hash password with bcrypt
+    const passwordHash = await bcrypt.hash(input.password, 12);
+    const role = input.role || "JOB_SEEKER";
+    const name = input.name || input.companyName || cleanEmail.split("@")[0];
+
+    // 3. Create real user record in PostgreSQL
+    let user: any;
     try {
-      dbUser = await prisma.user.create({
+      user = await prisma.user.create({
         data: {
           email: cleanEmail,
           passwordHash,
-          name: input.name || input.companyName || cleanEmail.split("@")[0],
-          role: input.role,
+          name,
+          role,
           isEmailVerified: false,
-          ...(input.role === "EMPLOYER"
+          ...(role === "EMPLOYER"
             ? {
                 employerProfile: {
                   create: {
-                    companyName: input.companyName || "My Enterprise",
+                    companyName: input.companyName || `${name}'s Company`,
                     businessEmail: cleanEmail,
                   },
                 },
@@ -76,17 +99,14 @@ export class EnterpriseAuthController {
           isEmailVerified: true,
         },
       });
-    } catch (_) {}
+    } catch (err: any) {
+      console.error("Prisma user creation error:", err);
+      const createErr: any = new Error("Failed to create user account. Please check database connectivity.");
+      createErr.statusCode = 500;
+      throw createErr;
+    }
 
-    const user = dbUser || {
-      id: `user-${Date.now()}`,
-      email: cleanEmail,
-      name: input.name || input.companyName || cleanEmail.split("@")[0],
-      role: input.role,
-      isEmailVerified: false,
-    };
-
-    // 4. Create verification token & audit log in parallel
+    // 4. Create verification token & audit log
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -101,14 +121,14 @@ export class EnterpriseAuthController {
       prisma.auditLog.create({
         data: {
           userId: user.id,
-          action: `USER_REGISTERED:${input.role}`,
+          action: `USER_REGISTERED:${role}`,
           ipAddress,
           userAgent,
         },
       }),
     ]).catch(() => null);
 
-    // 5. Create Session & JWT
+    // 5. Create Session in DB/Redis
     const session = await SessionStore.createSession({
       userId: user.id,
       email: user.email,
@@ -139,51 +159,67 @@ export class EnterpriseAuthController {
    * Universal Login Handler
    */
   static async login(input: LoginInput, ipAddress = "127.0.0.1", userAgent = "Browser") {
-    const cleanEmail = input.email.toLowerCase().trim();
-
-    // Select only required auth fields
-    let dbUser = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isEmailVerified: true,
-        passwordHash: true,
-      },
-    }).catch(() => null);
-
-    if (dbUser && dbUser.passwordHash) {
-      const isMatch = await bcrypt.compare(input.password, dbUser.passwordHash).catch(() => false);
-      if (!isMatch) {
-        prisma.loginHistory.create({
-          data: {
-            userId: dbUser.id,
-            email: cleanEmail,
-            status: "FAILED_INVALID_PASSWORD",
-            ipAddress,
-            userAgent,
-          },
-        }).catch(() => null);
-        throw new Error("Invalid email address or password.");
-      }
+    if (!input.email || !input.password) {
+      const err: any = new Error("Email and password are required.");
+      err.statusCode = 400;
+      throw err;
     }
 
-    const user = dbUser || {
-      id: "demo-user-id",
-      email: cleanEmail,
-      name: cleanEmail.split("@")[0],
-      role: cleanEmail.includes("employer") ? "EMPLOYER" : "JOB_SEEKER",
-      isEmailVerified: true,
-    };
+    const cleanEmail = input.email.toLowerCase().trim();
 
-    // Parallel background write for audit log & login history (non-blocking for response speed)
+    // 1. Fetch user from Database
+    let dbUser: any;
+    try {
+      dbUser = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isEmailVerified: true,
+          passwordHash: true,
+          deletedAt: true,
+        },
+      });
+    } catch (err: any) {
+      console.error("Database connection error during login:", err);
+      const dbErr: any = new Error("Database service unavailable.");
+      dbErr.statusCode = 500;
+      throw dbErr;
+    }
+
+    // 2. Reject if user does not exist, has no password, or is deleted
+    if (!dbUser || !dbUser.passwordHash || dbUser.deletedAt) {
+      const invalidErr: any = new Error("Invalid email or password.");
+      invalidErr.statusCode = 401; // Unauthorized
+      throw invalidErr;
+    }
+
+    // 3. Verify password with bcrypt
+    const isMatch = await bcrypt.compare(input.password, dbUser.passwordHash).catch(() => false);
+    if (!isMatch) {
+      prisma.loginHistory.create({
+        data: {
+          userId: dbUser.id,
+          email: cleanEmail,
+          status: "FAILED_INVALID_PASSWORD",
+          ipAddress,
+          userAgent,
+        },
+      }).catch(() => null);
+
+      const invalidErr: any = new Error("Invalid email or password.");
+      invalidErr.statusCode = 401; // Unauthorized
+      throw invalidErr;
+    }
+
+    // 4. Record successful login audit
     Promise.all([
       prisma.loginHistory.create({
         data: {
-          userId: user.id,
-          email: user.email,
+          userId: dbUser.id,
+          email: dbUser.email,
           status: "SUCCESS",
           ipAddress,
           userAgent,
@@ -191,7 +227,7 @@ export class EnterpriseAuthController {
       }),
       prisma.auditLog.create({
         data: {
-          userId: user.id,
+          userId: dbUser.id,
           action: "USER_LOGGED_IN",
           ipAddress,
           userAgent,
@@ -199,25 +235,26 @@ export class EnterpriseAuthController {
       }),
     ]).catch(() => null);
 
+    // 5. Create Session & Tokens
     const session = await SessionStore.createSession({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
+      userId: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
       ipAddress,
       userAgent,
       rememberMe: input.rememberMe,
     });
 
-    const accessToken = signJwt({ userId: user.id, email: user.email, role: user.role });
+    const accessToken = signJwt({ userId: dbUser.id, email: dbUser.email, role: dbUser.role });
     const refreshToken = crypto.randomBytes(40).toString("hex");
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        role: dbUser.role,
+        isEmailVerified: dbUser.isEmailVerified,
       },
       accessToken,
       refreshToken,
@@ -226,9 +263,15 @@ export class EnterpriseAuthController {
   }
 
   /**
-   * Generate Password Reset Token
+   * Request Password Reset
    */
   static async requestPasswordReset(email: string, ipAddress = "127.0.0.1") {
+    if (!email) {
+      const err: any = new Error("Email address is required.");
+      err.statusCode = 400;
+      throw err;
+    }
+
     const cleanEmail = email.toLowerCase().trim();
     const resetToken = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
@@ -241,7 +284,7 @@ export class EnterpriseAuthController {
           tokenHash,
           expiresAt,
         },
-      }).catch(() => null);
+      });
     } catch (_) {}
 
     return { success: true, resetToken };
@@ -251,24 +294,34 @@ export class EnterpriseAuthController {
    * Perform Password Reset
    */
   static async resetPassword(token: string, newPassword: string) {
+    if (!token || !newPassword) {
+      const err: any = new Error("Token and new password are required.");
+      err.statusCode = 400;
+      throw err;
+    }
+
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    let record = await prisma.passwordReset.findFirst({
+    const record = await prisma.passwordReset.findFirst({
       where: { tokenHash, isUsed: false, expiresAt: { gt: new Date() } },
     }).catch(() => null);
 
-    if (record) {
-      const passwordHash = await bcrypt.hash(newPassword, 12);
-      await prisma.user.update({
-        where: { email: record.email },
-        data: { passwordHash },
-      }).catch(() => null);
-
-      await prisma.passwordReset.update({
-        where: { id: record.id },
-        data: { isUsed: true },
-      }).catch(() => null);
+    if (!record) {
+      const err: any = new Error("Password reset token is invalid or expired.");
+      err.statusCode = 400;
+      throw err;
     }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { email: record.email },
+      data: { passwordHash },
+    });
+
+    await prisma.passwordReset.update({
+      where: { id: record.id },
+      data: { isUsed: true },
+    });
 
     return { success: true };
   }
@@ -277,23 +330,33 @@ export class EnterpriseAuthController {
    * Verify Email Address
    */
   static async verifyEmail(token: string) {
+    if (!token) {
+      const err: any = new Error("Verification token is required.");
+      err.statusCode = 400;
+      throw err;
+    }
+
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    let record = await prisma.passwordReset.findFirst({
+    const record = await prisma.passwordReset.findFirst({
       where: { tokenHash, isUsed: false, expiresAt: { gt: new Date() } },
     }).catch(() => null);
 
-    if (record) {
-      await prisma.user.update({
-        where: { email: record.email },
-        data: { isEmailVerified: true, emailVerifiedAt: new Date() },
-      }).catch(() => null);
-
-      await prisma.passwordReset.update({
-        where: { id: record.id },
-        data: { isUsed: true },
-      }).catch(() => null);
+    if (!record) {
+      const err: any = new Error("Verification token is invalid or expired.");
+      err.statusCode = 400;
+      throw err;
     }
+
+    await prisma.user.update({
+      where: { email: record.email },
+      data: { isEmailVerified: true, emailVerifiedAt: new Date() },
+    });
+
+    await prisma.passwordReset.update({
+      where: { id: record.id },
+      data: { isUsed: true },
+    });
 
     return { success: true };
   }
