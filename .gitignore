@@ -22,6 +22,9 @@ coverage/
 P.pem
 AWS IP.txt
 *.tar.gz
+*.tar
+scratch/
+var/
 audit_payload*.json
 temp_audit_prompt.json
 

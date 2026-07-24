@@ -39,19 +39,35 @@ export function middleware(request: NextRequest) {
     response.headers.set("X-Robots-Tag", "noindex, follow");
   }
 
-  // 5. Apply production security headers
+  // 5. Apply enterprise production security headers
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), display-capture=()"
   );
   response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   response.headers.set(
     "Strict-Transport-Security",
-    "max-age=31536000; includeSubDomains; preload"
+    "max-age=63072000; includeSubDomains; preload"
   );
+
+  // Content Security Policy (CSP)
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-eval needed for Next.js dev overlays
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https:",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ];
+  response.headers.set("Content-Security-Policy", cspDirectives.join("; "));
 
   return response;
 }

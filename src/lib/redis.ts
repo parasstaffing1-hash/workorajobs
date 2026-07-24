@@ -64,9 +64,15 @@ class MockRedis {
 
 export const redis = REDIS_URL
   ? new Redis(REDIS_URL, {
-      maxRetriesPerRequest: 1,
+      maxRetriesPerRequest: 2,
       connectTimeout: 2000,
       lazyConnect: true,
+      enableReadyCheck: true,
+      keepAlive: 10000, // TCP keepalive every 10s — prevents idle disconnections
+      retryStrategy(times) {
+        // Exponential backoff: 50ms, 100ms, 200ms... max 2s
+        return Math.min(times * 50, 2000);
+      },
     })
   : (new MockRedis() as unknown as Redis);
 

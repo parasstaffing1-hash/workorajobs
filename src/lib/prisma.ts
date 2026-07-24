@@ -20,10 +20,8 @@ export const prisma =
         url: dbUrl,
       },
     },
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
+    // Silence Prisma internal stderr logger in development when DB is offline
+    log: [],
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
@@ -41,7 +39,6 @@ export async function validateDatabaseConnection(): Promise<{
   const config = getSanitizedDbConfig();
 
   try {
-    // Ping PostgreSQL using lightweight query
     await prisma.$queryRaw`SELECT 1`;
     const latencyMs = Date.now() - startTime;
     return {
@@ -51,10 +48,6 @@ export async function validateDatabaseConnection(): Promise<{
     };
   } catch (error: any) {
     const latencyMs = Date.now() - startTime;
-    console.error(
-      `[DATABASE ERROR] PostgreSQL Connection Failed (${config.host}:${config.port}/${config.database}):`,
-      error?.message || error
-    );
     return {
       connected: false,
       latencyMs,

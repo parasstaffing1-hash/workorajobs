@@ -1,85 +1,29 @@
 import { prisma } from "@/lib/prisma";
-import { StorageProvider } from "./storage-provider";
-import { ResumeParser } from "./resume-parser";
-
-export const ApplicationStatus = {
-  APPLIED: "APPLIED",
-  UNDER_REVIEW: "UNDER_REVIEW",
-  SHORTLISTED: "SHORTLISTED",
-  INTERVIEW_SCHEDULED: "INTERVIEW_SCHEDULED",
-  HIRED: "HIRED",
-  REJECTED: "REJECTED",
-  WITHDRAWN: "WITHDRAWN"
-} as const;
-
-export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus];
+import { ApplicationStatus } from "@prisma/client";
 
 export class ApplicationService {
-  // 1. Resume Management
-  static async uploadResume(
-    userId: string,
-    buffer: Buffer,
-    originalFilename: string,
-    mimeType: string,
-    title?: string
-  ) {
-    const fileResult = await StorageProvider.saveResumeFile(buffer, originalFilename, mimeType);
-    const plainText = buffer.toString("utf-8"); // basic plain text fallback
-    const parsedData = ResumeParser.parseText(plainText);
-
-    // Check if user has existing default resume
-    const existingCount = await prisma.resume.count({ where: { userId } });
-    const isDefault = existingCount === 0;
-
-    const resume = await prisma.resume.create({
-      data: {
-        userId,
-        title: title || originalFilename,
-        fileUrl: fileResult.fileUrl,
-        fileSize: fileResult.fileSize,
-        fileType: mimeType,
-        isDefault,
-        parsedText: plainText,
-        extractedData: parsedData as any,
-      },
-    });
-
-    return resume;
-  }
-
-  static async getUserResumes(userId: string) {
-    return prisma.resume.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
-  static async setDefaultResume(userId: string, resumeId: string) {
-    await prisma.resume.updateMany({
-      where: { userId },
-      data: { isDefault: false },
-    });
-
-    return prisma.resume.update({
-      where: { id: resumeId },
-      data: { isDefault: true },
-    });
-  }
-
-  static async deleteResume(userId: string, resumeId: string) {
-    return prisma.resume.deleteMany({
-      where: { id: resumeId, userId },
-    });
-  }
-
-  // 2. Candidate Job Application Pipeline
-  static async submitApplication(data: {
+  /**
+   * Apply to a job with selected resume and optional cover letter & screening answers
+   */
+  static async applyToJob(data: {
     applicantId: string;
     jobId: string;
-    resumeId?: string;
+    resumeRecordId?: string;
     coverLetter?: string;
+    answers?: Record<string, any>;
+    isOneClick?: boolean;
   }) {
-    // 1. Check duplicate submission
+    // 1. Verify Job exists
+    const job = await prisma.job.findUnique({
+      where: { id: data.jobId },
+      include: { company: true },
+    });
+
+    if (!job || job.deletedAt) {
+      throw new Error("Job posting not found or is no longer accepting applications.");
+    }
+
+    // 2. Check duplicate application
     const existing = await prisma.application.findUnique({
       where: {
         applicantId_jobId: {
@@ -90,83 +34,165 @@ export class ApplicationService {
     });
 
     if (existing) {
-      throw new Error("You have already applied for this job position.");
+      throw new Error(`You have already applied for "${job.title}". Check your Application History dashboard.`);
     }
 
-    // 2. Resolve default resume if not specified
-    let selectedResumeId = data.resumeId;
-    let selectedResumeUrl: string | undefined = undefined;
+    // 3. Resolve Resume
+    let resumeUrl: string | undefined;
+    let resumeRecordId = data.resumeRecordId;
 
-    if (selectedResumeId) {
-      const res = await prisma.resume.findUnique({ where: { id: selectedResumeId } });
-      selectedResumeUrl = res?.fileUrl;
-    } else {
-      const defaultRes = await prisma.resume.findFirst({
+    if (resumeRecordId) {
+      const rec = await prisma.resumeRecord.findUnique({ where: { id: resumeRecordId } });
+      if (rec) resumeUrl = rec.fileUrl;
+    }
+
+    if (!resumeUrl) {
+      // Fallback to user default resume
+      const defaultRec = await prisma.resumeRecord.findFirst({
         where: { userId: data.applicantId, isDefault: true },
       });
-      selectedResumeId = defaultRes?.id;
-      selectedResumeUrl = defaultRes?.fileUrl;
+      if (defaultRec) {
+        resumeRecordId = defaultRec.id;
+        resumeUrl = defaultRec.fileUrl;
+      } else {
+        const userProfile = await prisma.userProfile.findUnique({ where: { userId: data.applicantId } });
+        resumeUrl = userProfile?.resumeUrl || undefined;
+      }
     }
 
-    const job = await prisma.job.findUnique({
-      where: { id: data.jobId },
-      include: { company: true },
-    });
-
-    if (!job || job.deletedAt) {
-      throw new Error("The target job listing is no longer available.");
-    }
-
-    // 3. Create Application
+    // 4. Create Application and Initial Status History Record
     const application = await prisma.application.create({
       data: {
         applicantId: data.applicantId,
         jobId: data.jobId,
-        resumeId: selectedResumeId,
-        resumeUrl: selectedResumeUrl,
-        coverLetter: data.coverLetter,
-        status: ApplicationStatus.APPLIED,
+        resumeRecordId,
+        resumeUrl,
+        coverLetter: data.coverLetter?.trim() || null,
+        answers: data.answers || undefined,
+        isOneClick: !!data.isOneClick,
+        status: "APPLIED",
+        statusHistory: {
+          create: {
+            fromStatus: "APPLIED",
+            toStatus: "APPLIED",
+            note: data.isOneClick ? "Applied via 1-Click Instant Application" : "Application submitted by candidate",
+          },
+        },
       },
-      include: { job: { include: { company: true } } },
+      include: {
+        job: { include: { company: true } },
+        statusHistory: true,
+      },
     });
 
-    // 4. Log initial status history
-    await prisma.applicationStatusHistory.create({
-      data: {
-        applicationId: application.id,
-        fromStatus: ApplicationStatus.APPLIED,
-        toStatus: ApplicationStatus.APPLIED,
-        note: "Candidate submitted application.",
-        changedById: data.applicantId,
-      },
-    });
-
-    // 5. In-App Notification Trigger
-    await prisma.notification.create({
+    // 5. Create Audit Log
+    await prisma.auditLog.create({
       data: {
         userId: data.applicantId,
-        title: "Application Submitted",
-        message: `Your application for ${job.title} at ${job.company.name} was successfully received.`,
-        type: "SUCCESS",
+        action: `JOB_APPLICATION_SUBMITTED:${job.title}:${data.jobId}`,
       },
     });
 
     return application;
   }
 
-  static async getCandidateApplications(applicantId: string) {
-    return prisma.application.findMany({
-      where: { applicantId },
-      include: {
-        job: { include: { company: true } },
-        resume: true,
-        statusHistory: true,
-      },
-      orderBy: { createdAt: "desc" },
+  /**
+   * One-Click Instant Application utilizing candidate's primary default resume
+   */
+  static async oneClickApply(applicantId: string, jobId: string) {
+    const defaultResume = await prisma.resumeRecord.findFirst({
+      where: { userId: applicantId, isDefault: true },
+    });
+
+    if (!defaultResume) {
+      throw new Error("No default resume found. Please upload a resume and mark it as primary default to use 1-Click Apply.");
+    }
+
+    return this.applyToJob({
+      applicantId,
+      jobId,
+      resumeRecordId: defaultResume.id,
+      isOneClick: true,
     });
   }
 
-  static async withdrawApplication(applicantId: string, applicationId: string) {
+  /**
+   * Fetch candidate applications history with timeline and job info
+   */
+  static async getCandidateApplications(applicantId: string, statusFilter?: string) {
+    const whereClause: any = { applicantId };
+
+    if (statusFilter && statusFilter !== "ALL") {
+      whereClause.status = statusFilter as ApplicationStatus;
+    }
+
+    const applications = await prisma.application.findMany({
+      where: whereClause,
+      include: {
+        job: {
+          include: {
+            company: {
+              select: {
+                id: true,
+                name: true,
+                logoUrl: true,
+                industry: true,
+                headquartersCity: true,
+              },
+            },
+          },
+        },
+        resumeRecord: {
+          select: {
+            id: true,
+            title: true,
+            fileName: true,
+            fileUrl: true,
+          },
+        },
+        statusHistory: {
+          orderBy: { createdAt: "desc" },
+        },
+        notes: {
+          select: { id: true, createdAt: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return applications.map((app) => ({
+      id: app.id,
+      status: app.status,
+      appliedAt: app.createdAt,
+      updatedAt: app.updatedAt,
+      isOneClick: app.isOneClick,
+      coverLetter: app.coverLetter,
+      withdrawalReason: app.withdrawalReason,
+      job: {
+        id: app.job.id,
+        title: app.job.title,
+        location: app.job.location,
+        type: app.job.type,
+        workMode: app.job.workMode,
+        salary: app.job.salary,
+        company: app.job.company,
+      },
+      resume: app.resumeRecord || (app.resumeUrl ? { fileUrl: app.resumeUrl, fileName: "Uploaded Resume" } : null),
+      timeline: app.statusHistory.map((h) => ({
+        id: h.id,
+        fromStatus: h.fromStatus,
+        toStatus: h.toStatus,
+        note: h.note,
+        createdAt: h.createdAt,
+      })),
+      employerNotesCount: app.notes.length,
+    }));
+  }
+
+  /**
+   * Withdraw an active application
+   */
+  static async withdrawApplication(applicationId: string, applicantId: string, reason?: string) {
     const app = await prisma.application.findFirst({
       where: { id: applicationId, applicantId },
     });
@@ -175,90 +201,104 @@ export class ApplicationService {
       throw new Error("Application not found or unauthorized.");
     }
 
-    if (app.status === ApplicationStatus.HIRED || app.status === ApplicationStatus.REJECTED) {
-      throw new Error("Cannot withdraw a closed application.");
+    if (app.status === "WITHDRAWN") {
+      throw new Error("Application has already been withdrawn.");
     }
+
+    const previousStatus = app.status;
 
     const updated = await prisma.application.update({
       where: { id: applicationId },
-      data: { status: ApplicationStatus.WITHDRAWN },
+      data: {
+        status: "WITHDRAWN",
+        withdrawalReason: reason?.trim() || "Candidate requested withdrawal",
+        statusHistory: {
+          create: {
+            fromStatus: previousStatus,
+            toStatus: "WITHDRAWN",
+            note: reason ? `Withdrawal reason: ${reason}` : "Withdrawn by candidate",
+          },
+        },
+      },
+      include: { statusHistory: { orderBy: { createdAt: "desc" } } },
     });
 
-    await prisma.applicationStatusHistory.create({
+    await prisma.auditLog.create({
       data: {
-        applicationId,
-        fromStatus: app.status,
-        toStatus: ApplicationStatus.WITHDRAWN,
-        note: "Candidate withdrew application.",
-        changedById: applicantId,
+        userId: applicantId,
+        action: `JOB_APPLICATION_WITHDRAWN:${applicationId}`,
       },
     });
 
     return updated;
   }
 
-  // 3. Employer Applicant Management
-  static async getJobApplicants(employerUserId: string, jobId: string) {
-    const job = await prisma.job.findFirst({
-      where: { id: jobId, postedById: employerUserId },
-    });
-
-    if (!job) {
-      throw new Error("Job not found or access denied.");
-    }
-
-    return prisma.application.findMany({
-      where: { jobId },
-      include: {
-        applicant: { select: { id: true, name: true, email: true, profile: true } },
-        resume: true,
-        statusHistory: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
+  /**
+   * Update Application Status (Recruiter / Admin Funnel Workflow)
+   */
   static async updateApplicationStatus(data: {
     applicationId: string;
-    changedById: string;
     newStatus: ApplicationStatus;
+    changedById?: string;
     note?: string;
   }) {
     const app = await prisma.application.findUnique({
       where: { id: data.applicationId },
-      include: { job: true },
     });
 
     if (!app) {
       throw new Error("Application not found.");
     }
 
+    const previousStatus = app.status;
+
     const updated = await prisma.application.update({
       where: { id: data.applicationId },
-      data: { status: data.newStatus },
-    });
-
-    // History Log
-    await prisma.applicationStatusHistory.create({
       data: {
-        applicationId: data.applicationId,
-        fromStatus: app.status,
-        toStatus: data.newStatus,
-        note: data.note || `Status updated to ${data.newStatus}`,
-        changedById: data.changedById,
+        status: data.newStatus,
+        statusHistory: {
+          create: {
+            fromStatus: previousStatus,
+            toStatus: data.newStatus,
+            note: data.note || `Status updated from ${previousStatus} to ${data.newStatus}`,
+            changedById: data.changedById,
+          },
+        },
       },
+      include: { statusHistory: { orderBy: { createdAt: "desc" } } },
     });
 
-    // Candidate Notification
-    await prisma.notification.create({
+    await prisma.auditLog.create({
       data: {
-        userId: app.applicantId,
-        title: "Application Status Update",
-        message: `Your application status for ${app.job.title} has been updated to ${data.newStatus}.`,
-        type: "INFO",
+        userId: data.changedById || app.applicantId,
+        action: `JOB_APPLICATION_STATUS_CHANGED:${data.applicationId}:${previousStatus}->${data.newStatus}`,
       },
     });
 
     return updated;
+  }
+
+  /**
+   * Add Employer Private Note to Application
+   */
+  static async addEmployerNote(data: {
+    applicationId: string;
+    authorId: string;
+    content: string;
+  }) {
+    const app = await prisma.application.findUnique({
+      where: { id: data.applicationId },
+    });
+
+    if (!app) throw new Error("Application not found.");
+
+    return prisma.candidateNote.create({
+      data: {
+        applicationId: data.applicationId,
+        candidateId: app.applicantId,
+        authorId: data.authorId,
+        content: data.content.trim(),
+      },
+    });
   }
 }
