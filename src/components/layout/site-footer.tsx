@@ -30,16 +30,16 @@ export function SiteFooter() {
     {
       title: "Company",
       links: [
-        { label: "About", href: "/about" },
+        { label: "About Us", href: "/about" },
         { label: "Careers", href: "/jobs" },
-        { label: "Contact", href: "/contact" },
+        { label: "Contact Us", href: "/contact" },
       ],
     },
     {
       title: "Resources",
       links: [
         { label: "Blog", href: "/blog" },
-        { label: "Help Center", href: "/resources" },
+        { label: "Help Center", href: "/help" },
         { label: "Resume Tips", href: "/resources" },
       ],
     },
@@ -52,11 +52,12 @@ export function SiteFooter() {
       ],
     },
     {
-      title: "Legal",
+      title: "Legal & Support",
       links: [
-        { label: "Privacy", href: "/privacy" },
-        { label: "Terms", href: "/terms" },
-        { label: "Cookies", href: "/cookie-policy" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
+        { label: "Cookie Policy", href: "/cookies" },
+        { label: "Contact Legal", href: "/contact" },
       ],
     },
   ];
