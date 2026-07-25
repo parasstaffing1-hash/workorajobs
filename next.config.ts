@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "clsx", "tailwind-merge"],
+    turbopack: {
+      root: __dirname,
+    },
   },
   async headers() {
     // Only apply strict CSP in production so dev server HMR and ws:// connections work cleanly
