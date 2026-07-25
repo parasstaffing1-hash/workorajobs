@@ -8,10 +8,7 @@
     "dev": "next dev -p 3000 -H 0.0.0.0",
     "dev:api": "pnpm --filter @workora/api start:dev",
     "build": "npx prisma@6.4.1 generate && next build",
-
-
     "postinstall": "prisma generate",
-
     "start": "next start -p 3000 -H 0.0.0.0",
     "preview": "next start -p 3000 -H 0.0.0.0",
     "seed": "tsx prisma/seed.ts",
@@ -30,11 +27,12 @@
     "companies:apply": "tsx scripts/companies-cli.ts apply",
     "companies:report": "tsx scripts/companies-cli.ts report"
   },
-
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1095.0",
+    "@aws-sdk/s3-request-presigner": "^3.1095.0",
     "@google/genai": "^2.12.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.4",
