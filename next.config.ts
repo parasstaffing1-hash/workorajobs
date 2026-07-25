@@ -82,7 +82,7 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(nextConfig, {
   // Sentry Webpack Plugin Options
   org: process.env.SENTRY_ORG || "workorajobs",
-  project: process.env.SENTRY_PROJECT || "workorajobs-web",
+  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
   silent: !process.env.CI,
   widenClientFileUpload: true,
   hideSourceMaps: true,
