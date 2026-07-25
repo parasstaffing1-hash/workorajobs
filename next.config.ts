@@ -4,7 +4,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   compress: true,
   trailingSlash: false,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
