@@ -10,8 +10,7 @@ export default function SentryExamplePage() {
     setStatus("Triggering client-side error...");
     try {
       // Trigger an intentional client exception
-      // @ts-expect-error Intentionally calling non-existent function for Sentry verification
-      window.myUndefinedFunction();
+      (window as unknown as Record<string, () => void>).myUndefinedFunction();
     } catch (error) {
       Sentry.captureException(error);
       setStatus("✅ Client-side error captured and dispatched to Sentry!");
