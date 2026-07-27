@@ -1,12 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "workora-jobs",
+  "main": ".next/standalone/server.js",
   "compatibility_date": "2024-09-23",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "pages_build_output_dir": ".next",
-  "site": {
-    "bucket": ".next"
+  "assets": {
+    "directory": ".next",
+    "binding": "ASSETS"
   }
 }
