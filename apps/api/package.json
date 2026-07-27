@@ -2,6 +2,10 @@
   "name": "@workora/api",
   "version": "0.1.0",
   "private": true,
+  "framework": false,
+  "wrangler": {
+    "ignore": true
+  },
   "description": "NestJS backend foundation for Workora Jobs.",
   "scripts": {
     "test": "jest",
