@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["clientExtensions"]
+  // clientExtensions is GA since Prisma 4.16 — no longer needed as preview
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -819,6 +819,9 @@ model Job {
   @@index([salary])
   @@index([workMode])
   @@index([experience])
+  @@index([postedById])
+  @@index([status, postedAt(sort: Desc)])
+  @@index([companyId, status])
   @@index([deletedAt])
 }
 
@@ -947,6 +950,10 @@ model Application {
   @@index([applicantId])
   @@index([jobId])
   @@index([status])
+  @@index([applicantId, status])
+  @@index([jobId, status])
+  @@index([resumeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model ApplicationStatusHistory {

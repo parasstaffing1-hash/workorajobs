@@ -1,7 +1,7 @@
 # Workora Jobs — AWS EC2 Production Deployment Script (PowerShell)
 $ErrorActionPreference = "Stop"
 
-$SERVER_IP = "16.171.202.34"
+$SERVER_IP = "13.60.195.192"
 $KEY_PATH = "C:\Users\HP\.ssh\temp_deploy.pem"
 $USER = "ec2-user"
 

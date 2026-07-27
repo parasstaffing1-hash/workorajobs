@@ -1,9 +1,54 @@
+# Version control
 .git
 .gitignore
+.github
+
+# Build output
 .next
 node_modules
-npm-debug.log
+build_output/
+*.tar.gz
+*.zip
+
+# Environment
+.env
+.env*.local
+
+# Docker
 Dockerfile*
 docker-compose*
-.env*.local
-docs
+
+# Documentation & tests
+docs/
+tests/
+scratch/
+artifacts/
+*.md
+!README.md
+
+# Data dumps
+*.csv
+*.xml
+!public/site.webmanifest
+
+# Config & tooling
+playwright.config.ts
+jest.config.cjs
+.prettierrc
+.prettierignore
+.eslintrc.json
+npm-debug.log
+.wrangler/
+.open-next/
+
+# Deployment scripts
+deploy*.sh
+deploy*.ps1
+nginx/
+workora_nginx.conf
+
+# Unnecessary for production
+apps/
+lib/
+scripts/
+var/

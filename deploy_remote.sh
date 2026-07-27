@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "🚀 Starting deployment on remote server 16.171.202.34..."
+echo "🚀 Starting deployment on remote server 13.60.195.192..."
 
 if [ ! -d "/opt/workora/current/.git" ]; then
     echo "Cloning repository..."
@@ -31,4 +31,4 @@ echo "Restarting workora-web service..."
 sudo systemctl restart workora-web
 sudo systemctl status workora-web --no-pager
 
-echo "🎉 Deployment to 16.171.202.34 completed successfully!"
+echo "🎉 Deployment to 13.60.195.192 completed successfully!"

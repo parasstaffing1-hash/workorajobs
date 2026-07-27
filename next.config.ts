@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   productionBrowserSourceMaps: false,
   compress: true,
+  poweredByHeader: false,
   trailingSlash: false,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   turbopack: {
@@ -28,7 +29,16 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "clsx", "tailwind-merge"],
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "clsx",
+      "tailwind-merge",
+      "@sentry/nextjs",
+      "zod",
+      "razorpay",
+      "@aws-sdk/client-s3",
+    ],
   },
   async headers() {
     if (!isProd) {

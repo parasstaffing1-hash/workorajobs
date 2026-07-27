@@ -44,3 +44,28 @@ build_output/
 user_extracted_ats/
 ats-resume-checker-package/
 
+# data dumps
+*.csv
+*.xml
+!site.webmanifest
+
+# build artifacts
+package-lock.json
+tsconfig.tsbuildinfo
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+
+# test artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# editor settings
+.vscode/
+.idea/
+
+# uploads (keep directory)
+public/uploads/*
+!public/uploads/.gitkeep

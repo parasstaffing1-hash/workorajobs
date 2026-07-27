@@ -14,14 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
 import { JobDiscoveryHero } from "@/components/hero/job-discovery-hero";
-import { HeroBackground } from "@/components/hero/hero-background";
-
-import { HeroBadge } from "@/components/hero/hero-badge";
-import { AnimatedHeroHeadline } from "@/components/hero/animated-hero-headline";
-import { AnimatedSearchBar } from "@/components/hero/animated-search-bar";
-import { HeroCTA } from "@/components/hero/hero-cta";
-import { LiveHiringMetrics } from "@/components/hero/live-hiring-metrics";
-import { HeroMockupSection } from "@/components/hero/hero-mockup-section";
 import { AiToolsSection } from "@/components/home/ai-tools-section";
 import { PremiumTrustSection } from "@/components/home/premium-trust-section";
 import { ConversionCTA } from "@/components/home/conversion-cta";
