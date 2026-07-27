@@ -9,7 +9,8 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "workora-hyperdrive-db"
+      "id": "workora-hyperdrive-db",
+      "localConnectionString": "postgresql://postgres:Supernoddy1%40@db.jayggxfyztajmtwmzxlb.supabase.co:5432/postgres"
     }
   ],
   "observability": {
