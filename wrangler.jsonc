@@ -1,17 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "workora-jobs-worker",
+  "name": "workorajobs",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "pages_build_output_dir": ".next",
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "workora-hyperdrive-db",
-      "localConnectionString": "postgresql://postgres:Supernoddy1%40@db.jayggxfyztajmtwmzxlb.supabase.co:5432/postgres"
+      "id": "2794d92e236a4d22a0e2b42118d5ee86"
     }
   ],
   "observability": {
@@ -22,7 +20,7 @@
   },
   "env": {
     "preview": {
-      "name": "workora-jobs-worker-preview"
+      "name": "workorajobs-preview"
     }
   }
 }
