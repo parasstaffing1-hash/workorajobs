@@ -28,6 +28,9 @@ import {
 
 import { CompanyLogo } from "@/components/company/company-logo";
 import { findCompanyBySlug, companiesData } from "@/data/companies";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { jobs, getJobSlug } from "@/data/jobs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

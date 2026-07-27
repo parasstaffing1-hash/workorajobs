@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { 
   Building2, 
   MapPin, 
