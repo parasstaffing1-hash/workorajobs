@@ -1,55 +1,70 @@
-# Workora Jobs — Fast Local Production Deployment Guide
+# WorkoraJobs — Enterprise Multi-Platform Deployment Guide
 
-To prevent memory overload on low-RAM EC2 instances (e.g. `t3.micro`), **never run `npm run build` on the server**. Always build locally and transfer the pre-compiled standalone package to EC2.
+This repository is optimized for zero-downtime, deterministic deployments across **Vercel**, **AWS EC2**, **Docker**, and **Local Workstations** using **pnpm 9.15.4** and **Node.js 20 LTS**.
 
 ---
 
-## ⚡ Quick One-Command Deployment
+## 🛠️ Pinned Toolchain & Environment Requirements
 
-Run the automated deployment script locally from the `workorajobs` root directory:
+- **Node.js**: `20.18.0` (pinned via `.nvmrc`)
+- **Package Manager**: `pnpm@9.15.4` (pinned via `packageManager` field in `package.json`)
+- **Package Config**: `.npmrc` (`node-linker=hoisted`, `auto-install-peers=true`)
+- **Framework**: Next.js 15 (`output: "standalone"`)
+- **Database ORM**: Prisma Client v6 (`prisma@6.4.1`)
 
-### Bash / Git Bash:
+---
+
+## 🚀 1. Deploying to Vercel (Recommended)
+
+Vercel natively detects `packageManager: "pnpm@9.15.4"` in `package.json` and deploys automatically:
+
+### GitHub Integration:
+1. Connect your repository `parasstaffing1-hash/workorajobs` on [vercel.com/new](https://vercel.com/new).
+2. Set Environment Variables (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`).
+3. Click **Deploy**. Vercel will install dependencies via `pnpm` and deploy serverless edge functions.
+
+---
+
+## ⚡ 2. Deploying to AWS EC2
+
+Deployments to AWS EC2 use pre-built standalone artifacts or native server builds with `pnpm`:
+
+### Target Server Details:
+- **Server IP**: `16.171.202.34`
+- **Runtime Path**: `/opt/workora/runtime`
+- **Service**: `workora-web.service`
+- **Reverse Proxy**: Nginx (Port 80/443 -> `http://127.0.0.1:3000`)
+
+---
+
+## 🐳 3. Docker Deployment
+
+Build and run the multi-stage production Docker container:
+
 ```bash
-./deploy.sh
-```
+# Build production image
+docker build -t workora-jobs:latest .
 
-### PowerShell:
-```powershell
-# 1. Build locally
-npm run build
-
-# 2. Package build
-Remove-Item -Recurse -Force build_output -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path build_output
-Copy-Item -Recurse -Force .next\standalone\* build_output\
-New-Item -ItemType Directory -Force -Path build_output\.next
-Copy-Item -Recurse -Force .next\static build_output\.next\
-Copy-Item -Recurse -Force public build_output\
-tar -czf release_bundle.tar.gz -C build_output .
-Remove-Item -Recurse -Force build_output
-
-# 3. Upload & Deploy
-scp -i C:\Users\HP\.ssh\temp_deploy.pem -o StrictHostKeyChecking=no release_bundle.tar.gz ec2-user@16.171.202.34:/tmp/release_bundle.tar.gz
-ssh -i C:\Users\HP\.ssh\temp_deploy.pem -o StrictHostKeyChecking=no ec2-user@16.171.202.34 "sudo tar -xzf /tmp/release_bundle.tar.gz -C /opt/workora/runtime/ && sudo systemctl restart workora-web && sudo systemctl reload nginx"
+# Run container locally on Port 3000
+docker run -d -p 3000:3000 --env-file .env workora-jobs:latest
 ```
 
 ---
 
-## 📋 Architecture & Server Requirements
+## 🧪 4. Local Development & Verification
 
-- **Target IP**: `16.171.202.34`
-- **Domain**: `https://workorajobs.com`
-- **Remote Runtime Path**: `/opt/workora/runtime`
-- **Systemd Service**: `workora-web.service`
-- **Web Server**: `nginx` (Proxying port 80/443 -> 127.0.0.1:3000)
-- **SSH User / Key**: `ec2-user` with `C:\Users\HP\.ssh\temp_deploy.pem`
+To verify the codebase locally before pushing:
 
----
+```bash
+# 1. Install exact dependencies
+pnpm install
 
-## 🔒 Preserved Assets During Deployment
+# 2. Generate Prisma Client
+pnpm prisma generate
 
-The following files on the EC2 server are **never deleted or overwritten**:
-- Environment variables & `.env` file (`/opt/workora/runtime/.env`)
-- SSL certificates (`/etc/letsencrypt/`)
-- Nginx configuration (`/etc/nginx/conf.d/workora.conf`)
-- Database data & user uploads
+# 3. Type check & Lint
+pnpm lint
+
+# 4. Production Build
+pnpm build
+```

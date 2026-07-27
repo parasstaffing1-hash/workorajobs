@@ -1,12 +1,13 @@
-# Multi-stage Production Dockerfile for WorkoraJobs Next.js 16
+# Multi-stage Production Dockerfile for WorkoraJobs Next.js 15
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # 1. Install dependencies
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN npx pnpm i --frozen-lockfile || npm ci
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # 2. Rebuild source code
 FROM base AS builder
@@ -16,8 +17,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN npx prisma generate
-RUN npm run build
+RUN pnpm prisma generate
+RUN pnpm build
 
 # 3. Production runner image
 FROM base AS runner
@@ -38,6 +39,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/v1/health/liveness || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/v1/health || exit 1
 
 CMD ["node", "server.js"]
