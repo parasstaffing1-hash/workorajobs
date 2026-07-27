@@ -2,6 +2,24 @@
 
 Workora Jobs is an enterprise staffing and recruitment platform built with Next.js 15, TypeScript, Tailwind CSS, NestJS, PostgreSQL, Prisma, Redis, Docker and Nginx.
 
+## Workspace Architecture
+
+This repository is structured as a pnpm monorepo with two primary applications:
+
+1. **Main Next.js Web Application (`workora-jobs`)**
+   - **Location**: Root directory (`/`)
+   - **Framework**: **Next.js 15** (App Router inside `src/app`)
+   - **Purpose**: Frontend web app, SSR pages, SEO landing pages, dashboard UI, and Next.js serverless API routes (`/api/...`).
+   - **Deployment Target**: Cloudflare Pages / Vercel / AWS EC2.
+
+2. **Backend REST API Application (`@workora/api`)**
+   - **Location**: [`apps/api`](apps/api)
+   - **Framework**: **NestJS 10** (`@nestjs/core`)
+   - **Purpose**: Dedicated standalone NestJS REST API microservice.
+   - **Deployment Target**: Node.js server (EC2 / Docker container).
+
+---
+
 ## What Is Included
 
 - Public marketing website
@@ -57,4 +75,3 @@ pnpm build
 ```
 
 See `docs/` for installation, architecture, API, deployment and environment details.
-
