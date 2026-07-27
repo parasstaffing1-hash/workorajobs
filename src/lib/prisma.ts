@@ -1,33 +1,33 @@
 import { PrismaClient } from "@prisma/client";
 import { getDatabaseUrl, getSanitizedDbConfig } from "./db-config";
 
-const dbUrl = getDatabaseUrl();
+function createPrismaClient(): PrismaClient {
+  const dbUrl = getDatabaseUrl();
 
-// Ensure process.env.DATABASE_URL is set dynamically for Prisma Client runtime
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = dbUrl;
+  if (typeof process !== "undefined" && !process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = dbUrl;
+  }
+
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: dbUrl,
+      },
+    },
+    log: [],
+  });
 }
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    datasources: {
-      db: {
-        url: dbUrl,
-      },
-    },
-    // Silence Prisma internal stderr logger in development when DB is offline
-    log: [],
-  });
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 /**
- * Validate connection on startup with graceful error handling
+ * Validate connection on startup / health probes with latency measurement
  */
 export async function validateDatabaseConnection(): Promise<{
   connected: boolean;

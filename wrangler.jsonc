@@ -2,7 +2,16 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "workora-jobs",
   "compatibility_date": "2026-07-27",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "pages_build_output_dir": ".next",
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "workora-hyperdrive-db"
+    }
+  ],
   "observability": {
     "enabled": true
   },
