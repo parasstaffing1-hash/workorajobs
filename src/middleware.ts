@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const url = request.nextUrl.clone();
-  const pathname = url.pathname;
-  const searchParams = url.searchParams;
+  const { pathname, searchParams } = request.nextUrl;
 
   // 1. Skip system files, static files, APIs, and Next.js internals
   if (
@@ -17,13 +15,14 @@ export function middleware(request: NextRequest) {
 
   // 2. Duplicate slash removal (e.g. /jobs//details -> /jobs/details)
   if (pathname.includes("//")) {
-    const cleanPath = pathname.replace(/\/+/g, "/");
-    url.pathname = cleanPath;
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/\/+/g, "/");
     return NextResponse.redirect(url, 308);
   }
 
   // 3. Lowercase URL normalization
   if (/[A-Z]/.test(pathname)) {
+    const url = request.nextUrl.clone();
     url.pathname = pathname.toLowerCase();
     return NextResponse.redirect(url, 308);
   }
