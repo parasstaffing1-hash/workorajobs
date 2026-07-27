@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "workora-jobs",
+  "name": "workora-jobs-worker",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": [
@@ -23,7 +23,7 @@
   },
   "env": {
     "preview": {
-      "name": "workora-jobs-preview"
+      "name": "workora-jobs-worker-preview"
     }
   }
 }
