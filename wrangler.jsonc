@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "workora-jobs",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": [
     "nodejs_compat"
@@ -15,6 +16,10 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
   },
   "env": {
     "preview": {
