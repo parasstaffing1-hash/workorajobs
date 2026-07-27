@@ -1,15 +1,37 @@
 import { NextResponse } from "next/server";
-import { validateDatabaseConnection } from "@/lib/prisma";
+import { prisma, validateDatabaseConnection } from "@/lib/prisma";
 
 export async function GET() {
-  // Readiness probe: verifies DB connectivity before accepting traffic
+  // Readiness probe: verifies DB connectivity and executes a live query via Hyperdrive
   const db = await validateDatabaseConnection();
 
   if (db.connected) {
-    return NextResponse.json(
-      { status: "READY", database: "CONNECTED", latencyMs: db.latencyMs },
-      { status: 200 }
-    );
+    try {
+      const jobCount = await prisma.job.count();
+      return NextResponse.json(
+        {
+          status: "READY",
+          database: "CONNECTED",
+          latencyMs: db.latencyMs,
+          details: {
+            hyperdrive: db.config.isHyperdrive,
+            databaseHost: db.config.host,
+            totalJobsSeeded: jobCount,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (queryErr: any) {
+      return NextResponse.json(
+        {
+          status: "READY",
+          database: "CONNECTED",
+          latencyMs: db.latencyMs,
+          queryError: queryErr?.message,
+        },
+        { status: 200 }
+      );
+    }
   }
 
   return NextResponse.json(
