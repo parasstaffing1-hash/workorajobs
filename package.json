@@ -2,19 +2,16 @@
   "name": "workora-jobs",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@9.15.4",
-  "framework": "nextjs",
   "type": "module",
   "description": "Workora interview preparation API",
   "scripts": {
     "dev": "next dev -p 3000 -H 0.0.0.0",
     "dev:api": "pnpm --filter @workora/api start:dev",
     "build": "npx prisma@6.4.1 generate && next build",
-    "deploy": "wrangler pages deploy .next --project-name workora-jobs",
-    "deploy:cloudflare": "wrangler pages deploy .next",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "postinstall": "prisma generate",
     "start": "next start -p 3000 -H 0.0.0.0",
-    "preview": "next start -p 3000 -H 0.0.0.0",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -43,7 +40,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/swagger": "^11.4.6",
+    "@nestjs/swagger": "^8.1.0",
     "@nestjs/throttler": "^6.5.0",
     "@next/third-parties": "^16.2.10",
     "@prisma/client": "^6.19.3",
@@ -79,6 +76,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@nestjs/testing": "^10.0.0",
+    "@opennextjs/cloudflare": "^1.20.2",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
@@ -94,7 +92,8 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "wrangler": "4.114.0"
   },
   "engines": {
     "node": ">=20.0.0"

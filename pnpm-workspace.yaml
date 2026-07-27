@@ -1,4 +1,6 @@
 packages:
+  # Cloudflare deploys the root Next.js application. The Nest prototype under
+  # apps/api is not a separate Worker and must not take part in detection.
   - "."
 allowBuilds:
   '@google/genai': true
@@ -6,7 +8,9 @@ allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   '@scarf/scarf': true
+  '@sentry/cli': true
   esbuild: true
   prisma: true
   protobufjs: true
   sharp: true
+  workerd: true
