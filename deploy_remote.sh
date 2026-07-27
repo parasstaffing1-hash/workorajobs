@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "🚀 Starting deployment on remote server 13.60.195.192..."
+echo "🚀 Starting deployment on remote server 16.171.202.34..."
 
 if [ ! -d "/opt/workora/current/.git" ]; then
     echo "Cloning repository..."
@@ -21,14 +21,12 @@ pnpm install --no-frozen-lockfile
 echo "Building standalone production application..."
 NEXT_OUTPUT_STANDALONE=1 pnpm build
 
-echo "Updating runtime server files..."
-cp -r .next/standalone/* /opt/workora/runtime/
-mkdir -p /opt/workora/runtime/.next
-cp -r .next/static /opt/workora/runtime/.next/
-cp -r public /opt/workora/runtime/
+echo "Updating standalone assets..."
+cp -r .next/static .next/standalone/.next/static
+cp -r public .next/standalone/public
 
-echo "Restarting workora-web service..."
-sudo systemctl restart workora-web
-sudo systemctl status workora-web --no-pager
+echo "Restarting workora service..."
+sudo systemctl restart workora
+sudo systemctl status workora --no-pager
 
-echo "🎉 Deployment to 13.60.195.192 completed successfully!"
+echo "🎉 Deployment to 16.171.202.34 completed successfully!"
