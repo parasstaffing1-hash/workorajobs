@@ -85,6 +85,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	seoService := service.NewSeoServiceWithBaseURL(db, cfg.AppURL)
 	sitemapService := service.NewSitemapService(db, cfg.AppURL)
 	pseoService := service.NewPseoService(db, seoService, cfg.AppURL)
+	linkingService := service.NewInternalLinkingService(db, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -93,6 +94,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	seoCtrl := controllers.NewSeoController(seoService, jobService)
 	sitemapCtrl := controllers.NewSitemapController(sitemapService)
 	pseoCtrl := controllers.NewPseoController(pseoService)
+	linkingCtrl := controllers.NewInternalLinkingController(linkingService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -114,6 +116,14 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	{
 		pseoGroup.GET("/page", pseoCtrl.GetPseoPage)
 		pseoGroup.GET("/related", pseoCtrl.GetRelatedLinks)
+	}
+
+	// Internal Linking Engine Endpoints
+	linkingGroup := r.Group("/api/v1/linking")
+	{
+		linkingGroup.GET("/entity", linkingCtrl.GetEntityLinks)
+		linkingGroup.GET("/orphan-audit", linkingCtrl.AuditOrphanPages)
+		linkingGroup.GET("/crawl-depth", linkingCtrl.GetCrawlDepth)
 	}
 
 	// XML Sitemap Engine Endpoints
