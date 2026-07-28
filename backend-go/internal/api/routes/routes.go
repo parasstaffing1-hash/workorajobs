@@ -197,6 +197,10 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		authGroup.POST("/login", authCtrl.Login)
 		authGroup.POST("/refresh", authCtrl.Refresh)
 		authGroup.POST("/logout", authCtrl.Logout)
+		authGroup.POST("/email-verification/request", authCtrl.RequestEmailVerification)
+		authGroup.POST("/email-verification/verify", authCtrl.VerifyEmail)
+		authGroup.POST("/password-reset/request", authCtrl.RequestPasswordReset)
+		authGroup.POST("/password-reset/confirm", authCtrl.ResetPassword)
 		authGroup.GET("/me", middleware.AuthMiddleware(cfg.JWTAccessSecret), authCtrl.Me)
 	}
 

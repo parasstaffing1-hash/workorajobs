@@ -1,6 +1,8 @@
 package service
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"strings"
 	"time"
@@ -47,9 +49,30 @@ type LogoutDTO struct {
 	RefreshToken string `json:"refreshToken" binding:"required"`
 }
 
+type RequestEmailVerificationDTO struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type VerifyEmailDTO struct {
+	Email string `json:"email" binding:"required,email"`
+	Token string `json:"token" binding:"required"`
+}
+
+type RequestPasswordResetDTO struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type ResetPasswordDTO struct {
+	Email       string `json:"email" binding:"required,email"`
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,min=8"`
+}
+
 var (
 	ErrInvalidRegistrationRole = errors.New("registration role is not allowed")
 	ErrInvalidRefreshToken     = errors.New("invalid or expired refresh token")
+	ErrInvalidResetToken       = errors.New("invalid or expired password reset token")
+	ErrInvalidVerifyToken      = errors.New("invalid or expired email verification token")
 )
 
 func (s *AuthService) Register(dto *RegisterDTO) (*AuthResponse, error) {
@@ -211,6 +234,122 @@ func (s *AuthService) Logout(dto *LogoutDTO) error {
 	return ErrInvalidRefreshToken
 }
 
+func (s *AuthService) RequestEmailVerification(dto *RequestEmailVerificationDTO) (string, error) {
+	var user models.User
+	if err := s.db.Where("email = ?", strings.ToLower(strings.TrimSpace(dto.Email))).First(&user).Error; err != nil {
+		return "", nil
+	}
+	if user.IsEmailVerified {
+		return "", nil
+	}
+
+	token, tokenHash, err := newOpaqueToken()
+	if err != nil {
+		return "", err
+	}
+	if err := s.db.Create(&models.EmailVerification{
+		ID:        uuid.New().String(),
+		Email:     user.Email,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}).Error; err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *AuthService) VerifyEmail(dto *VerifyEmailDTO) error {
+	email := strings.ToLower(strings.TrimSpace(dto.Email))
+	var tokens []models.EmailVerification
+	if err := s.db.Where("email = ? AND is_verified = ? AND expires_at > ?", email, false, time.Now()).Find(&tokens).Error; err != nil {
+		return err
+	}
+
+	var matched *models.EmailVerification
+	for idx := range tokens {
+		ok, err := auth.VerifyPassword(dto.Token, tokens[idx].TokenHash)
+		if err == nil && ok {
+			matched = &tokens[idx]
+			break
+		}
+	}
+	if matched == nil {
+		return ErrInvalidVerifyToken
+	}
+
+	now := time.Now()
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.User{}).Where("email = ?", email).Updates(map[string]interface{}{
+			"is_email_verified": true,
+			"email_verified_at": now,
+		}).Error; err != nil {
+			return err
+		}
+		return tx.Model(&models.EmailVerification{}).Where("id = ?", matched.ID).Update("is_verified", true).Error
+	})
+}
+
+func (s *AuthService) RequestPasswordReset(dto *RequestPasswordResetDTO) (string, error) {
+	email := strings.ToLower(strings.TrimSpace(dto.Email))
+	var user models.User
+	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return "", nil
+	}
+
+	token, tokenHash, err := newOpaqueToken()
+	if err != nil {
+		return "", err
+	}
+	if err := s.db.Create(&models.PasswordReset{
+		ID:        uuid.New().String(),
+		Email:     email,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(1 * time.Hour),
+	}).Error; err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *AuthService) ResetPassword(dto *ResetPasswordDTO) error {
+	email := strings.ToLower(strings.TrimSpace(dto.Email))
+	var tokens []models.PasswordReset
+	if err := s.db.Where("email = ? AND is_used = ? AND expires_at > ?", email, false, time.Now()).Find(&tokens).Error; err != nil {
+		return err
+	}
+
+	var matched *models.PasswordReset
+	for idx := range tokens {
+		ok, err := auth.VerifyPassword(dto.Token, tokens[idx].TokenHash)
+		if err == nil && ok {
+			matched = &tokens[idx]
+			break
+		}
+	}
+	if matched == nil {
+		return ErrInvalidResetToken
+	}
+
+	hashedPassword, err := auth.HashPassword(dto.NewPassword)
+	if err != nil {
+		return err
+	}
+	var user models.User
+	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return ErrInvalidResetToken
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.User{}).Where("email = ?", email).Update("password_hash", hashedPassword).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&models.PasswordReset{}).Where("id = ?", matched.ID).Update("is_used", true).Error; err != nil {
+			return err
+		}
+		return tx.Model(&models.RefreshToken{}).Where("user_id = ?", user.ID).Update("is_revoked", true).Error
+	})
+}
+
 func (s *AuthService) persistRefreshToken(userID, refreshToken string) error {
 	tokenHash, err := auth.HashPassword(refreshToken)
 	if err != nil {
@@ -234,4 +373,14 @@ func normalizeRegistrationRole(role models.Role) (models.Role, error) {
 	default:
 		return "", ErrInvalidRegistrationRole
 	}
+}
+
+func newOpaqueToken() (plain string, hash string, err error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", "", err
+	}
+	plain = base64.RawURLEncoding.EncodeToString(raw)
+	hash, err = auth.HashPassword(plain)
+	return plain, hash, err
 }

@@ -85,6 +85,68 @@ func (ctrl *AuthController) Logout(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Logged out successfully", nil)
 }
 
+func (ctrl *AuthController) RequestEmailVerification(c *gin.Context) {
+	var dto service.RequestEmailVerificationDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid email verification payload", err.Error())
+		return
+	}
+
+	_, err := ctrl.authService.RequestEmailVerification(&dto)
+	if err != nil {
+		response.InternalServerError(c, "Failed to request email verification", nil)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "If the account exists and is unverified, verification instructions will be sent.", nil)
+}
+
+func (ctrl *AuthController) VerifyEmail(c *gin.Context) {
+	var dto service.VerifyEmailDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid email verification payload", err.Error())
+		return
+	}
+
+	if err := ctrl.authService.VerifyEmail(&dto); err != nil {
+		response.BadRequest(c, "Invalid or expired email verification token", nil)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Email verified successfully", nil)
+}
+
+func (ctrl *AuthController) RequestPasswordReset(c *gin.Context) {
+	var dto service.RequestPasswordResetDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid password reset payload", err.Error())
+		return
+	}
+
+	_, err := ctrl.authService.RequestPasswordReset(&dto)
+	if err != nil {
+		response.InternalServerError(c, "Failed to request password reset", nil)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "If the account exists, password reset instructions will be sent.", nil)
+}
+
+func (ctrl *AuthController) ResetPassword(c *gin.Context) {
+	var dto service.ResetPasswordDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid password reset payload", err.Error())
+		return
+	}
+
+	if err := ctrl.authService.ResetPassword(&dto); err != nil {
+		response.BadRequest(c, "Invalid or expired password reset token", nil)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Password reset successfully", nil)
+}
+
 func (ctrl *AuthController) Me(c *gin.Context) {
 	userID, _ := c.Get(middleware.CtxUserID)
 	email, _ := c.Get(middleware.CtxUserEmail)

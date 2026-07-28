@@ -37,6 +37,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&TestJob{},
 		&models.UserProfile{},
 		&models.RefreshToken{},
+		&models.EmailVerification{},
+		&models.PasswordReset{},
 	)
 	if err != nil {
 		t.Fatalf("Failed to auto migrate models: %v", err)
@@ -137,6 +139,95 @@ func TestRegistrationRejectsPrivilegedRoles(t *testing.T) {
 		if err != ErrInvalidRegistrationRole {
 			t.Errorf("Expected role %s to be blocked, got %v", role, err)
 		}
+	}
+}
+
+func TestEmailVerificationLifecycle(t *testing.T) {
+	db := setupTestDB(t)
+	cfg := &config.Config{
+		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
+		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
+	}
+	svc := NewAuthService(db, cfg)
+
+	authResp, err := svc.Register(&RegisterDTO{
+		Email:    "verify@workora.com",
+		Password: "SecurePassword123!",
+		Name:     "Verify User",
+		Role:     models.RoleUser,
+	})
+	if err != nil {
+		t.Fatalf("Registration failed: %v", err)
+	}
+
+	token, err := svc.RequestEmailVerification(&RequestEmailVerificationDTO{Email: authResp.User.Email})
+	if err != nil {
+		t.Fatalf("RequestEmailVerification failed: %v", err)
+	}
+	if token == "" {
+		t.Fatal("Expected verification token for unverified user")
+	}
+
+	if err := svc.VerifyEmail(&VerifyEmailDTO{Email: authResp.User.Email, Token: token}); err != nil {
+		t.Fatalf("VerifyEmail failed: %v", err)
+	}
+
+	var user models.User
+	if err := db.Where("email = ?", authResp.User.Email).First(&user).Error; err != nil {
+		t.Fatalf("Failed to load verified user: %v", err)
+	}
+	if !user.IsEmailVerified || user.EmailVerifiedAt == nil {
+		t.Fatal("Expected user to be email verified")
+	}
+	if err := svc.VerifyEmail(&VerifyEmailDTO{Email: authResp.User.Email, Token: token}); err != ErrInvalidVerifyToken {
+		t.Errorf("Expected reused verification token to fail, got %v", err)
+	}
+}
+
+func TestPasswordResetLifecycle(t *testing.T) {
+	db := setupTestDB(t)
+	cfg := &config.Config{
+		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
+		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
+	}
+	svc := NewAuthService(db, cfg)
+
+	_, err := svc.Register(&RegisterDTO{
+		Email:    "reset@workora.com",
+		Password: "OldPassword123!",
+		Name:     "Reset User",
+		Role:     models.RoleUser,
+	})
+	if err != nil {
+		t.Fatalf("Registration failed: %v", err)
+	}
+	loginResp, err := svc.Login(&LoginDTO{Email: "reset@workora.com", Password: "OldPassword123!"})
+	if err != nil {
+		t.Fatalf("Login before reset failed: %v", err)
+	}
+
+	token, err := svc.RequestPasswordReset(&RequestPasswordResetDTO{Email: "reset@workora.com"})
+	if err != nil {
+		t.Fatalf("RequestPasswordReset failed: %v", err)
+	}
+	if token == "" {
+		t.Fatal("Expected password reset token")
+	}
+
+	if err := svc.ResetPassword(&ResetPasswordDTO{Email: "reset@workora.com", Token: token, NewPassword: "NewPassword123!"}); err != nil {
+		t.Fatalf("ResetPassword failed: %v", err)
+	}
+	if _, err := svc.Login(&LoginDTO{Email: "reset@workora.com", Password: "OldPassword123!"}); err == nil {
+		t.Fatal("Expected old password to fail after reset")
+	}
+	if _, err := svc.Login(&LoginDTO{Email: "reset@workora.com", Password: "NewPassword123!"}); err != nil {
+		t.Fatalf("Expected new password to work: %v", err)
+	}
+	if _, err := svc.Refresh(&RefreshTokenDTO{RefreshToken: loginResp.RefreshToken}); err != ErrInvalidRefreshToken {
+		t.Errorf("Expected pre-reset refresh token to be revoked, got %v", err)
+	}
+	if err := svc.ResetPassword(&ResetPasswordDTO{Email: "reset@workora.com", Token: token, NewPassword: "AnotherPassword123!"}); err != ErrInvalidResetToken {
+		t.Errorf("Expected reused reset token to fail, got %v", err)
 	}
 }
 

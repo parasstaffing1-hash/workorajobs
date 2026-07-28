@@ -64,6 +64,8 @@ func main() {
 			&models.UserProfile{},
 			&models.EmployerProfile{},
 			&models.RefreshToken{},
+			&models.EmailVerification{},
+			&models.PasswordReset{},
 			&models.UserSession{},
 			&models.OAuthAccount{},
 			&models.Company{},

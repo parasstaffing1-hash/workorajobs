@@ -17,13 +17,13 @@ git diff --check
 | Domain | Current score | Verified strengths | Remaining blockers |
 |---|---:|---|---|
 | Architecture & structure | 80 / 100 | Layered controllers/services/models, clearer storage and middleware boundaries. | Frontend API routing to Go is not verified. |
-| Security & auth controls | 87 / 100 | JWT route guards, refresh-token persistence/rotation/logout, registration role restrictions, fail-closed S3 ownership checks, protected state-changing routes. | Google/LinkedIn OAuth parity and email verification/password reset flows are pending. |
+| Security & auth controls | 89 / 100 | JWT route guards, refresh-token persistence/rotation/logout, email verification tokens, password reset tokens, registration role restrictions, fail-closed S3 ownership checks, protected state-changing routes. | Google/LinkedIn OAuth parity and live Resend delivery validation are pending. |
 | Storage & S3 integration | 82 / 100 | Presigned upload/download/delete, MIME/size validation, private/encrypted object writes, DB-backed company ownership tests. | Live AWS bucket/IAM/CORS validation is still manual. |
 | Database & schema parity | 76 / 100 | Company, CompanyUser, Job, User, and auth flows have focused tests. | Full Postgres integration tests and complete Prisma/GORM parity are pending. |
 | Rate limiting & resiliency | 76 / 100 | Memory limiter and Redis limiter exist; Redis URL parsing and ping are now part of router setup. | Redis backend needs production environment validation and operational monitoring. |
 | Search & performance | 63 / 100 | Baseline Postgres search and finder modules compile and have targeted tests. | Search is still `ILIKE`/baseline, not full-text or external search backed. |
-| Test coverage | 71 / 100 | Unit, route, storage, auth lifecycle, and lightweight integration tests exist. | Missing E2E tests for OAuth, payments, email, upload, admin, employer, and application flows. |
-| Production readiness | 72 / 100 | Core safety checks improved and validation passes. | Not ready as a full backend replacement until remaining integration blockers are closed. |
+| Test coverage | 74 / 100 | Unit, route, storage, auth lifecycle, verification/reset lifecycle, and lightweight integration tests exist. | Missing E2E tests for OAuth, payments, live email delivery, upload, admin, employer, and application flows. |
+| Production readiness | 74 / 100 | Core safety checks improved and validation passes. | Not ready as a full backend replacement until remaining integration blockers are closed. |
 
 ## Verified hardening improvements
 
@@ -74,7 +74,11 @@ Public health/search route tests assert expected success status where a test DB 
 - Login now persists hashed refresh tokens.
 - `POST /api/v1/auth/refresh` validates stored non-revoked refresh tokens and rotates credentials.
 - `POST /api/v1/auth/logout` revokes the submitted refresh token.
-- Integration tests verify duplicate registration rejection, login, refresh rotation, logout revocation, and privileged role rejection.
+- `POST /api/v1/auth/email-verification/request` creates a hashed verification token for existing unverified users without leaking account existence.
+- `POST /api/v1/auth/email-verification/verify` marks the user verified and consumes the token.
+- `POST /api/v1/auth/password-reset/request` creates a hashed reset token without leaking account existence.
+- `POST /api/v1/auth/password-reset/confirm` updates the password, consumes the reset token, and revokes existing refresh tokens.
+- Integration tests verify duplicate registration rejection, login, refresh rotation, logout revocation, privileged role rejection, email verification, password reset, and reset-token reuse protection.
 
 ## Remaining production blockers
 
@@ -83,7 +87,7 @@ Do not deploy `backend-go` as a complete production replacement until these are 
 1. Google OAuth flow parity.
 2. LinkedIn OAuth flow parity.
 3. Razorpay checkout and webhook verification.
-4. Resend email verification and password reset flows.
+4. Resend email delivery integration and template validation for verification/password reset emails.
 5. Frontend routing/proxying from Next.js to Go API.
 6. Production Postgres integration tests.
 7. Live AWS S3 IAM, CORS, encryption, and lifecycle validation.
