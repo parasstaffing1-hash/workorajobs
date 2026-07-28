@@ -1,10 +1,5 @@
 import crypto from "crypto";
-import { SecretsRotationService } from "@/lib/config/env-validator";
-
-const SECRET = process.env.JWT_SECRET || "workora-super-secret-encryption-key-jwt-auth";
-
-// Pre-compute the secret buffer once at module load (avoids repeated allocation)
-const SECRET_BUFFER = Buffer.from(SECRET);
+import { EnvValidator, SecretsRotationService } from "@/lib/config/env-validator";
 
 export interface JwtPayload {
   userId: string;
@@ -13,6 +8,7 @@ export interface JwtPayload {
 }
 
 export function signJwt(payload: JwtPayload, expirySeconds = 86400): string {
+  const secretBuffer = Buffer.from(EnvValidator.validate().jwtSecret);
   const header = { alg: "HS256", typ: "JWT" };
   const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
 
@@ -24,7 +20,7 @@ export function signJwt(payload: JwtPayload, expirySeconds = 86400): string {
   const encodedPayload = Buffer.from(JSON.stringify(payloadWithExp)).toString("base64url");
 
   const signature = crypto
-    .createHmac("sha256", SECRET_BUFFER)
+    .createHmac("sha256", secretBuffer)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest("base64url");
 

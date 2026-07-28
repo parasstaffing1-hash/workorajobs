@@ -77,13 +77,13 @@ describe("AuthRateLimiter", () => {
     expect(result.remaining).toBe(0);
   });
 
-  it("fails open (allows) when Redis is unavailable", async () => {
+  it("uses local fallback limits when Redis is unavailable", async () => {
     (redis.incr as jest.Mock).mockRejectedValue(new Error("Redis down"));
 
     const result = await AuthRateLimiter.check("login", "user@example.com");
 
     expect(result.allowed).toBe(true);
-    expect(result.remaining).toBe(5);
+    expect(result.remaining).toBe(4);
   });
 
   it("sets TTL expire on first request", async () => {

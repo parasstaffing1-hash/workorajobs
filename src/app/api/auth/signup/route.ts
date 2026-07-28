@@ -18,7 +18,9 @@ export async function POST(request: NextRequest) {
         user: result.user,
         token: result.accessToken,
         sessionToken: result.sessionToken,
-        verificationToken: result.verificationToken,
+        ...(process.env.NODE_ENV !== "production" && {
+          verificationToken: result.verificationToken,
+        }),
       },
       { status: 201 }
     );

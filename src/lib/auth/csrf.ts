@@ -1,6 +1,14 @@
 import crypto from "crypto";
+import { EnvValidator } from "@/lib/config/env-validator";
 
-const CSRF_SECRET = process.env.CSRF_SECRET || "workorajobs-csrf-protection-secret-key-2026";
+function getCsrfSecret(): string {
+  const configured = process.env.CSRF_SECRET || process.env.JWT_SECRET;
+  if (configured && configured.length >= 32) {
+    return configured;
+  }
+
+  return EnvValidator.validate().jwtSecret;
+}
 
 export class CsrfProtection {
   /**
@@ -10,7 +18,7 @@ export class CsrfProtection {
     const random = crypto.randomBytes(16).toString("hex");
     const timestamp = Date.now();
     const data = `${sessionId}:${random}:${timestamp}`;
-    const hmac = crypto.createHmac("sha256", CSRF_SECRET).update(data).digest("hex");
+    const hmac = crypto.createHmac("sha256", getCsrfSecret()).update(data).digest("hex");
     return Buffer.from(`${data}:${hmac}`).toString("base64url");
   }
 
@@ -30,7 +38,7 @@ export class CsrfProtection {
       if (Date.now() - timestamp > maxAgeMs) return false; // Token expired
 
       const expectedData = `${tokenSessionId}:${random}:${timestampStr}`;
-      const expectedHmac = crypto.createHmac("sha256", CSRF_SECRET).update(expectedData).digest("hex");
+      const expectedHmac = crypto.createHmac("sha256", getCsrfSecret()).update(expectedData).digest("hex");
 
       return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac));
     } catch {

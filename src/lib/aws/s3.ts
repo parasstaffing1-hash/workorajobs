@@ -203,16 +203,121 @@ export function sanitizeFileName(fileName: string): string {
   return safeName.substring(0, 100);
 }
 
+function sanitizeOwnerSegment(userId?: string): string | null {
+  if (!userId) return null;
+  const safe = userId.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 80);
+  return safe || null;
+}
+
+export function normalizeS3Key(key: string): string {
+  if (!key || typeof key !== "string") {
+    throw new Error("[S3 Storage Error] Key is required.");
+  }
+
+  const cleanKey = key.replace(/^\/+/, "").replace(/\\/g, "/");
+  if (
+    cleanKey.includes("\0") ||
+    cleanKey.includes("../") ||
+    cleanKey.includes("..\\") ||
+    cleanKey.startsWith("../")
+  ) {
+    throw new Error("[S3 Storage Error] Invalid object key.");
+  }
+
+  const folder = cleanKey.split("/")[0] as UploadFolder;
+  if (!FOLDER_RULES[folder]) {
+    throw new Error("[S3 Storage Error] Object key is outside an allowed upload folder.");
+  }
+
+  return cleanKey;
+}
+
+function getFolderFromKey(key: string): UploadFolder {
+  return normalizeS3Key(key).split("/")[0] as UploadFolder;
+}
+
 /**
  * Generates a unique, non-colliding S3 key with folder prefix and UUID v4.
  */
-export function generateS3Key(folder: UploadFolder, originalFileName: string): string {
+export function generateS3Key(folder: UploadFolder, originalFileName: string, userId?: string): string {
   const sanitized = sanitizeFileName(originalFileName);
   const ext = path.extname(sanitized).toLowerCase();
   const baseWithoutExt = path.basename(sanitized, ext) || "file";
   const uuid = crypto.randomUUID();
+  const ownerSegment = sanitizeOwnerSegment(userId);
 
-  return `${folder}/${uuid}-${baseWithoutExt}${ext}`;
+  return `${folder}/${ownerSegment ? `${ownerSegment}/` : ""}${uuid}-${baseWithoutExt}${ext}`;
+}
+
+function validateUploadMetadata(
+  originalFileName: string,
+  contentType: string,
+  fileSize: number,
+  folder: UploadFolder
+): void {
+  const rule = FOLDER_RULES[folder];
+  if (!rule) {
+    throw new Error(`[S3 Validation Error] Invalid upload folder: '${folder}'`);
+  }
+
+  if (!Number.isFinite(fileSize) || fileSize <= 0) {
+    throw new Error("[S3 Validation Error] File size must be a positive number.");
+  }
+  if (fileSize > rule.maxSizeBytes) {
+    throw new Error(
+      `[S3 Validation Error] File size exceeds maximum allowed limit of ${rule.maxSizeBytes / (1024 * 1024)} MB.`
+    );
+  }
+
+  const sanitized = sanitizeFileName(originalFileName);
+  if (!sanitized || sanitized.length > 100) {
+    throw new Error("[S3 Validation Error] Invalid file name.");
+  }
+
+  const ext = path.extname(sanitized).toLowerCase();
+  if (!rule.allowedExtensions.includes(ext)) {
+    throw new Error("[S3 Validation Error] File extension is not allowed for this folder.");
+  }
+
+  const normalizedContentType = contentType.toLowerCase().split(";")[0].trim();
+  if (!rule.allowedMimeTypes.includes(normalizedContentType)) {
+    throw new Error("[S3 Validation Error] MIME type is not allowed for this folder.");
+  }
+}
+
+async function assertCanAccessS3Object(
+  key: string,
+  userId: string,
+  action: "read" | "delete"
+): Promise<string> {
+  const cleanKey = normalizeS3Key(key);
+  const folder = getFolderFromKey(cleanKey);
+  const rule = FOLDER_RULES[folder];
+  const ownerSegment = sanitizeOwnerSegment(userId);
+
+  if (action === "read" && rule.accessLevel === "public-read") {
+    return cleanKey;
+  }
+
+  if (ownerSegment && cleanKey.startsWith(`${folder}/${ownerSegment}/`)) {
+    return cleanKey;
+  }
+
+  const config = getS3Config();
+  const s3 = getS3Client();
+  const head = await s3.send(
+    new HeadObjectCommand({
+      Bucket: config.bucket,
+      Key: cleanKey,
+    })
+  );
+
+  const uploadedBy = head.Metadata?.["uploaded-by"];
+  if (uploadedBy === userId) {
+    return cleanKey;
+  }
+
+  throw new Error("[S3 Storage Error] You are not allowed to access this file.");
 }
 
 /**
@@ -370,7 +475,7 @@ export async function uploadToS3(input: S3UploadInput): Promise<S3UploadOutput> 
   // Step 3: Prepare S3 parameters
   const config = getS3Config();
   const s3 = getS3Client();
-  const key = generateS3Key(folder, originalFileName);
+  const key = generateS3Key(folder, originalFileName, userId);
   const rule = FOLDER_RULES[folder];
   const isPrivate = rule.accessLevel === "private";
 
@@ -429,13 +534,14 @@ export async function uploadToS3(input: S3UploadInput): Promise<S3UploadOutput> 
 /**
  * Deletes an object from AWS S3 by key.
  */
-export async function deleteFromS3(key: string): Promise<boolean> {
+export async function deleteFromS3(key: string, userId?: string): Promise<boolean> {
   if (!key || typeof key !== "string") {
     throw new Error("[S3 Storage Error] Key is required for file deletion.");
   }
 
-  // Prevent path traversal in key
-  const cleanKey = key.replace(/^\/+/, "").replace(/\.\./g, "");
+  const cleanKey = userId
+    ? await assertCanAccessS3Object(key, userId, "delete")
+    : normalizeS3Key(key);
 
   const config = getS3Config();
   const s3 = getS3Client();
@@ -461,13 +567,17 @@ export async function deleteFromS3(key: string): Promise<boolean> {
  */
 export async function getSignedDownloadUrl(
   key: string,
-  expiresInSeconds = 3600
+  expiresInSeconds = 3600,
+  userId?: string
 ): Promise<string> {
   if (!key) {
     throw new Error("[S3 Storage Error] Key is required for generating signed URL.");
   }
 
-  const cleanKey = key.replace(/^\/+/, "").replace(/\.\./g, "");
+  const cleanKey = userId
+    ? await assertCanAccessS3Object(key, userId, "read")
+    : normalizeS3Key(key);
+  const safeExpiresInSeconds = Math.min(3600, Math.max(60, expiresInSeconds));
   const config = getS3Config();
   const s3 = getS3Client();
 
@@ -477,7 +587,7 @@ export async function getSignedDownloadUrl(
   });
 
   try {
-    const url = await getSignedUrl(s3, command, { expiresIn: expiresInSeconds });
+    const url = await getSignedUrl(s3, command, { expiresIn: safeExpiresInSeconds });
     return url;
   } catch (error: unknown) {
     const err = error as Error;
@@ -501,15 +611,11 @@ export async function getSignedUploadUrl(
     throw new Error(`[S3 Error] Invalid folder '${folder}'`);
   }
 
-  if (fileSize > rule.maxSizeBytes) {
-    throw new Error(
-      `[S3 Error] File size exceeds maximum limit of ${rule.maxSizeBytes / (1024 * 1024)} MB`
-    );
-  }
+  validateUploadMetadata(originalFileName, contentType, fileSize, folder);
 
   const config = getS3Config();
   const s3 = getS3Client();
-  const key = generateS3Key(folder, originalFileName);
+  const key = generateS3Key(folder, originalFileName, userId);
   const isPrivate = rule.accessLevel === "private";
 
   const command = new PutObjectCommand({

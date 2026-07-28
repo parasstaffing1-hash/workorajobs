@@ -9,6 +9,13 @@ import {
   FOLDER_RULES,
 } from "@/lib/aws/s3";
 
+function getClientError(error: unknown, fallback: string): string {
+  if (process.env.NODE_ENV === "production") {
+    return fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 /**
  * POST /api/v1/uploads
  * Uploads a file to AWS S3 or generates a presigned upload URL.
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const err = error as Error;
     console.error("[API Upload Error]:", err.message);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to process upload request" },
+      { success: false, error: getClientError(error, "Failed to process upload request") },
       { status: 400 }
     );
   }
@@ -136,21 +143,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const signedUrl = await getSignedDownloadUrl(key, expiresIn);
+    const safeExpiresIn = Number.isFinite(expiresIn) ? expiresIn : 3600;
+    const signedUrl = await getSignedDownloadUrl(key, safeExpiresIn, userId);
 
     return NextResponse.json({
       success: true,
       data: {
         key,
         signedUrl,
-        expiresInSeconds: expiresIn,
+        expiresInSeconds: Math.min(3600, Math.max(60, safeExpiresIn)),
       },
     });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[API Signed URL Error]:", err.message);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to generate signed download URL" },
+      { success: false, error: getClientError(error, "Failed to generate signed download URL") },
       { status: 400 }
     );
   }
@@ -180,23 +188,23 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const success = await deleteFromS3(key);
+    const success = await deleteFromS3(key, userId);
     if (!success) {
       return NextResponse.json(
-        { success: false, error: `Failed to delete S3 file with key '${key}'` },
+        { success: false, error: "Failed to delete file" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: `Successfully deleted file '${key}'`,
+      message: "Successfully deleted file.",
     });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[API Delete Error]:", err.message);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to delete file" },
+      { success: false, error: getClientError(error, "Failed to delete file") },
       { status: 400 }
     );
   }

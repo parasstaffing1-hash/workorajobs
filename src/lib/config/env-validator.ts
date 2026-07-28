@@ -8,6 +8,8 @@
 
 import crypto from "crypto";
 
+const DEFAULT_DEV_JWT_SECRET = "workora-super-secret-encryption-key-jwt-auth";
+
 export interface EnvironmentConfig {
   nodeEnv: "development" | "production" | "test";
   databaseUrl: string;
@@ -22,36 +24,34 @@ export class EnvValidator {
   private static cachedConfig: EnvironmentConfig | null = null;
 
   /**
-   * Validate mandatory environment variables with strict checks
+   * Validate mandatory environment variables with strict checks.
    */
   static validate(): EnvironmentConfig {
     if (this.cachedConfig) return this.cachedConfig;
 
-    const nodeEnv = (process.env.NODE_ENV as any) || "development";
+    const nodeEnv = ((process.env.NODE_ENV as EnvironmentConfig["nodeEnv"]) || "development");
     const databaseUrl = process.env.DATABASE_URL || "";
-    const jwtSecret = process.env.JWT_SECRET || "workora-super-secret-encryption-key-jwt-auth";
+    const jwtSecret = process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET;
     const jwtSecretPrevious = process.env.JWT_SECRET_PREVIOUS;
     const redisUrl = process.env.REDIS_URL;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const warnings: string[] = [];
-
     if (nodeEnv === "production") {
+      const errors: string[] = [];
+
       if (!databaseUrl || databaseUrl.includes("user:password")) {
-        warnings.push("DATABASE_URL is missing or using default placeholder credentials");
+        errors.push("DATABASE_URL is missing or using default placeholder credentials");
       }
-      if (jwtSecret.length < 32 || jwtSecret.includes("super-secret")) {
-        warnings.push("JWT_SECRET is insecure (less than 32 characters or default key)");
+      if (!process.env.JWT_SECRET || jwtSecret.length < 32 || jwtSecret === DEFAULT_DEV_JWT_SECRET) {
+        errors.push("JWT_SECRET must be set to a non-default secret with at least 32 characters");
       }
       if (!redisUrl) {
-        warnings.push("REDIS_URL is not set — session store running in fallback mode");
+        console.warn("REDIS_URL is not set; session cache will use database fallback.");
       }
-    }
 
-    if (warnings.length > 0) {
-      console.warn("\n⚠️ PRODUCTION SECURITY WARNINGS:");
-      warnings.forEach((w) => console.warn(`   - ${w}`));
-      console.warn("");
+      if (errors.length > 0) {
+        throw new Error(`Production security configuration failed: ${errors.join("; ")}`);
+      }
     }
 
     this.cachedConfig = {
@@ -92,12 +92,11 @@ export class SecretsRotationService {
   }
 
   /**
-   * Verify HMAC signature against active key, fallback to previous key if present
+   * Verify HMAC signature against active key, fallback to previous key if present.
    */
   static verifyHmacSignature(headerAndPayload: string, signature: string): boolean {
     const { current, previous } = this.getKeys();
 
-    // 1. Try current key
     const currentExpected = crypto
       .createHmac("sha256", current)
       .update(headerAndPayload)
@@ -110,7 +109,6 @@ export class SecretsRotationService {
       return true;
     }
 
-    // 2. Try previous key (during secret rotation window)
     if (previous) {
       const prevExpected = crypto
         .createHmac("sha256", previous)

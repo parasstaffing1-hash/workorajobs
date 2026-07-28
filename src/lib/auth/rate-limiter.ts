@@ -7,6 +7,31 @@ export interface RateLimitResult {
   totalLimit: number;
 }
 
+const LOCAL_LIMITS = new Map<string, { count: number; expiresAt: number }>();
+
+function checkLocalLimit(redisKey: string, maxAttempts: number, windowSeconds: number): RateLimitResult {
+  const now = Date.now();
+  const existing = LOCAL_LIMITS.get(redisKey);
+  const isActive = Boolean(existing && existing.expiresAt > now);
+  const expiresAt = isActive && existing ? existing.expiresAt : now + windowSeconds * 1000;
+  const count = isActive && existing ? existing.count + 1 : 1;
+
+  LOCAL_LIMITS.set(redisKey, { count, expiresAt });
+
+  for (const [key, value] of LOCAL_LIMITS.entries()) {
+    if (value.expiresAt <= now) {
+      LOCAL_LIMITS.delete(key);
+    }
+  }
+
+  return {
+    allowed: count <= maxAttempts,
+    remaining: Math.max(0, maxAttempts - count),
+    resetSeconds: Math.max(1, Math.ceil((expiresAt - now) / 1000)),
+    totalLimit: maxAttempts,
+  };
+}
+
 /**
  * Sliding window rate limiter for Authentication endpoints (Login, Signup, Reset Password)
  */
@@ -41,14 +66,9 @@ export class AuthRateLimiter {
         resetSeconds: windowSeconds,
         totalLimit: maxAttempts,
       };
-    } catch (err) {
-      console.warn("Rate limiter redis error, failing open safely:", err);
-      return {
-        allowed: true,
-        remaining: maxAttempts,
-        resetSeconds: windowSeconds,
-        totalLimit: maxAttempts,
-      };
+    } catch {
+      console.warn("Rate limiter Redis unavailable; using local fallback limiter.");
+      return checkLocalLimit(redisKey, maxAttempts, windowSeconds);
     }
   }
 
@@ -60,5 +80,6 @@ export class AuthRateLimiter {
     try {
       await redis.del(redisKey);
     } catch (_) {}
+    LOCAL_LIMITS.delete(redisKey);
   }
 }
