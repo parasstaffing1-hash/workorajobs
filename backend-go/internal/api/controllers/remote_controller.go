@@ -25,12 +25,7 @@ func (ctrl *RemoteController) SearchRemoteJobs(c *gin.Context) {
 		return
 	}
 
-	if filter.Page <= 0 {
-		filter.Page = 1
-	}
-	if filter.Limit <= 0 || filter.Limit > 100 {
-		filter.Limit = 20
-	}
+	filter.Page, filter.Limit, _ = response.SanitizePagination(filter.Page, filter.Limit)
 
 	jobs, total, err := ctrl.remoteService.SearchRemoteJobs(c.Request.Context(), &filter)
 	if err != nil {

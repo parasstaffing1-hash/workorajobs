@@ -42,3 +42,19 @@ func TestRateLimitMiddleware(t *testing.T) {
 		t.Errorf("Expected status 429, got %d", w3.Code)
 	}
 }
+
+func TestNewConfiguredRateLimiter(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Memory Backend Selection
+	mwMemory := NewConfiguredRateLimiter("memory", false, nil, 5, time.Minute)
+	if mwMemory == nil {
+		t.Error("Expected non-nil middleware for memory backend")
+	}
+
+	// Redis Backend Selection with nil client (Development fallback)
+	mwRedisFallback := NewConfiguredRateLimiter("redis", false, nil, 5, time.Minute)
+	if mwRedisFallback == nil {
+		t.Error("Expected non-nil middleware for redis backend with fallback")
+	}
+}

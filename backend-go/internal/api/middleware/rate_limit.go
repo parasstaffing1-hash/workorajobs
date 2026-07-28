@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -122,4 +123,19 @@ func RedisRateLimitMiddleware(rdb *redis.Client, maxReqs int, window time.Durati
 
 		c.Next()
 	}
+}
+
+// NewConfiguredRateLimiter returns the appropriate rate-limiting middleware based on configuration
+func NewConfiguredRateLimiter(backend string, isProd bool, rdb *redis.Client, maxReqs int, window time.Duration) gin.HandlerFunc {
+	if backend == "redis" {
+		if rdb != nil {
+			return RedisRateLimitMiddleware(rdb, maxReqs, window)
+		}
+		if isProd {
+			log.Println("[FATAL] RATE_LIMIT_BACKEND=redis requested but Redis client is nil in production")
+		} else {
+			log.Println("[WARN] RATE_LIMIT_BACKEND=redis requested but Redis client is nil; falling back to in-memory rate limiter")
+		}
+	}
+	return RateLimitMiddleware(maxReqs, window)
 }

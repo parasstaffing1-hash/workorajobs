@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"math"
 	"net/http"
 
@@ -26,12 +27,7 @@ func (ctrl *JobController) ListJobs(c *gin.Context) {
 		return
 	}
 
-	if filter.Page <= 0 {
-		filter.Page = 1
-	}
-	if filter.Limit <= 0 || filter.Limit > 100 {
-		filter.Limit = 20
-	}
+	filter.Page, filter.Limit, _ = response.SanitizePagination(filter.Page, filter.Limit)
 
 	jobs, total, err := ctrl.jobService.ListJobs(&filter)
 	if err != nil {
@@ -63,12 +59,12 @@ func (ctrl *JobController) GetJobByID(c *gin.Context) {
 }
 
 func (ctrl *JobController) CreateJob(c *gin.Context) {
-	userIDVal, exists := c.Get(middleware.CtxUserID)
-	if !exists {
+	userID := c.GetString(middleware.CtxUserID)
+	if userID == "" {
 		response.Unauthorized(c, "Unauthorized")
 		return
 	}
-	userID := userIDVal.(string)
+	userRole := c.GetString(middleware.CtxUserRole)
 
 	var job models.Job
 	if err := c.ShouldBindJSON(&job); err != nil {
@@ -76,8 +72,20 @@ func (ctrl *JobController) CreateJob(c *gin.Context) {
 		return
 	}
 
-	createdJob, err := ctrl.jobService.CreateJob(userID, &job)
+	createdJob, err := ctrl.jobService.CreateJob(userID, userRole, &job)
 	if err != nil {
+		if errors.Is(err, service.ErrUserIDRequired) || errors.Is(err, service.ErrInvalidJobCompany) {
+			response.BadRequest(c, err.Error(), nil)
+			return
+		}
+		if errors.Is(err, service.ErrCompanyNotFound) {
+			response.NotFound(c, err.Error())
+			return
+		}
+		if errors.Is(err, service.ErrForbiddenCompanyAccess) {
+			response.Forbidden(c, err.Error())
+			return
+		}
 		response.InternalServerError(c, "Failed to create job", err.Error())
 		return
 	}

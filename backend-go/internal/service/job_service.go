@@ -2,10 +2,19 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/workorajobs/backend-go/internal/domain/models"
+	"github.com/workorajobs/backend-go/pkg/response"
 	"gorm.io/gorm"
+)
+
+var (
+	ErrUserIDRequired         = errors.New("user ID is required")
+	ErrInvalidJobCompany      = errors.New("valid company ID is required")
+	ErrCompanyNotFound        = errors.New("company not found")
+	ErrForbiddenCompanyAccess = errors.New("you are not authorized to post jobs for this company")
 )
 
 type JobService struct {
@@ -29,6 +38,8 @@ type JobFilter struct {
 func (s *JobService) ListJobs(filter *JobFilter) ([]models.Job, int64, error) {
 	var jobs []models.Job
 	var total int64
+
+	filter.Page, filter.Limit, _ = response.SanitizePagination(filter.Page, filter.Limit)
 
 	db := s.db.Model(&models.Job{}).Where("status = ?", models.JobStatusPublished)
 
@@ -69,8 +80,36 @@ func (s *JobService) GetJobByID(id string) (*models.Job, error) {
 	return &job, nil
 }
 
-func (s *JobService) CreateJob(userID string, job *models.Job) (*models.Job, error) {
+func (s *JobService) CreateJob(userID, role string, job *models.Job) (*models.Job, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, ErrUserIDRequired
+	}
+
+	if job.CompanyID == nil || strings.TrimSpace(*job.CompanyID) == "" {
+		return nil, ErrInvalidJobCompany
+	}
+
+	companyID := strings.TrimSpace(*job.CompanyID)
+
+	// Check if company exists
+	var company models.Company
+	if err := s.db.Where("id = ?", companyID).First(&company).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrCompanyNotFound
+		}
+		return nil, err
+	}
+
+	// Validate authorization: ADMIN can post for any company
+	if role != "ADMIN" {
+		isOwner := company.OwnerID != nil && *company.OwnerID == userID
+		if !isOwner {
+			return nil, ErrForbiddenCompanyAccess
+		}
+	}
+
 	job.ID = uuid.New().String()
+	job.CompanyID = &companyID
 	job.PostedByID = &userID
 	job.Status = models.JobStatusPublished
 
