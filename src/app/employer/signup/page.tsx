@@ -7,6 +7,7 @@ import { Building2, Mail, Phone, Lock, CheckCircle2, ShieldCheck, ArrowRight } f
 import { FormInput } from "@/components/auth/FormInput";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 export default function EmployerSignupPage() {
   const router = useRouter();
@@ -81,6 +82,8 @@ export default function EmployerSignupPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-slate-200/80 space-y-6">
           {alert && <AuthAlert type={alert.type} message={alert.message} />}
+
+          <SocialAuthButtons role="EMPLOYER" isLoading={isLoading} />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormInput

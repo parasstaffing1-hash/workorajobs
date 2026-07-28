@@ -6,6 +6,7 @@ import { X, User, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 
 interface JoinNowGatewayModalProps {
   isOpen: boolean;
@@ -349,11 +350,11 @@ export function JoinNowGatewayModal({
 
               <GoogleSignInButton
                 role={role === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER"}
-                onSuccess={() => {
-                  onClose();
-                  router.push(role === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard");
-                }}
                 buttonText={role === "EMPLOYER" ? "Sign up with Google (Work Email)" : "Sign up with Google / Gmail"}
+              />
+              <LinkedInSignInButton
+                role={role === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER"}
+                buttonText="Sign up with LinkedIn"
               />
 
               <div className="text-center text-xs text-slate-500 pt-1">

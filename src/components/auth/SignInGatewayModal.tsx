@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { LinkedInSignInButton } from "@/components/auth/LinkedInSignInButton";
 
 interface SignInGatewayModalProps {
   isOpen: boolean;
@@ -302,36 +303,16 @@ export function SignInGatewayModal({
               <div className="space-y-2.5">
                 <GoogleSignInButton
                   role={view === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER"}
-                  onSuccess={() => {
-                    onClose();
-                    router.push(view === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard");
-                  }}
                   buttonText={view === "EMPLOYER" ? "Sign in with Google (Work Email)" : "Sign in with Google / Gmail"}
                 />
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const res = await fetch("/api/v1/auth/oauth/linkedin", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ role: view === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER" }),
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                          onClose();
-                          router.push(view === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard");
-                        }
-                      } catch (_) {}
-                    }}
-                    className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
-                  >
-                    <span className="text-blue-600 font-extrabold text-xs">in</span>
-                    <span>LinkedIn</span>
-                  </button>
-
+                <LinkedInSignInButton
+                  role={view === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER"}
+                  buttonText="Sign in with LinkedIn"
+                />
+                {/* Legacy GitHub login stays separate from the verified Google and
+                    LinkedIn flows while its server-side OAuth is migrated. */}
+                <div className="grid grid-cols-1 gap-2.5">
                   <button
                     type="button"
                     onClick={async () => {

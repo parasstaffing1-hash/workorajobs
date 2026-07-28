@@ -128,7 +128,7 @@ export default function EmployerLoginPage() {
             </div>
           </div>
 
-          <SocialAuthButtons />
+          <SocialAuthButtons role="EMPLOYER" />
 
           <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-600">
             Need an Employer Account?{" "}

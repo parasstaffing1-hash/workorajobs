@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, Eye, EyeOff, Sparkles, Building2, User } from "lucide-react";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -90,6 +91,8 @@ export default function LoginPage() {
         </div>
 
         {alert && <AuthAlert type={alert.type} message={alert.message} />}
+
+        <SocialAuthButtons role={role} isLoading={isLoading} />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

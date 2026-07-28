@@ -6,18 +6,20 @@ interface SocialAuthButtonsProps {
   onGoogleClick?: () => void;
   onLinkedInClick?: () => void;
   isLoading?: boolean;
+  role?: "JOB_SEEKER" | "EMPLOYER";
 }
 
 export function SocialAuthButtons({
   onGoogleClick,
   onLinkedInClick,
   isLoading = false,
+  role = "JOB_SEEKER",
 }: SocialAuthButtonsProps) {
   const handleGoogle = () => {
     if (onGoogleClick) {
       onGoogleClick();
     } else {
-      window.location.href = "/api/v1/auth/oauth/google";
+      window.location.assign(`/api/v1/auth/oauth/google?${new URLSearchParams({ role })}`);
     }
   };
 
@@ -25,7 +27,7 @@ export function SocialAuthButtons({
     if (onLinkedInClick) {
       onLinkedInClick();
     } else {
-      window.location.href = "/api/v1/auth/oauth/linkedin";
+      window.location.assign(`/api/v1/auth/oauth/linkedin?${new URLSearchParams({ role })}`);
     }
   };
 

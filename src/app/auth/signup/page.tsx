@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Building2, Sparkles, CheckCircle2 } from "lucide-react";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -109,6 +110,8 @@ export default function SignupPage() {
         </div>
 
         {alert && <AuthAlert type={alert.type} message={alert.message} />}
+
+        <SocialAuthButtons role={role} isLoading={isLoading} />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {role === "JOB_SEEKER" ? (

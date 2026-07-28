@@ -1,62 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface GoogleSignInButtonProps {
   role?: "JOB_SEEKER" | "EMPLOYER";
-  onSuccess?: (user: any) => void;
   className?: string;
   buttonText?: string;
 }
 
 export function GoogleSignInButton({
   role = "JOB_SEEKER",
-  onSuccess,
   className = "",
   buttonText = "Continue with Google",
 }: GoogleSignInButtonProps) {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
-    try {
-      // Standard Google OAuth SSO Flow
-      const mockGoogleUser = {
-        email: `user.google.${Date.now()}@gmail.com`,
-        name: "Google Verified User",
-        sub: `google-uid-${Date.now()}`,
-        picture: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-        role,
-      };
-
-      const res = await fetch("/api/v1/auth/oauth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mockGoogleUser),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Google sign in failed.");
-      }
-
-      if (onSuccess) {
-        onSuccess(data.user);
-      } else {
-        if (data.user?.role === "EMPLOYER") {
-          router.push("/employer/dashboard");
-        } else {
-          router.push("/candidate/dashboard");
-        }
-      }
-    } catch (err: any) {
-      alert(err.message || "Failed to log in with Google.");
-    } finally {
-      setIsLoading(false);
-    }
+    // The server owns the authorization-code flow. Client-side profile data
+    // must never be treated as proof of identity.
+    window.location.assign(`/api/v1/auth/oauth/google?${new URLSearchParams({ role })}`);
   };
 
   return (
