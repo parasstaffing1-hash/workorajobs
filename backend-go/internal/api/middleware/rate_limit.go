@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/workorajobs/backend-go/pkg/response"
 )
 
@@ -15,10 +17,10 @@ type clientLimiter struct {
 }
 
 type RateLimiter struct {
-	mu       sync.Mutex
-	clients  map[string]*clientLimiter
-	maxReqs  int
-	window   time.Duration
+	mu      sync.Mutex
+	clients map[string]*clientLimiter
+	maxReqs int
+	window  time.Duration
 }
 
 func NewRateLimiter(maxReqs int, window time.Duration) *RateLimiter {
@@ -80,6 +82,44 @@ func RateLimitMiddleware(maxReqs int, window time.Duration) gin.HandlerFunc {
 		cl.count++
 		cl.lastSeen = now
 		limiter.mu.Unlock()
+		c.Next()
+	}
+}
+
+// RedisRateLimitMiddleware performs atomic Redis INCR & EXPIRE rate limiting for multi-instance deployments
+func RedisRateLimitMiddleware(rdb *redis.Client, maxReqs int, window time.Duration) gin.HandlerFunc {
+	if rdb == nil {
+		return RateLimitMiddleware(maxReqs, window)
+	}
+
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		userID := c.GetString(CtxUserID)
+		entityKey := ip
+		if userID != "" {
+			entityKey = userID
+		}
+
+		ctx := c.Request.Context()
+		key := fmt.Sprintf("rl:%s:%d", entityKey, time.Now().Unix()/int64(window.Seconds()))
+
+		count, err := rdb.Incr(ctx, key).Result()
+		if err != nil {
+			// Fail soft if Redis is temporarily unreachable
+			c.Next()
+			return
+		}
+
+		if count == 1 {
+			_ = rdb.Expire(ctx, key, window).Err()
+		}
+
+		if count > int64(maxReqs) {
+			response.Error(c, http.StatusTooManyRequests, "Rate limit exceeded. Please try again later.", "TOO_MANY_REQUESTS")
+			c.Abort()
+			return
+		}
+
 		c.Next()
 	}
 }

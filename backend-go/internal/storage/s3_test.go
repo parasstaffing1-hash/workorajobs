@@ -2,6 +2,10 @@ package storage
 
 import (
 	"testing"
+
+	"github.com/glebarez/sqlite"
+	"github.com/workorajobs/backend-go/internal/domain/models"
+	"gorm.io/gorm"
 )
 
 func TestSanitizeFileName(t *testing.T) {
@@ -120,22 +124,63 @@ func TestValidateOwnership(t *testing.T) {
 	}
 }
 
-func TestCompanyLogoAuthorization(t *testing.T) {
-	svc := &S3Service{}
-
-	// Admin can upload any company logo without DB
-	if !svc.ValidateCompanyManagement("comp_100", "user_admin", "ADMIN") {
-		t.Error("Expected ADMIN role to be allowed for company logo management")
+func TestDBBackedCompanyLogoAuthorization(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open sqlite memory DB: %v", err)
 	}
 
-	// Employer fails closed without DB
-	if svc.ValidateCompanyManagement("comp_100", "user_emp", "EMPLOYER") {
-		t.Error("Expected EMPLOYER role to fail closed without DB")
+	if err := db.AutoMigrate(&models.Company{}); err != nil {
+		t.Fatalf("Failed to migrate company model: %v", err)
 	}
 
-	// Candidate rejected
-	if svc.ValidateCompanyManagement("comp_100", "user_cand", "CANDIDATE") {
-		t.Error("Expected CANDIDATE role to be rejected for company logo management")
+	ownerID := "user_owner_100"
+	comp := models.Company{
+		ID:      "comp_100",
+		Name:    "Acme Corp",
+		OwnerID: &ownerID,
+	}
+	if err := db.Create(&comp).Error; err != nil {
+		t.Fatalf("Failed to create test company: %v", err)
+	}
+
+	svcWithDB := &S3Service{db: db}
+	svcNilDB := &S3Service{db: nil}
+
+	// 1. ADMIN can manage company logo with or without DB
+	if !svcWithDB.ValidateCompanyManagement("comp_100", "user_any", "ADMIN") {
+		t.Error("ADMIN should be allowed with DB")
+	}
+	if !svcNilDB.ValidateCompanyManagement("comp_100", "user_any", "ADMIN") {
+		t.Error("ADMIN should be allowed without DB")
+	}
+
+	// 2. EMPLOYER who owns Company.OwnerID is allowed
+	if !svcWithDB.ValidateCompanyManagement("comp_100", ownerID, "EMPLOYER") {
+		t.Error("EMPLOYER owner should be allowed for their company")
+	}
+
+	// 3. EMPLOYER/RECRUITER not associated is rejected
+	if svcWithDB.ValidateCompanyManagement("comp_100", "user_other", "EMPLOYER") {
+		t.Error("Unassociated EMPLOYER should be rejected")
+	}
+	if svcWithDB.ValidateCompanyManagement("comp_100", "user_other", "RECRUITER") {
+		t.Error("Unassociated RECRUITER should be rejected")
+	}
+
+	// 4. CANDIDATE is rejected
+	if svcWithDB.ValidateCompanyManagement("comp_100", ownerID, "CANDIDATE") {
+		t.Error("CANDIDATE role should be rejected")
+	}
+
+	// 5. Unknown company is rejected
+	if svcWithDB.ValidateCompanyManagement("comp_unknown", ownerID, "EMPLOYER") {
+		t.Error("Unknown company ID should be rejected")
+	}
+
+	// 6. Nil DB fails closed for EMPLOYER/RECRUITER
+	if svcNilDB.ValidateCompanyManagement("comp_100", ownerID, "EMPLOYER") {
+		t.Error("Nil DB must fail closed for EMPLOYER")
 	}
 }
 

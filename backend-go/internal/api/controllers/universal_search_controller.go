@@ -24,12 +24,7 @@ func (ctrl *UniversalSearchController) Search(c *gin.Context) {
 		return
 	}
 
-	if input.Page <= 0 {
-		input.Page = 1
-	}
-	if input.Limit <= 0 || input.Limit > 100 {
-		input.Limit = 20
-	}
+	input.Page, input.Limit, _ = response.SanitizePagination(input.Page, input.Limit)
 
 	result, err := ctrl.searchService.Search(c.Request.Context(), &input)
 	if err != nil {
