@@ -23,6 +23,18 @@ cd "${BUILD_DIR}"
 pnpm install --frozen-lockfile
 NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 pnpm build
 
+# Load root-only production settings for schema migrations. The application
+# also supports POSTGRES_* variables, so keep that fallback for older hosts.
+if [[ -r /etc/workora/oauth.env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source /etc/workora/oauth.env
+  set +a
+fi
+
+export DATABASE_URL="${DATABASE_URL:-postgresql://${POSTGRES_USER:-workora}:${POSTGRES_PASSWORD:-workora_password}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-workora_jobs}?schema=public}"
+pnpm exec prisma migrate deploy
+
 test -f .next/standalone/server.js
 install -d -m 755 "${RELEASE_DIR}/.next"
 cp -a .next/standalone/. "${RELEASE_DIR}/"
@@ -47,4 +59,3 @@ else
   echo "DEPLOY_ROLLED_BACK ${RELEASE_SHA}" >&2
   exit 1
 fi
-
