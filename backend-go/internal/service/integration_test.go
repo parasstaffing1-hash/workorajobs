@@ -92,6 +92,52 @@ func TestAuthAndUserIntegration(t *testing.T) {
 	if tokenResp.AccessToken == "" || tokenResp.RefreshToken == "" {
 		t.Error("Expected non-empty access and refresh tokens")
 	}
+
+	var refreshCount int64
+	if err := db.Model(&models.RefreshToken{}).Where("user_id = ? AND is_revoked = ?", tokenResp.User.ID, false).Count(&refreshCount).Error; err != nil {
+		t.Fatalf("Failed to count refresh tokens: %v", err)
+	}
+	if refreshCount < 2 {
+		t.Errorf("Expected register and login to persist refresh tokens, got %d", refreshCount)
+	}
+
+	// 4. Refresh rotates tokens
+	refreshed, err := svc.Refresh(&RefreshTokenDTO{RefreshToken: tokenResp.RefreshToken})
+	if err != nil {
+		t.Fatalf("Refresh failed: %v", err)
+	}
+	if refreshed.AccessToken == "" || refreshed.RefreshToken == "" || refreshed.RefreshToken == tokenResp.RefreshToken {
+		t.Error("Expected refresh to return new access and refresh tokens")
+	}
+
+	// 5. Logout revokes refresh token
+	if err := svc.Logout(&LogoutDTO{RefreshToken: refreshed.RefreshToken}); err != nil {
+		t.Fatalf("Logout failed: %v", err)
+	}
+	if _, err := svc.Refresh(&RefreshTokenDTO{RefreshToken: refreshed.RefreshToken}); err != ErrInvalidRefreshToken {
+		t.Errorf("Expected revoked refresh token to fail, got %v", err)
+	}
+}
+
+func TestRegistrationRejectsPrivilegedRoles(t *testing.T) {
+	db := setupTestDB(t)
+	cfg := &config.Config{
+		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
+		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
+	}
+
+	svc := NewAuthService(db, cfg)
+	for _, role := range []models.Role{models.RoleAdmin, models.RoleRecruiter, models.RoleEditor, models.RoleSeoManager} {
+		_, err := svc.Register(&RegisterDTO{
+			Email:    "blocked-" + string(role) + "@workora.com",
+			Password: "SecurePassword123!",
+			Name:     "Blocked User",
+			Role:     role,
+		})
+		if err != ErrInvalidRegistrationRole {
+			t.Errorf("Expected role %s to be blocked, got %v", role, err)
+		}
+	}
 }
 
 func TestCompanyAndJobIntegration(t *testing.T) {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +39,19 @@ type AuthResponse struct {
 	RefreshToken string       `json:"refreshToken"`
 }
 
+type RefreshTokenDTO struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
+type LogoutDTO struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
+var (
+	ErrInvalidRegistrationRole = errors.New("registration role is not allowed")
+	ErrInvalidRefreshToken     = errors.New("invalid or expired refresh token")
+)
+
 func (s *AuthService) Register(dto *RegisterDTO) (*AuthResponse, error) {
 	var existingUser models.User
 	if err := s.db.Where("email = ?", dto.Email).First(&existingUser).Error; err == nil {
@@ -49,9 +63,9 @@ func (s *AuthService) Register(dto *RegisterDTO) (*AuthResponse, error) {
 		return nil, err
 	}
 
-	role := dto.Role
-	if role == "" {
-		role = models.RoleUser
+	role, err := normalizeRegistrationRole(dto.Role)
+	if err != nil {
+		return nil, err
 	}
 
 	user := models.User{
@@ -85,13 +99,9 @@ func (s *AuthService) Register(dto *RegisterDTO) (*AuthResponse, error) {
 	}
 
 	// Save Refresh Token
-	tokenHash, _ := auth.HashPassword(refreshToken)
-	s.db.Create(&models.RefreshToken{
-		ID:        uuid.New().String(),
-		UserID:    user.ID,
-		TokenHash: tokenHash,
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
-	})
+	if err := s.persistRefreshToken(user.ID, refreshToken); err != nil {
+		return nil, err
+	}
 
 	return &AuthResponse{
 		User:         &user,
@@ -125,9 +135,103 @@ func (s *AuthService) Login(dto *LoginDTO) (*AuthResponse, error) {
 		return nil, err
 	}
 
+	if err := s.persistRefreshToken(user.ID, refreshToken); err != nil {
+		return nil, err
+	}
+
 	return &AuthResponse{
 		User:         &user,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (s *AuthService) Refresh(dto *RefreshTokenDTO) (*AuthResponse, error) {
+	claims, err := auth.ValidateToken(dto.RefreshToken, s.cfg.JWTRefreshSecret)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	var storedTokens []models.RefreshToken
+	if err := s.db.Where("user_id = ? AND is_revoked = ? AND expires_at > ?", claims.UserID, false, time.Now()).Find(&storedTokens).Error; err != nil {
+		return nil, err
+	}
+
+	matched := false
+	for _, stored := range storedTokens {
+		ok, err := auth.VerifyPassword(dto.RefreshToken, stored.TokenHash)
+		if err == nil && ok {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	var user models.User
+	if err := s.db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	accessToken, err := auth.GenerateAccessToken(user.ID, user.Email, string(user.Role), s.cfg.JWTAccessSecret, 15*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := auth.GenerateAccessToken(user.ID, user.Email, string(user.Role), s.cfg.JWTRefreshSecret, 30*24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.persistRefreshToken(user.ID, refreshToken); err != nil {
+		return nil, err
+	}
+
+	return &AuthResponse{User: &user, AccessToken: accessToken, RefreshToken: refreshToken}, nil
+}
+
+func (s *AuthService) Logout(dto *LogoutDTO) error {
+	claims, err := auth.ValidateToken(dto.RefreshToken, s.cfg.JWTRefreshSecret)
+	if err != nil {
+		return ErrInvalidRefreshToken
+	}
+
+	var storedTokens []models.RefreshToken
+	if err := s.db.Where("user_id = ? AND is_revoked = ? AND expires_at > ?", claims.UserID, false, time.Now()).Find(&storedTokens).Error; err != nil {
+		return err
+	}
+
+	for _, stored := range storedTokens {
+		ok, err := auth.VerifyPassword(dto.RefreshToken, stored.TokenHash)
+		if err == nil && ok {
+			return s.db.Model(&models.RefreshToken{}).Where("id = ?", stored.ID).Update("is_revoked", true).Error
+		}
+	}
+
+	return ErrInvalidRefreshToken
+}
+
+func (s *AuthService) persistRefreshToken(userID, refreshToken string) error {
+	tokenHash, err := auth.HashPassword(refreshToken)
+	if err != nil {
+		return err
+	}
+	return s.db.Create(&models.RefreshToken{
+		ID:        uuid.New().String(),
+		UserID:    userID,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+	}).Error
+}
+
+func normalizeRegistrationRole(role models.Role) (models.Role, error) {
+	if role == "" {
+		return models.RoleUser, nil
+	}
+	switch models.Role(strings.ToUpper(string(role))) {
+	case models.RoleUser, models.RoleJobSeeker, models.RoleEmployer:
+		return models.Role(strings.ToUpper(string(role))), nil
+	default:
+		return "", ErrInvalidRegistrationRole
+	}
 }

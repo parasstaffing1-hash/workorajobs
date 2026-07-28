@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,10 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 
 	res, err := ctrl.authService.Register(&dto)
 	if err != nil {
+		if errors.Is(err, service.ErrInvalidRegistrationRole) {
+			response.Forbidden(c, err.Error())
+			return
+		}
 		response.BadRequest(c, err.Error(), nil)
 		return
 	}
@@ -47,6 +52,37 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Login successful", res)
+}
+
+func (ctrl *AuthController) Refresh(c *gin.Context) {
+	var dto service.RefreshTokenDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid refresh payload", err.Error())
+		return
+	}
+
+	res, err := ctrl.authService.Refresh(&dto)
+	if err != nil {
+		response.Unauthorized(c, "Invalid or expired refresh token")
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Token refreshed successfully", res)
+}
+
+func (ctrl *AuthController) Logout(c *gin.Context) {
+	var dto service.LogoutDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		response.BadRequest(c, "Invalid logout payload", err.Error())
+		return
+	}
+
+	if err := ctrl.authService.Logout(&dto); err != nil {
+		response.Unauthorized(c, "Invalid or expired refresh token")
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Logged out successfully", nil)
 }
 
 func (ctrl *AuthController) Me(c *gin.Context) {
