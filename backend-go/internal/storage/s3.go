@@ -216,20 +216,16 @@ func (s *S3Service) ValidateCompanyManagement(companyID, userID, role string) bo
 		return false
 	}
 
-	// If DB is available, perform DB-backed check
-	if s.db != nil {
-		var count int64
-		err := s.db.Model(&models.Company{}).
-			Where("id = ? AND owner_id = ?", companyID, userID).
-			Count(&count).Error
-		if err == nil && count > 0 {
-			return true
-		}
+	// Fail closed if database is unavailable
+	if s.db == nil {
 		return false
 	}
 
-	// Default true for employer in standalone/mock mode without DB
-	return true
+	var count int64
+	err := s.db.Model(&models.Company{}).
+		Where("id = ? AND owner_id = ?", companyID, userID).
+		Count(&count).Error
+	return err == nil && count > 0
 }
 
 // ValidateOwnership verifies the key prefix belongs to the active user/entity
@@ -263,6 +259,14 @@ func (s *S3Service) ValidateOwnership(key, userID, role string) bool {
 	}
 
 	return false
+}
+
+func extractKeyPrefix(key string) string {
+	parts := strings.Split(key, "/")
+	if len(parts) >= 2 {
+		return parts[0] + "/" + parts[1] + "/*"
+	}
+	return "s3-object/*"
 }
 
 // GeneratePresignedUpload creates a presigned PUT URL with strict authorization
@@ -314,7 +318,7 @@ func (s *S3Service) GeneratePresignedUpload(ctx context.Context, req *PresignUpl
 	duration := time.Duration(s.ttlSeconds) * time.Second
 	presignedReq, err := s.presignClient.PresignPutObject(ctx, putInput, s3.WithPresignExpires(duration))
 	if err != nil {
-		s.logger.Error("failed to presign put object", zap.Error(err), zap.String("key", key))
+		s.logger.Error("failed to presign put object", zap.Error(err), zap.String("keyPrefix", extractKeyPrefix(key)))
 		return nil, fmt.Errorf("failed to generate presigned upload url: %w", err)
 	}
 
@@ -322,7 +326,7 @@ func (s *S3Service) GeneratePresignedUpload(ctx context.Context, req *PresignUpl
 
 	s.logger.Info("generated presigned upload url",
 		zap.String("purpose", req.Purpose),
-		zap.String("key", key),
+		zap.String("keyPrefix", extractKeyPrefix(key)),
 		zap.String("userId", userID),
 	)
 
@@ -338,7 +342,7 @@ func (s *S3Service) GeneratePresignedUpload(ctx context.Context, req *PresignUpl
 // GeneratePresignedDownload creates a presigned GET URL after validating ownership
 func (s *S3Service) GeneratePresignedDownload(ctx context.Context, key, userID, role string) (string, error) {
 	if !s.ValidateOwnership(key, userID, role) {
-		s.logger.Warn("unauthorized download attempt", zap.String("key", key), zap.String("userId", userID))
+		s.logger.Warn("unauthorized download attempt", zap.String("keyPrefix", extractKeyPrefix(key)), zap.String("userId", userID))
 		return "", ErrUnauthorizedAccess
 	}
 
@@ -350,12 +354,12 @@ func (s *S3Service) GeneratePresignedDownload(ctx context.Context, key, userID, 
 	duration := time.Duration(s.ttlSeconds) * time.Second
 	presignedReq, err := s.presignClient.PresignGetObject(ctx, getInput, s3.WithPresignExpires(duration))
 	if err != nil {
-		s.logger.Error("failed to presign get object", zap.Error(err), zap.String("key", key))
+		s.logger.Error("failed to presign get object", zap.Error(err), zap.String("keyPrefix", extractKeyPrefix(key)))
 		return "", fmt.Errorf("failed to generate presigned download url: %w", err)
 	}
 
 	s.logger.Info("generated presigned download url",
-		zap.String("key", key),
+		zap.String("keyPrefix", extractKeyPrefix(key)),
 		zap.String("userId", userID),
 	)
 
@@ -365,7 +369,7 @@ func (s *S3Service) GeneratePresignedDownload(ctx context.Context, key, userID, 
 // DeleteObject removes an object from S3 after validating ownership
 func (s *S3Service) DeleteObject(ctx context.Context, key, userID, role string) error {
 	if !s.ValidateOwnership(key, userID, role) {
-		s.logger.Warn("unauthorized delete attempt", zap.String("key", key), zap.String("userId", userID))
+		s.logger.Warn("unauthorized delete attempt", zap.String("keyPrefix", extractKeyPrefix(key)), zap.String("userId", userID))
 		return ErrUnauthorizedAccess
 	}
 
@@ -376,12 +380,12 @@ func (s *S3Service) DeleteObject(ctx context.Context, key, userID, role string) 
 
 	_, err := s.client.DeleteObject(ctx, deleteInput)
 	if err != nil {
-		s.logger.Error("failed to delete s3 object", zap.Error(err), zap.String("key", key))
+		s.logger.Error("failed to delete s3 object", zap.Error(err), zap.String("keyPrefix", extractKeyPrefix(key)))
 		return fmt.Errorf("failed to delete object: %w", err)
 	}
 
 	s.logger.Info("deleted s3 object",
-		zap.String("key", key),
+		zap.String("keyPrefix", extractKeyPrefix(key)),
 		zap.String("userId", userID),
 	)
 

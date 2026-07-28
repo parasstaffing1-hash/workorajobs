@@ -107,10 +107,10 @@ func TestValidateOwnership(t *testing.T) {
 		t.Error("Expected admin to be allowed for any key")
 	}
 
-	// Employer allowed for company logo
+	// Without DB, non-ADMIN fail-closed for company logo
 	logoKey := "company-logos/comp_999/uuid-logo.png"
-	if !svc.ValidateOwnership(logoKey, userID, "EMPLOYER") {
-		t.Error("Expected employer to be allowed for company logo")
+	if svc.ValidateOwnership(logoKey, userID, "EMPLOYER") {
+		t.Error("Expected employer without DB to be rejected (fail closed)")
 	}
 
 	// Candidate rejected for other user's profile image
@@ -123,14 +123,14 @@ func TestValidateOwnership(t *testing.T) {
 func TestCompanyLogoAuthorization(t *testing.T) {
 	svc := &S3Service{}
 
-	// Admin can upload any company logo
+	// Admin can upload any company logo without DB
 	if !svc.ValidateCompanyManagement("comp_100", "user_admin", "ADMIN") {
 		t.Error("Expected ADMIN role to be allowed for company logo management")
 	}
 
-	// Employer allowed
-	if !svc.ValidateCompanyManagement("comp_100", "user_emp", "EMPLOYER") {
-		t.Error("Expected EMPLOYER role to be allowed for company logo management")
+	// Employer fails closed without DB
+	if svc.ValidateCompanyManagement("comp_100", "user_emp", "EMPLOYER") {
+		t.Error("Expected EMPLOYER role to fail closed without DB")
 	}
 
 	// Candidate rejected

@@ -21,6 +21,23 @@ type PaginationMeta struct {
 	TotalPages int   `json:"totalPages"`
 }
 
+func SanitizePagination(page, limit int) (int, int, int) {
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+	return page, limit, offset
+}
+
 func Success(c *gin.Context, statusCode int, message string, data interface{}) {
 	c.JSON(statusCode, Response{
 		Success: true,

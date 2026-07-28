@@ -54,6 +54,7 @@ type Config struct {
 	// Operations
 	MetricsBearerToken string `mapstructure:"METRICS_BEARER_TOKEN"`
 	EnableAutoMigrate  bool   `mapstructure:"ENABLE_AUTO_MIGRATE"`
+	RateLimitBackend   string `mapstructure:"RATE_LIMIT_BACKEND"`
 }
 
 func (c *Config) ValidateS3Config() error {
@@ -87,6 +88,7 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("ENABLE_AUTO_MIGRATE", false)
 	viper.SetDefault("AWS_S3_PRESIGN_TTL_SECONDS", 900)
 	viper.SetDefault("ENABLE_S3_UPLOADS", false)
+	viper.SetDefault("RATE_LIMIT_BACKEND", "memory")
 
 	viper.AutomaticEnv()
 
