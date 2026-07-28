@@ -122,27 +122,74 @@ func TestCreateJobValidationAndAuthorization(t *testing.T) {
 		t.Errorf("Unexpected admin created job: %+v", adminCreatedJob)
 	}
 
-	// 7. User with CompanyUser active membership allowed
-	cuMemberID := "cu_member_user"
-	db.Create(&models.User{ID: cuMemberID, Email: "cu@workora.com", Role: models.RoleEmployer})
-	db.Create(&models.CompanyUser{
-		ID:        "cu_job_1",
-		CompanyID: compID,
-		UserID:    cuMemberID,
-		Role:      models.RoleEmployer,
-		Status:    "ACTIVE",
-	})
-	cuJobInput := &models.Job{
-		Title:       "CompanyUser Member Created Job",
-		Description: "Posted by authorized company member",
+	// 7. CompanyUser roles aligned to Prisma EmployerUserRole
+	allowedCompanyRoles := []models.CompanyUserRole{
+		models.CompanyUserRoleOwner,
+		models.CompanyUserRoleAdmin,
+		models.CompanyUserRoleHRManager,
+		models.CompanyUserRoleHiringManager,
+		models.CompanyUserRoleRecruiter,
+	}
+	for idx, companyRole := range allowedCompanyRoles {
+		memberID := "allowed_company_user_" + string(companyRole)
+		db.Create(&models.User{ID: memberID, Email: memberID + "@workora.com", Role: models.RoleEmployer})
+		db.Create(&models.CompanyUser{
+			ID:        "cu_allowed_" + string(companyRole),
+			CompanyID: compID,
+			UserID:    memberID,
+			Role:      companyRole,
+			Status:    "ACTIVE",
+		})
+		jobInput := &models.Job{
+			Title:       "CompanyUser Allowed Job",
+			Description: "Posted by authorized company member",
+			CompanyID:   &compID,
+			PostedAt:    time.Now().Add(time.Duration(idx) * time.Second),
+		}
+		if _, err := jobSvc.CreateJob(memberID, "EMPLOYER", jobInput); err != nil {
+			t.Fatalf("Expected CompanyUser role %s to create job, got %v", companyRole, err)
+		}
+	}
+
+	blockedCompanyUsers := []struct {
+		id     string
+		role   models.CompanyUserRole
+		status string
+	}{
+		{id: "blocked_interviewer", role: models.CompanyUserRoleInterviewer, status: "ACTIVE"},
+		{id: "blocked_viewer", role: models.CompanyUserRoleViewer, status: "ACTIVE"},
+		{id: "blocked_suspended", role: models.CompanyUserRoleRecruiter, status: "SUSPENDED"},
+		{id: "blocked_invited", role: models.CompanyUserRoleHiringManager, status: "INVITED"},
+	}
+	for _, tc := range blockedCompanyUsers {
+		db.Create(&models.User{ID: tc.id, Email: tc.id + "@workora.com", Role: models.RoleEmployer})
+		db.Create(&models.CompanyUser{
+			ID:        "cu_" + tc.id,
+			CompanyID: compID,
+			UserID:    tc.id,
+			Role:      tc.role,
+			Status:    tc.status,
+		})
+		_, err := jobSvc.CreateJob(tc.id, "EMPLOYER", &models.Job{
+			Title:       "Blocked CompanyUser Job",
+			Description: "Should not be created",
+			CompanyID:   &compID,
+			PostedAt:    time.Now(),
+		})
+		if err != ErrForbiddenCompanyAccess {
+			t.Errorf("Expected CompanyUser role/status %s/%s to be forbidden, got %v", tc.role, tc.status, err)
+		}
+	}
+
+	candidateID := "candidate_user"
+	db.Create(&models.User{ID: candidateID, Email: "candidate@workora.com", Role: models.RoleUser})
+	_, err = jobSvc.CreateJob(candidateID, "CANDIDATE", &models.Job{
+		Title:       "Candidate Created Job",
+		Description: "Should not be created",
 		CompanyID:   &compID,
 		PostedAt:    time.Now(),
-	}
-	cuCreatedJob, err := jobSvc.CreateJob(cuMemberID, "EMPLOYER", cuJobInput)
-	if err != nil {
-		t.Fatalf("Failed for CompanyUser member: %v", err)
-	}
-	if cuCreatedJob == nil || cuCreatedJob.Title != "CompanyUser Member Created Job" {
-		t.Errorf("Unexpected CompanyUser created job: %+v", cuCreatedJob)
+	})
+	if err != ErrForbiddenCompanyAccess {
+		t.Errorf("Expected candidate to be forbidden, got %v", err)
 	}
 }

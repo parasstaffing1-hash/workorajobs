@@ -1,48 +1,83 @@
 # Go Backend Production Readiness Report
 
 ## Overview
-This document provides an empirical assessment of the Workora Go Backend (`backend-go`). All claims, scores, and security controls below are verified by unit, controller, storage, and integration tests under `go test ./...`.
 
----
+This document tracks the current production-readiness status of the Workora Go backend (`backend-go`). Scores are evidence-based and should not be raised unless code and tests verify the claim.
 
-## Production Readiness Audit Scores
+Validation command set:
 
-| Domain | Verified Score | Core Strengths & Implementation Status | Remaining Gaps / Blockers |
-|---|---|---|---|
-| **Architecture & Structure** | **95 / 100** | Layered Controllers -> Services -> Repositories with GORM & SQLite test support. | Frontend API proxy routing alignment needed. |
-| **Security & Auth Controls** | **94 / 100** | Fail-closed S3 authorization, JWT validation, IP/User rate limiting, Zap log masking, route-level auth checks. | OAuth2 provider integration (Google/LinkedIn) pending. |
-| **Storage & S3 Integration** | **92 / 100** | Presigned upload/download URLs with MIME/size limits, `Company` + `CompanyUser` ownership checks, KMS/AES256 encryption. | AWS S3 production bucket creation & IAM policy application. |
-| **Database & Schema Parity** | **92 / 100** | `CompanyUser` model aligned; SQLite in-memory integration tests passing; DB constraints & GORM index tags applied. | Full Postgres production integration tests. |
-| **Rate Limiting & Resiliency** | **94 / 100** | Configurable Redis rate limiter (`NewConfiguredRateLimiter`) with `REDIS_URL` parsing wired directly into `routes.go`. | Production Redis cluster deployment. |
-| **Code Quality & Testing** | **95 / 100** | 100% test pass rate across `auth`, `crawler`, `service`, `storage`, `response`, `middleware`, and `routes` packages. | End-to-end integration tests with Next.js frontend. |
+```bash
+go test ./...
+go build ./cmd/server ./cmd/worker
+git diff --check
+```
 
----
+## Current audit scores
 
-## Verified Hardening Improvements in Code
+| Domain | Current score | Verified strengths | Remaining blockers |
+|---|---:|---|---|
+| Architecture & structure | 80 / 100 | Layered controllers/services/models, clearer storage and middleware boundaries. | Frontend API routing to Go is not verified. |
+| Security & auth controls | 84 / 100 | JWT route guards, fail-closed S3 ownership checks, protected state-changing routes. | Google/LinkedIn OAuth parity and full session lifecycle are pending. |
+| Storage & S3 integration | 82 / 100 | Presigned upload/download/delete, MIME/size validation, private/encrypted object writes, DB-backed company ownership tests. | Live AWS bucket/IAM/CORS validation is still manual. |
+| Database & schema parity | 76 / 100 | Company, CompanyUser, Job, User, and auth flows have focused tests. | Full Postgres integration tests and complete Prisma/GORM parity are pending. |
+| Rate limiting & resiliency | 76 / 100 | Memory limiter and Redis limiter exist; Redis URL parsing and ping are now part of router setup. | Redis backend needs production environment validation and operational monitoring. |
+| Search & performance | 63 / 100 | Baseline Postgres search and finder modules compile and have targeted tests. | Search is still `ILIKE`/baseline, not full-text or external search backed. |
+| Test coverage | 68 / 100 | Unit, route, storage, auth, and lightweight integration tests exist. | Missing E2E tests for OAuth, payments, email, upload, admin, employer, and application flows. |
+| Production readiness | 70 / 100 | Core safety checks improved and validation passes. | Not ready as a full backend replacement until remaining integration blockers are closed. |
 
-### 1. Properly Wired Redis Rate Limiting & Fail-Safe Behavior (`routes.go` & `rate_limit.go`)
-- **Redis Initialization**: `SetupRouter` in `routes.go` parses `REDIS_URL` via `redis.ParseURL` when `RATE_LIMIT_BACKEND=redis` is set and instantiates `redis.Client`.
-- **Wired Factory**: `middleware.NewConfiguredRateLimiter(backend, isProd, rdb, maxReqs, window, logger)` is wired into all rate-limited routes.
-- **Fail-Safe Protection**: In production with `RATE_LIMIT_BACKEND=redis` and an uninitialized/nil Redis client, returns a 500 error middleware (`RATE_LIMIT_CONFIG_ERROR`) to prevent unthrottled traffic. In development, logs a warning and gracefully falls back to memory rate limiting.
+## Verified hardening improvements
 
-### 2. CompanyUser Authorization for Job Posting (`job_service.go`, `s3.go`, `job_test.go`)
-- **Dual Verification**: `JobService.CreateJob` and `S3Service.ValidateCompanyManagement` verify that non-ADMIN users are either the `Company.OwnerID` OR hold active `CompanyUser` membership (`status = 'ACTIVE'` with `EMPLOYER` or `RECRUITER` role).
-- **Validation**: Requires non-empty `userID` and valid `CompanyID`. Missing/invalid companies return `400 Bad Request` or `404 Not Found`. Unauthorized attempts return `403 Forbidden`.
-- **Test Coverage**: `TestCreateJobValidationAndAuthorization` in `job_test.go` and `TestDBBackedCompanyLogoAuthorization` in `s3_test.go` verify `CompanyUser` authorization under in-memory SQLite.
+### Redis-backed rate limiting
 
-### 3. Strengthened Route & Pagination Tests (`routes_test.go` & `response_test.go`)
-- **Strict 200 Assertions**: `TestPublicSearchRoutesHealthy` in `routes_test.go` uses an in-memory SQLite DB and asserts HTTP `200 OK` for `/api/v1/health/liveness`, `/api/v1/universal-search/trending`, and `/api/v1/jobs`.
-- **Auth Protection**: `TestAuthProtectedRoutes` verifies `401 Unauthorized` responses for unauthenticated state-changing endpoints (`POST /recommendations/*`, `/internships/recommendations`, `/walkins/:id/remind`, `/jobs`).
-- **Centralized Pagination**: All 11 controllers use `response.SanitizePagination` clamping `page >= 1` and `limit <= 100`.
+- `RATE_LIMIT_BACKEND=memory` uses the in-process limiter.
+- `RATE_LIMIT_BACKEND=redis` now parses `REDIS_URL`, creates a Redis client, and pings Redis during router setup.
+- In production, Redis backend misconfiguration fails startup through the router setup path instead of silently pretending Redis rate limiting is active.
+- In development and test modes, Redis misconfiguration falls back to memory with a warning.
 
----
+### CompanyUser job-post authorization
 
-## Final Production Deployment Warning & Blockers
+`JobService.CreateJob` now allows job creation only when:
 
-> [!WARNING]
-> **DO NOT DEPLOY** `backend-go` to production as a complete replacement for the Next.js backend until the following end-to-end integration items are verified:
-> 1. **OAuth Flow Verification**: Google and LinkedIn OAuth handlers.
-> 2. **Payment Processing**: Razorpay webhooks & checkout verification.
-> 3. **Transactional Email**: Resend email verification & password reset triggers.
-> 4. **Frontend API Proxying**: Next.js route handlers routing requests to Go backend services.
-> 5. **E2E Workflows**: Admin, Employer, and Candidate application flows end-to-end.
+- the caller is global `ADMIN`, or
+- the caller is `Company.ownerId`, or
+- the caller has active `CompanyUser` membership with one of the Prisma-aligned roles:
+  - `OWNER`
+  - `ADMIN`
+  - `HR_MANAGER`
+  - `HIRING_MANAGER`
+  - `RECRUITER`
+
+The following roles/statuses must not post jobs:
+
+- `INTERVIEWER`
+- `VIEWER`
+- `SUSPENDED`
+- `INVITED`
+- unrelated employers or candidates
+
+### Route protection
+
+Route tests verify unauthenticated state-changing endpoints return `401` for:
+
+- `POST /api/v1/recommendations/jobs`
+- `POST /api/v1/recommendations/resume-match`
+- `POST /api/v1/internships/recommendations`
+- `POST /api/v1/walkins/:id/remind`
+- `POST /api/v1/jobs`
+
+Public health/search route tests assert expected success status where a test DB is available.
+
+## Remaining production blockers
+
+Do not deploy `backend-go` as a complete production replacement until these are verified:
+
+1. Google OAuth flow parity.
+2. LinkedIn OAuth flow parity.
+3. Razorpay checkout and webhook verification.
+4. Resend email verification and password reset flows.
+5. Frontend routing/proxying from Next.js to Go API.
+6. Production Postgres integration tests.
+7. Live AWS S3 IAM, CORS, encryption, and lifecycle validation.
+8. Admin, employer, candidate, job application, and upload E2E workflows.
+9. Production observability: structured logs, metrics, traces, alerts, and runbooks.
+10. Search scalability: Postgres full-text or dedicated search backend when dataset size requires it.

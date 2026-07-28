@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -49,18 +50,9 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	recommendationService := service.NewRecommendationService(db)
 	universalSearchService := service.NewUniversalSearchService(db)
 
-	var rdb *redis.Client
-	if cfg.RateLimitBackend == "redis" {
-		redisURL := cfg.RedisURL
-		if redisURL == "" {
-			redisURL = "redis://localhost:6379/0"
-		}
-		opts, err := redis.ParseURL(redisURL)
-		if err != nil {
-			log.Warn("Failed to parse Redis URL for rate limiter", zap.Error(err))
-		} else {
-			rdb = redis.NewClient(opts)
-		}
+	rdb, redisLimiterReady := initRateLimitRedisClient(cfg, log)
+	if cfg.Environment == "production" && cfg.RateLimitBackend == "redis" && !redisLimiterReady {
+		log.Fatal("RATE_LIMIT_BACKEND=redis is required in production but Redis is unavailable")
 	}
 
 	var s3Service *storage.S3Service
@@ -225,4 +217,33 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	}
 
 	return r
+}
+
+func initRateLimitRedisClient(cfg *config.Config, log *zap.Logger) (*redis.Client, bool) {
+	if cfg.RateLimitBackend != "redis" {
+		return nil, false
+	}
+
+	redisURL := cfg.RedisURL
+	if redisURL == "" {
+		redisURL = "redis://localhost:6379/0"
+	}
+
+	opts, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Warn("Failed to parse Redis URL for rate limiter", zap.Error(err))
+		return nil, false
+	}
+
+	rdb := redis.NewClient(opts)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		_ = rdb.Close()
+		log.Warn("Failed to ping Redis for rate limiter", zap.Error(err))
+		return nil, false
+	}
+
+	return rdb, true
 }

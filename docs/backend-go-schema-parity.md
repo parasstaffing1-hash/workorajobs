@@ -1,27 +1,33 @@
 # Go Backend & Prisma Schema Parity Report
 
 ## Overview
-This document presents an accurate, element-by-element schema audit comparing the Prisma schema (`prisma/schema.prisma`) with the GORM models in `backend-go/internal/domain/models/`.
 
----
+This document compares `prisma/schema.prisma` with GORM models in `backend-go/internal/domain/models/`. Mark a row verified only when implementation and tests support the claim.
 
-## Detailed Model Parity Matrix
+## Parity matrix
 
-| Model Name | Prisma Model | GORM Model | Parity Status | Mismatch Description | Runtime Risk | Fix / Mitigation Status |
-|---|---|---|---|---|---|---|
-| **User** | `model User` | `models.User` | 🟢 Verified | Prisma includes direct OAuth relations and role enums (`ADMIN`, `EMPLOYER`, `RECRUITER`, `CANDIDATE`). GORM stores role as `models.Role`. | Low | Fully functional for JWT authentication and DB persistence. |
-| **Company** | `model Company` | `models.Company` | 🟢 Verified | Both include `id`, `name`, `slug`, `logo`, `website`, `description`, `ownerId`. | Low | `owner_id` properly set as optional string pointer (`*string`). |
-| **CompanyUser** | `model CompanyUser` | `models.CompanyUser` | 🟢 Verified | Defines join table between `Company` and `User` with `role` and `status`. | Low | `CompanyUser` struct defined in `models/company.go` and verified in authorization checks. |
-| **Job** | `model Job` | `models.Job` | 🟢 Verified | Prisma requires non-null `companyId` and `postedById`. GORM has `CompanyID *string` and `PostedByID *string` as pointers. | Low | `CreateJob` service method validates non-empty `companyID` and verifies company existence and user ownership/membership. |
-| **Application** | `model Application` | `models.Application` | 🟢 Verified | Matches `id`, `jobId`, `userId`, `resumeUrl`, `status`, `coverLetter`. | Low | Unique index constraint `(userId, jobId)` enforced in DB. |
-| **SavedJob** | `model SavedJob` | `models.SavedJob` | 🟢 Verified | Matches `id`, `userId`, `jobId`, `createdAt`. | Low | Compound unique constraint `(userId, jobId)` enforced. |
-| **OAuthAccount** | `model Account` | `models.OAuthAccount` | 🔴 Pending OAuth | Model defined in Prisma and GORM; OAuth provider handlers pending full backend integration. | High | Logged in readiness report as blocker for production switchover. |
-| **UserSession** | `model Session` | `models.RefreshToken` | 🟢 Verified | Refresh tokens are hashed and persisted with expiration timestamps (`RefreshToken`). | Low | JWT refresh token flow verified. |
+| Model | Prisma model | GORM model | Status | Known mismatch / risk | Required action |
+|---|---|---|---|---|---|
+| User | `User` | `models.User` | High parity | Prisma has broader relations and permissions. | Keep OAuth/session parity tests pending. |
+| Company | `Company` | `models.Company` | High parity | GORM maps the core fields used by Go services, not every metadata field from Prisma. | Add Postgres integration tests before production cutover. |
+| CompanyUser | `CompanyUser` + `EmployerUserRole` | `models.CompanyUser` + `CompanyUserRole` | High parity for posting auth | Role enum now matches Prisma roles: `OWNER`, `ADMIN`, `HR_MANAGER`, `RECRUITER`, `HIRING_MANAGER`, `INTERVIEWER`, `VIEWER`. | Keep tests for active allowed roles and blocked viewer/interviewer/suspended/invited states. |
+| Job | `Job` | `models.Job` | Medium-high parity | Prisma requires `companyId` and `postedById`; GORM fields are pointers but service validation now requires company and poster. | Add real Postgres create/list tests. |
+| Application | `Application` | `models.Application` | Partial | Basic fields exist, but full application workflow is not E2E verified. | Add application service/API tests. |
+| SavedJob | `SavedJob` | `models.SavedJob` | Partial | Basic model exists; uniqueness and user workflow need integration tests. | Add saved-job service/API tests. |
+| OAuthAccount | `Account` / OAuth relations | `models.OAuthAccount` | Pending | Provider handlers and linking flows are not complete in Go. | Implement and test Google/LinkedIn OAuth before backend cutover. |
+| UserSession / RefreshToken | Session-related Prisma models | `models.RefreshToken`, `models.UserSession` | Partial | JWT login tests exist, but full session revocation/refresh lifecycle needs coverage. | Add refresh/revoke/session tests. |
 
----
+## Current safeguards
 
-## Verified Database Constraints & Safeguards
-1. **Foreign Key Integrity**: GORM `Job` model links `CompanyID` to `Company.ID` and `PostedByID` to `User.ID`.
-2. **CompanyUser Authorization**: `CompanyUser` model allows multi-user company management (`EMPLOYER`/`RECRUITER` roles).
-3. **Cascading Safety**: Deletion of jobs or users does not trigger silent data corruption; soft-deletes (`deleted_at`) are enabled on primary entities.
-4. **Index Coverage**: Critical search and lookup columns (`status`, `posted_at`, `title`, `location`, `type`, `work_mode`) contain explicit GORM index tags.
+1. Job creation validates non-empty `userID`.
+2. Job creation validates non-empty `companyId`.
+3. Job creation verifies company existence.
+4. Job creation authorizes global `ADMIN`, company owner, or active allowed `CompanyUser` role.
+5. S3 company-logo authorization uses company ownership data and fails closed without DB for non-admin users.
+
+## Remaining required verification
+
+- Full Postgres integration tests.
+- Prisma migration compatibility check.
+- Application, SavedJob, OAuth, and session lifecycle tests.
+- Frontend-to-Go API contract tests.

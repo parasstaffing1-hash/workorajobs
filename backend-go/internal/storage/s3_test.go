@@ -149,7 +149,7 @@ func TestDBBackedCompanyLogoAuthorization(t *testing.T) {
 		ID:        "cu_1",
 		CompanyID: "comp_100",
 		UserID:    cuUserID,
-		Role:      models.RoleEmployer,
+		Role:      models.CompanyUserRoleRecruiter,
 		Status:    "ACTIVE",
 	})
 

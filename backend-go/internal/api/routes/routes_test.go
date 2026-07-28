@@ -91,3 +91,28 @@ func TestPublicSearchRoutesHealthy(t *testing.T) {
 		t.Errorf("Expected 200 OK for public jobs route, got %d", wJobs.Code)
 	}
 }
+
+func TestInitRateLimitRedisClient(t *testing.T) {
+	logger := zap.NewNop()
+
+	memoryCfg := &config.Config{RateLimitBackend: "memory"}
+	if client, ready := initRateLimitRedisClient(memoryCfg, logger); client != nil || ready {
+		t.Fatal("memory rate limit backend must not initialize Redis")
+	}
+
+	invalidRedisCfg := &config.Config{
+		RateLimitBackend: "redis",
+		RedisURL:         "://bad-url",
+	}
+	if client, ready := initRateLimitRedisClient(invalidRedisCfg, logger); client != nil || ready {
+		t.Fatal("invalid Redis URL must not return a ready client")
+	}
+
+	unreachableRedisCfg := &config.Config{
+		RateLimitBackend: "redis",
+		RedisURL:         "redis://127.0.0.1:1/0",
+	}
+	if client, ready := initRateLimitRedisClient(unreachableRedisCfg, logger); client != nil || ready {
+		t.Fatal("unreachable Redis must not return a ready client")
+	}
+}

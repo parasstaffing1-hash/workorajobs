@@ -105,8 +105,15 @@ func (s *JobService) CreateJob(userID, role string, job *models.Job) (*models.Jo
 		isOwner := company.OwnerID != nil && *company.OwnerID == userID
 		if !isOwner {
 			var cuCount int64
+			allowedCompanyRoles := []models.CompanyUserRole{
+				models.CompanyUserRoleOwner,
+				models.CompanyUserRoleAdmin,
+				models.CompanyUserRoleHRManager,
+				models.CompanyUserRoleRecruiter,
+				models.CompanyUserRoleHiringManager,
+			}
 			err := s.db.Model(&models.CompanyUser{}).
-				Where("company_id = ? AND user_id = ? AND status = 'ACTIVE' AND role IN ('EMPLOYER', 'RECRUITER', 'ADMIN')", companyID, userID).
+				Where("company_id = ? AND user_id = ? AND status = ? AND role IN ?", companyID, userID, "ACTIVE", allowedCompanyRoles).
 				Count(&cuCount).Error
 			if err != nil || cuCount == 0 {
 				return nil, ErrForbiddenCompanyAccess
