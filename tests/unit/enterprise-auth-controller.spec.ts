@@ -9,6 +9,7 @@ jest.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
@@ -29,6 +30,39 @@ jest.mock("@/lib/prisma", () => ({
     auditLog: {
       create: jest.fn(),
     },
+    $transaction: jest.fn(async (callback) =>
+      callback({
+        user: {
+          create: jest.fn().mockResolvedValue({
+            id: "user-emp",
+            email: "employer@acme.com",
+            name: "Acme Corp",
+            role: "EMPLOYER",
+            isEmailVerified: false,
+          }),
+          findUniqueOrThrow: jest.fn().mockResolvedValue({
+            id: "user-emp",
+            email: "employer@acme.com",
+            name: "Acme Corp",
+            role: "EMPLOYER",
+            isEmailVerified: false,
+          }),
+        },
+        company: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn().mockResolvedValue({ id: "company-1" }),
+        },
+        companyUser: {
+          create: jest.fn().mockResolvedValue({ id: "company-user-1" }),
+        },
+      }),
+    ),
+  },
+}));
+
+jest.mock("@/lib/company/company-service", () => ({
+  CompanyService: {
+    provisionEmployerCompany: jest.fn().mockResolvedValue({ id: "company-1" }),
   },
 }));
 

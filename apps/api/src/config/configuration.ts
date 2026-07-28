@@ -73,14 +73,9 @@ export function configuration() {
       n8nWebhookSecret: process.env.N8N_WEBHOOK_SECRET,
     },
     billing: {
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-      stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-      successUrl:
-        process.env.STRIPE_SUCCESS_URL ??
-        `${process.env.APP_URL ?? "http://localhost:3000"}/billing?checkout=success`,
-      cancelUrl:
-        process.env.STRIPE_CANCEL_URL ??
-        `${process.env.APP_URL ?? "http://localhost:3000"}/billing?checkout=cancel`,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+      razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+      razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
     },
     communication: {
       smsProvider: process.env.SMS_PROVIDER ?? "disabled",

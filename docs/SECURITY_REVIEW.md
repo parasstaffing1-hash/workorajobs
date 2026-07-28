@@ -22,7 +22,7 @@
 - Confirm CORS origins match production domains.
 - Enable real email, SMS, WhatsApp and push providers.
 - Configure S3 bucket policies and object lifecycle.
-- Configure Stripe webhooks and verify signature handling before live payments.
+- Configure Razorpay webhooks and verify signature handling before live payments.
 - Run dependency vulnerability scans.
 - Perform access-control tests for all roles.
 - Run Lighthouse and accessibility checks against production build.

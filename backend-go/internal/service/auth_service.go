@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -11,16 +12,25 @@ import (
 	"github.com/workorajobs/backend-go/internal/auth"
 	"github.com/workorajobs/backend-go/internal/config"
 	"github.com/workorajobs/backend-go/internal/domain/models"
+	"github.com/workorajobs/backend-go/internal/email"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	db  *gorm.DB
-	cfg *config.Config
+	db          *gorm.DB
+	cfg         *config.Config
+	emailSender email.Sender
 }
 
 func NewAuthService(db *gorm.DB, cfg *config.Config) *AuthService {
-	return &AuthService{db: db, cfg: cfg}
+	return NewAuthServiceWithEmailSender(db, cfg, email.NewSender(cfg))
+}
+
+func NewAuthServiceWithEmailSender(db *gorm.DB, cfg *config.Config, emailSender email.Sender) *AuthService {
+	if emailSender == nil {
+		emailSender = email.NoopSender{}
+	}
+	return &AuthService{db: db, cfg: cfg, emailSender: emailSender}
 }
 
 type RegisterDTO struct {
@@ -68,11 +78,20 @@ type ResetPasswordDTO struct {
 	NewPassword string `json:"newPassword" binding:"required,min=8"`
 }
 
+type OAuthProfile struct {
+	Provider          string
+	ProviderAccountID string
+	Email             string
+	Name              string
+	Picture           string
+}
+
 var (
 	ErrInvalidRegistrationRole = errors.New("registration role is not allowed")
 	ErrInvalidRefreshToken     = errors.New("invalid or expired refresh token")
 	ErrInvalidResetToken       = errors.New("invalid or expired password reset token")
 	ErrInvalidVerifyToken      = errors.New("invalid or expired email verification token")
+	ErrInvalidOAuthProfile     = errors.New("invalid oauth profile")
 )
 
 func (s *AuthService) Register(dto *RegisterDTO) (*AuthResponse, error) {
@@ -255,6 +274,9 @@ func (s *AuthService) RequestEmailVerification(dto *RequestEmailVerificationDTO)
 	}).Error; err != nil {
 		return "", err
 	}
+	if err := s.emailSender.SendEmailVerification(context.Background(), user.Email, token); err != nil {
+		return "", err
+	}
 	return token, nil
 }
 
@@ -308,6 +330,9 @@ func (s *AuthService) RequestPasswordReset(dto *RequestPasswordResetDTO) (string
 	}).Error; err != nil {
 		return "", err
 	}
+	if err := s.emailSender.SendPasswordReset(context.Background(), email, token); err != nil {
+		return "", err
+	}
 	return token, nil
 }
 
@@ -350,6 +375,100 @@ func (s *AuthService) ResetPassword(dto *ResetPasswordDTO) error {
 	})
 }
 
+func (s *AuthService) AuthenticateOAuth(profile *OAuthProfile) (*AuthResponse, error) {
+	if profile == nil ||
+		strings.TrimSpace(profile.Provider) == "" ||
+		strings.TrimSpace(profile.ProviderAccountID) == "" ||
+		strings.TrimSpace(profile.Email) == "" {
+		return nil, ErrInvalidOAuthProfile
+	}
+
+	provider := strings.ToLower(strings.TrimSpace(profile.Provider))
+	providerAccountID := strings.TrimSpace(profile.ProviderAccountID)
+	email := strings.ToLower(strings.TrimSpace(profile.Email))
+	name := strings.TrimSpace(profile.Name)
+	if name == "" {
+		name = strings.Split(email, "@")[0]
+	}
+
+	var user models.User
+	err := s.db.
+		Joins("JOIN \"OAuthAccount\" ON \"OAuthAccount\".\"user_id\" = \"User\".\"id\"").
+		Where("\"OAuthAccount\".\"provider\" = ? AND \"OAuthAccount\".\"provider_account_id\" = ?", provider, providerAccountID).
+		First(&user).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+			user = models.User{
+				ID:              uuid.New().String(),
+				Email:           email,
+				Name:            &name,
+				Role:            models.RoleJobSeeker,
+				IsEmailVerified: true,
+			}
+			now := time.Now()
+			user.EmailVerifiedAt = &now
+			if err := s.db.Create(&user).Error; err != nil {
+				return nil, err
+			}
+			profileRecord := models.UserProfile{
+				ID:       uuid.New().String(),
+				UserID:   user.ID,
+				PhotoURL: nullableTrimmed(profile.Picture),
+			}
+			_ = s.db.Create(&profileRecord).Error
+		}
+	}
+
+	now := time.Now()
+	if !user.IsEmailVerified {
+		if err := s.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]any{
+			"is_email_verified": true,
+			"email_verified_at": now,
+		}).Error; err != nil {
+			return nil, err
+		}
+		user.IsEmailVerified = true
+		user.EmailVerifiedAt = &now
+	}
+
+	scope := "openid profile email"
+	account := models.OAuthAccount{
+		ID:                uuid.New().String(),
+		UserID:            user.ID,
+		Provider:          provider,
+		ProviderAccountID: providerAccountID,
+		Scope:             &scope,
+	}
+	if err := s.db.Where(models.OAuthAccount{Provider: provider, ProviderAccountID: providerAccountID}).
+		Assign(models.OAuthAccount{UserID: user.ID, Scope: &scope}).
+		FirstOrCreate(&account).Error; err != nil {
+		return nil, err
+	}
+
+	accessToken, err := auth.GenerateAccessToken(user.ID, user.Email, string(user.Role), s.cfg.JWTAccessSecret, 15*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := auth.GenerateAccessToken(user.ID, user.Email, string(user.Role), s.cfg.JWTRefreshSecret, 30*24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.persistRefreshToken(user.ID, refreshToken); err != nil {
+		return nil, err
+	}
+
+	return &AuthResponse{User: &user, AccessToken: accessToken, RefreshToken: refreshToken}, nil
+}
+
 func (s *AuthService) persistRefreshToken(userID, refreshToken string) error {
 	tokenHash, err := auth.HashPassword(refreshToken)
 	if err != nil {
@@ -361,6 +480,14 @@ func (s *AuthService) persistRefreshToken(userID, refreshToken string) error {
 		TokenHash: tokenHash,
 		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
 	}).Error
+}
+
+func nullableTrimmed(value string) *string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }
 
 func normalizeRegistrationRole(role models.Role) (models.Role, error) {

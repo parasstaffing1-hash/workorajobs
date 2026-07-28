@@ -157,8 +157,8 @@ func (UserSession) TableName() string {
 type OAuthAccount struct {
 	ID                string     `gorm:"primaryKey;type:varchar(255)" json:"id"`
 	UserID            string     `gorm:"type:varchar(255);not null;index" json:"userId"`
-	Provider          string     `gorm:"type:varchar(50);not null" json:"provider"`
-	ProviderAccountID string     `gorm:"type:varchar(255);not null" json:"providerAccountId"`
+	Provider          string     `gorm:"type:varchar(50);not null;uniqueIndex:idx_oauth_provider_account" json:"provider"`
+	ProviderAccountID string     `gorm:"type:varchar(255);not null;uniqueIndex:idx_oauth_provider_account" json:"providerAccountId"`
 	AccessToken       *string    `gorm:"type:text" json:"-"`
 	RefreshToken      *string    `gorm:"type:text" json:"-"`
 	ExpiresAt         *time.Time `json:"expiresAt"`

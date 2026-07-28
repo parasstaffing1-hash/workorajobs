@@ -36,6 +36,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 
 	// Services
 	authService := service.NewAuthService(db, cfg)
+	paymentService := service.NewPaymentService(cfg)
 	jobService := service.NewJobService(db)
 	searchService := service.NewSearchService(db, nil)
 	remoteService := service.NewRemoteService(db)
@@ -70,7 +71,8 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 
 	// Controllers
 	healthCtrl := controllers.NewHealthController(db)
-	authCtrl := controllers.NewAuthController(authService)
+	authCtrl := controllers.NewAuthController(authService, cfg)
+	paymentCtrl := controllers.NewPaymentController(paymentService)
 	jobCtrl := controllers.NewJobController(jobService)
 	searchCtrl := controllers.NewSearchController(searchService)
 	remoteCtrl := controllers.NewRemoteController(remoteService)
@@ -201,6 +203,8 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		authGroup.POST("/email-verification/verify", authCtrl.VerifyEmail)
 		authGroup.POST("/password-reset/request", authCtrl.RequestPasswordReset)
 		authGroup.POST("/password-reset/confirm", authCtrl.ResetPassword)
+		authGroup.GET("/oauth/:provider", authCtrl.StartOAuth)
+		authGroup.GET("/oauth/:provider/callback", authCtrl.OAuthCallback)
 		authGroup.GET("/me", middleware.AuthMiddleware(cfg.JWTAccessSecret), authCtrl.Me)
 	}
 
@@ -212,6 +216,14 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 			uploadGroup.GET("/presign-download", uploadCtrl.PresignDownload)
 			uploadGroup.DELETE("", uploadCtrl.DeleteObject)
 		}
+	}
+
+	// Payment Endpoints (Razorpay)
+	paymentGroup := r.Group("/api/v1/payments")
+	{
+		paymentGroup.POST("/razorpay/orders", middleware.AuthMiddleware(cfg.JWTAccessSecret), paymentCtrl.CreateRazorpayOrder)
+		paymentGroup.POST("/razorpay/verify", paymentCtrl.VerifyRazorpayPayment)
+		paymentGroup.POST("/razorpay/webhook", paymentCtrl.RazorpayWebhook)
 	}
 
 	// Job Endpoints

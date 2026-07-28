@@ -132,71 +132,32 @@ export class BillingService {
       });
     }
 
-    const stripeSecretKey = this.config.get<string>("billing.stripeSecretKey");
-    if (!stripeSecretKey || !plan.stripePriceId) {
+    const razorpayKeyId = this.config.get<string>("billing.razorpayKeyId");
+    const razorpayKeySecret = this.config.get<string>("billing.razorpayKeySecret");
+    if (!razorpayKeyId || !razorpayKeySecret) {
       return {
-        provider: "stripe",
+        provider: "razorpay",
         setupRequired: true,
         requiredEnvironment: [
-          "STRIPE_SECRET_KEY",
-          "STRIPE_WEBHOOK_SECRET",
-          "STRIPE_SUCCESS_URL",
-          "STRIPE_CANCEL_URL",
+          "RAZORPAY_KEY_ID",
+          "RAZORPAY_KEY_SECRET",
+          "RAZORPAY_WEBHOOK_SECRET",
         ],
-        requiredPlanField: "stripePriceId",
       };
     }
 
-    const params = new URLSearchParams();
-    params.set("mode", "subscription");
-    params.set(
-      "success_url",
-      this.config.getOrThrow<string>("billing.successUrl"),
+    this.logger.warn(
+      "Legacy Nest billing endpoint is configured for Razorpay but order creation is handled by the Go /api/v1/payments/razorpay/orders endpoint.",
     );
-    params.set(
-      "cancel_url",
-      this.config.getOrThrow<string>("billing.cancelUrl"),
-    );
-    params.set("client_reference_id", company.id);
-    params.set("line_items[0][price]", plan.stripePriceId);
-    params.set("line_items[0][quantity]", "1");
-    params.set("metadata[companyId]", company.id);
-    params.set("metadata[planId]", plan.id);
-    if (dto.gstNumber) params.set("metadata[gstNumber]", dto.gstNumber);
-
-    try {
-      const response = await fetch(
-        "https://api.stripe.com/v1/checkout/sessions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${stripeSecretKey}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: params,
-        },
-      );
-      const payload = (await response.json()) as {
-        id?: string;
-        url?: string;
-        error?: { message?: string };
-      };
-      if (!response.ok) {
-        throw new BadRequestException(
-          payload.error?.message ?? "Stripe Checkout session failed.",
-        );
-      }
-      return {
-        provider: "stripe",
-        checkoutSessionId: payload.id,
-        url: payload.url,
-      };
-    } catch (error) {
-      this.logger.warn(
-        `Stripe Checkout failed: ${error instanceof Error ? error.message : "unknown error"}`,
-      );
-      throw error;
-    }
+    return {
+      provider: "razorpay",
+      setupRequired: false,
+      handoffEndpoint: "/api/v1/payments/razorpay/orders",
+      amount: plan.priceCents,
+      currency: plan.currency,
+      companyId: company.id,
+      planId: plan.id,
+    };
   }
 
   private companyScope(user: AuthenticatedUser) {

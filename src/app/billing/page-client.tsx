@@ -22,7 +22,7 @@ export default function BillingPage() {
   return (
     <PlatformShell
       badge="Billing"
-      description="Manage subscriptions, invoices, GST support, coupons, Stripe checkout structure and payment history."
+      description="Manage subscriptions, invoices, GST support, coupons, Razorpay checkout structure and payment history."
       nav={adminNav}
       title="Billing"
     >

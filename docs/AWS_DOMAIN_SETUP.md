@@ -76,10 +76,11 @@ APP_URL=https://workorajobs.com
 API_URL=https://workorajobs.com
 NEXT_PUBLIC_API_URL=https://workorajobs.com/api/v1
 CORS_ORIGINS=https://workorajobs.com,https://www.workorajobs.com
-GOOGLE_CALLBACK_URL=https://workorajobs.com/api/v1/auth/google/callback
-LINKEDIN_CALLBACK_URL=https://workorajobs.com/api/v1/auth/linkedin/callback
-STRIPE_SUCCESS_URL=https://workorajobs.com/billing?checkout=success
-STRIPE_CANCEL_URL=https://workorajobs.com/billing?checkout=cancel
+GOOGLE_CALLBACK_URL=https://workorajobs.com/api/v1/auth/oauth/google/callback
+LINKEDIN_CALLBACK_URL=https://workorajobs.com/api/v1/auth/oauth/linkedin/callback
+RAZORPAY_KEY_ID=rzp_live_...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
 ```
 
 ## Route 53 Records

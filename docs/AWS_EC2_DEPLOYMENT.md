@@ -29,5 +29,5 @@ docker compose exec api pnpm --filter @workora/api prisma:deploy
 - Verify `/api/v1/health`.
 - Verify web routes.
 - Verify uploads to S3.
-- Verify Stripe webhook delivery.
+- Verify Razorpay webhook delivery.
 - Configure backups and monitoring alarms.

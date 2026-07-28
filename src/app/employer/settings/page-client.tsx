@@ -39,7 +39,7 @@ export default function EmployerSettingsPage() {
         <WorkflowCard title="Billing and subscription">
           <p className="text-sm text-muted-foreground">
             Billing and subscription management connect to the production
-            billing service when Stripe environment variables are configured.
+            billing service when Razorpay environment variables are configured.
           </p>
         </WorkflowCard>
       </div>

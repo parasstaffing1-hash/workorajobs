@@ -41,6 +41,15 @@ type Config struct {
 	// External Services
 	ResendAPIKey           string `mapstructure:"RESEND_API_KEY"`
 	EmailFrom              string `mapstructure:"EMAIL_FROM"`
+	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret     string `mapstructure:"GOOGLE_CLIENT_SECRET"`
+	GoogleCallbackURL      string `mapstructure:"GOOGLE_CALLBACK_URL"`
+	LinkedInClientID       string `mapstructure:"LINKEDIN_CLIENT_ID"`
+	LinkedInClientSecret   string `mapstructure:"LINKEDIN_CLIENT_SECRET"`
+	LinkedInCallbackURL    string `mapstructure:"LINKEDIN_CALLBACK_URL"`
+	RazorpayKeyID          string `mapstructure:"RAZORPAY_KEY_ID"`
+	RazorpayKeySecret      string `mapstructure:"RAZORPAY_KEY_SECRET"`
+	RazorpayWebhookSecret  string `mapstructure:"RAZORPAY_WEBHOOK_SECRET"`
 	S3Bucket               string `mapstructure:"AWS_S3_BUCKET"`
 	AWSRegion              string `mapstructure:"AWS_REGION"`
 	AWSAccessKeyID         string `mapstructure:"AWS_ACCESS_KEY_ID"`
@@ -127,6 +136,18 @@ func LoadConfig(path string) (*Config, error) {
 		}
 		if strings.Contains(cfg.DatabaseURL, "sslmode=disable") {
 			return nil, fmt.Errorf("production DATABASE_URL must not use sslmode=disable")
+		}
+		if strings.TrimSpace(cfg.ResendAPIKey) == "" || strings.TrimSpace(cfg.EmailFrom) == "" {
+			return nil, fmt.Errorf("RESEND_API_KEY and EMAIL_FROM are required in production")
+		}
+		if strings.TrimSpace(cfg.GoogleClientID) == "" || strings.TrimSpace(cfg.GoogleClientSecret) == "" {
+			return nil, fmt.Errorf("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required in production")
+		}
+		if strings.TrimSpace(cfg.LinkedInClientID) == "" || strings.TrimSpace(cfg.LinkedInClientSecret) == "" {
+			return nil, fmt.Errorf("LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET are required in production")
+		}
+		if strings.TrimSpace(cfg.RazorpayKeyID) == "" || strings.TrimSpace(cfg.RazorpayKeySecret) == "" {
+			return nil, fmt.Errorf("RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are required in production")
 		}
 	}
 

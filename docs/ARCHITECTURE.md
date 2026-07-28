@@ -25,4 +25,4 @@ PostgreSQL is accessed through Prisma. Redis is prepared for cache/session-adjac
 
 ## Integrations
 
-OpenAI, Stripe, n8n, SMS, WhatsApp, push and AWS S3 are implemented as credential-driven structures. Without credentials, the app stays buildable and returns explicit setup-required responses.
+OpenAI, Razorpay, n8n, SMS, WhatsApp, push and AWS S3 are implemented as credential-driven structures. Without credentials, the app stays buildable and returns explicit setup-required responses.

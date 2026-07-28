@@ -117,7 +117,7 @@ export function verifyRazorpayPaymentSignature(params: VerifyPaymentParams): {
     };
   }
 
-  console.warn(`[Razorpay Signature Mismatch] Expected: ${expectedSignature}, Received: ${signature}`);
+  console.warn("[Razorpay Signature Mismatch] Payment verification failed.");
   return {
     success: false,
     message: "Invalid payment signature. Payment verification failed.",

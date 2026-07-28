@@ -22,6 +22,6 @@ Automation endpoints are n8n-ready. Set `N8N_BASE_URL` for default webhook dispa
 
 ## Production integrations
 
-Billing uses Stripe Checkout structure through `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_SUCCESS_URL` and `STRIPE_CANCEL_URL`. SMS, WhatsApp and push notifications are represented by provider configuration records and environment variables until real providers are connected.
+Billing uses Razorpay through `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. SMS, WhatsApp and push notifications are represented by provider configuration records and environment variables until real providers are connected.
 
 See repository-level `docs/` for installation, architecture, API, deployment, environment and security guidance.

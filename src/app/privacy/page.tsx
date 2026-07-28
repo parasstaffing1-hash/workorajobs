@@ -170,7 +170,7 @@ export default function PrivacyPage() {
 
             <div className="pl-4 border-l-2 border-blue-600 dark:border-blue-400 space-y-1">
               <h3 className="font-bold text-slate-900 dark:text-white">D. Payment & Billing Data</h3>
-              <p className="text-slate-600 dark:text-slate-300 text-xs">Payment transaction metadata, billing addresses, and invoice histories. Complete credit card numbers are processed directly by our PCI-DSS compliant payment gateway (Stripe) and are never stored on WorkoraJobs servers.</p>
+              <p className="text-slate-600 dark:text-slate-300 text-xs">Payment transaction metadata, billing addresses, and invoice histories. Complete card numbers are processed directly by our PCI-DSS compliant payment gateway (Razorpay) and are never stored on WorkoraJobs servers.</p>
             </div>
 
             <div className="pl-4 border-l-2 border-blue-600 dark:border-blue-400 space-y-1">
@@ -365,7 +365,7 @@ export default function PrivacyPage() {
                   <td className="p-2.5">Global Edge Network</td>
                 </tr>
                 <tr>
-                  <td className="p-2.5 font-bold text-slate-900 dark:text-white">Stripe Inc.</td>
+                  <td className="p-2.5 font-bold text-slate-900 dark:text-white">Razorpay Software Private Limited</td>
                   <td className="p-2.5">Payment Processing & Subscription Billing</td>
                   <td className="p-2.5">Billing Name, Address, Payment Token</td>
                   <td className="p-2.5">United States / Global</td>

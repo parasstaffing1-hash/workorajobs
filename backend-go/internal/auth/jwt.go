@@ -99,13 +99,19 @@ func VerifyPassword(password, encodedHash string) (bool, error) {
 }
 
 func GenerateAccessToken(userID, email, role, secret string, duration time.Duration) (string, error) {
+	tokenID, err := randomTokenID()
+	if err != nil {
+		return "", err
+	}
+	now := time.Now()
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ID:        tokenID,
+			ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(now),
 			Subject:   userID,
 		},
 	}
@@ -131,4 +137,12 @@ func ValidateToken(tokenString, secret string) (*Claims, error) {
 	}
 
 	return nil, errors.New("invalid token")
+}
+
+func randomTokenID() (string, error) {
+	raw := make([]byte, 16)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(raw), nil
 }

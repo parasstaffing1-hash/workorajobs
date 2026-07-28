@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -10,6 +11,25 @@ import (
 	"github.com/workorajobs/backend-go/internal/domain/models"
 	"gorm.io/gorm"
 )
+
+type fakeEmailSender struct {
+	verificationTo    string
+	verificationToken string
+	resetTo           string
+	resetToken        string
+}
+
+func (f *fakeEmailSender) SendEmailVerification(_ context.Context, to, token string) error {
+	f.verificationTo = to
+	f.verificationToken = token
+	return nil
+}
+
+func (f *fakeEmailSender) SendPasswordReset(_ context.Context, to, token string) error {
+	f.resetTo = to
+	f.resetToken = token
+	return nil
+}
 
 type TestJob struct {
 	ID          string    `gorm:"primaryKey;type:varchar(255)" json:"id"`
@@ -39,6 +59,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&models.RefreshToken{},
 		&models.EmailVerification{},
 		&models.PasswordReset{},
+		&models.OAuthAccount{},
 	)
 	if err != nil {
 		t.Fatalf("Failed to auto migrate models: %v", err)
@@ -54,7 +75,8 @@ func TestAuthAndUserIntegration(t *testing.T) {
 		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
 	}
 
-	svc := NewAuthService(db, cfg)
+	sender := &fakeEmailSender{}
+	svc := NewAuthServiceWithEmailSender(db, cfg, sender)
 
 	// 1. Register User
 	authResp, err := svc.Register(&RegisterDTO{
@@ -148,7 +170,8 @@ func TestEmailVerificationLifecycle(t *testing.T) {
 		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
 		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
 	}
-	svc := NewAuthService(db, cfg)
+	sender := &fakeEmailSender{}
+	svc := NewAuthServiceWithEmailSender(db, cfg, sender)
 
 	authResp, err := svc.Register(&RegisterDTO{
 		Email:    "verify@workora.com",
@@ -166,6 +189,9 @@ func TestEmailVerificationLifecycle(t *testing.T) {
 	}
 	if token == "" {
 		t.Fatal("Expected verification token for unverified user")
+	}
+	if sender.verificationTo != authResp.User.Email || sender.verificationToken != token {
+		t.Fatalf("Expected verification token to be sent by email sender")
 	}
 
 	if err := svc.VerifyEmail(&VerifyEmailDTO{Email: authResp.User.Email, Token: token}); err != nil {
@@ -190,7 +216,8 @@ func TestPasswordResetLifecycle(t *testing.T) {
 		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
 		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
 	}
-	svc := NewAuthService(db, cfg)
+	sender := &fakeEmailSender{}
+	svc := NewAuthServiceWithEmailSender(db, cfg, sender)
 
 	_, err := svc.Register(&RegisterDTO{
 		Email:    "reset@workora.com",
@@ -213,6 +240,9 @@ func TestPasswordResetLifecycle(t *testing.T) {
 	if token == "" {
 		t.Fatal("Expected password reset token")
 	}
+	if sender.resetTo != "reset@workora.com" || sender.resetToken != token {
+		t.Fatalf("Expected password reset token to be sent by email sender")
+	}
 
 	if err := svc.ResetPassword(&ResetPasswordDTO{Email: "reset@workora.com", Token: token, NewPassword: "NewPassword123!"}); err != nil {
 		t.Fatalf("ResetPassword failed: %v", err)
@@ -228,6 +258,81 @@ func TestPasswordResetLifecycle(t *testing.T) {
 	}
 	if err := svc.ResetPassword(&ResetPasswordDTO{Email: "reset@workora.com", Token: token, NewPassword: "AnotherPassword123!"}); err != ErrInvalidResetToken {
 		t.Errorf("Expected reused reset token to fail, got %v", err)
+	}
+}
+
+func TestOAuthCreatesVerifiedUserAndLinksAccount(t *testing.T) {
+	db := setupTestDB(t)
+	cfg := &config.Config{
+		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
+		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
+	}
+	svc := NewAuthService(db, cfg)
+
+	authResp, err := svc.AuthenticateOAuth(&OAuthProfile{
+		Provider:          "google",
+		ProviderAccountID: "google-sub-123",
+		Email:             "oauth.user@workora.com",
+		Name:              "OAuth User",
+		Picture:           "https://example.com/avatar.png",
+	})
+	if err != nil {
+		t.Fatalf("AuthenticateOAuth failed: %v", err)
+	}
+	if authResp.User.Email != "oauth.user@workora.com" || authResp.User.Role != models.RoleJobSeeker {
+		t.Fatalf("Unexpected OAuth user: %+v", authResp.User)
+	}
+	if !authResp.User.IsEmailVerified {
+		t.Fatal("Expected OAuth user email to be verified")
+	}
+	if authResp.AccessToken == "" || authResp.RefreshToken == "" {
+		t.Fatal("Expected OAuth auth response tokens")
+	}
+
+	var account models.OAuthAccount
+	if err := db.Where("provider = ? AND provider_account_id = ?", "google", "google-sub-123").First(&account).Error; err != nil {
+		t.Fatalf("Expected OAuth account link: %v", err)
+	}
+	if account.UserID != authResp.User.ID {
+		t.Fatalf("Expected OAuth account to link created user")
+	}
+	if account.AccessToken != nil || account.RefreshToken != nil {
+		t.Fatal("Provider access tokens must not be persisted")
+	}
+}
+
+func TestOAuthLinksExistingUserByEmail(t *testing.T) {
+	db := setupTestDB(t)
+	cfg := &config.Config{
+		JWTAccessSecret:  "test-secret-key-at-least-32-chars-long!",
+		JWTRefreshSecret: "test-refresh-secret-at-least-32-chars-long!",
+	}
+	svc := NewAuthService(db, cfg)
+
+	registered, err := svc.Register(&RegisterDTO{
+		Email:    "existing.oauth@workora.com",
+		Password: "SecurePassword123!",
+		Name:     "Existing User",
+		Role:     models.RoleUser,
+	})
+	if err != nil {
+		t.Fatalf("Registration failed: %v", err)
+	}
+
+	oauthResp, err := svc.AuthenticateOAuth(&OAuthProfile{
+		Provider:          "linkedin",
+		ProviderAccountID: "linkedin-sub-456",
+		Email:             "existing.oauth@workora.com",
+		Name:              "Existing OAuth User",
+	})
+	if err != nil {
+		t.Fatalf("AuthenticateOAuth failed: %v", err)
+	}
+	if oauthResp.User.ID != registered.User.ID {
+		t.Fatal("Expected OAuth to link the existing email user")
+	}
+	if !oauthResp.User.IsEmailVerified {
+		t.Fatal("Expected linked OAuth user to become email verified")
 	}
 }
 
