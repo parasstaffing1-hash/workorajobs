@@ -31,17 +31,28 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	// Services
 	authService := service.NewAuthService(db, cfg)
 	jobService := service.NewJobService(db)
+	searchService := service.NewSearchService(db, nil)
 
 	// Controllers
 	healthCtrl := controllers.NewHealthController(db)
 	authCtrl := controllers.NewAuthController(authService)
 	jobCtrl := controllers.NewJobController(jobService)
+	searchCtrl := controllers.NewSearchController(searchService)
 
 	// Health Endpoints
 	healthGroup := r.Group("/api/v1/health")
 	{
 		healthGroup.GET("/liveness", healthCtrl.Liveness)
 		healthGroup.GET("/readiness", healthCtrl.Readiness)
+	}
+
+	// Search Endpoints
+	searchGroup := r.Group("/api/v1/search")
+	{
+		searchGroup.GET("/jobs", searchCtrl.SearchJobs)
+		searchGroup.GET("/autocomplete", searchCtrl.Autocomplete)
+		searchGroup.GET("/trending", searchCtrl.GetTrendingJobs)
+		searchGroup.GET("/jobs/:id/similar", searchCtrl.GetSimilarJobs)
 	}
 
 	// Auth Endpoints
