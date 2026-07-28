@@ -84,6 +84,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	wfhCtrl := controllers.NewWFHController(wfhService)
 	seoService := service.NewSeoServiceWithBaseURL(db, cfg.AppURL)
 	sitemapService := service.NewSitemapService(db, cfg.AppURL)
+	pseoService := service.NewPseoService(db, seoService, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -91,6 +92,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	universalSearchCtrl := controllers.NewUniversalSearchController(universalSearchService)
 	seoCtrl := controllers.NewSeoController(seoService, jobService)
 	sitemapCtrl := controllers.NewSitemapController(sitemapService)
+	pseoCtrl := controllers.NewPseoController(pseoService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -105,6 +107,13 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// Programmatic SEO Engine Endpoints
+	pseoGroup := r.Group("/api/v1/pseo")
+	{
+		pseoGroup.GET("/page", pseoCtrl.GetPseoPage)
+		pseoGroup.GET("/related", pseoCtrl.GetRelatedLinks)
 	}
 
 	// XML Sitemap Engine Endpoints
