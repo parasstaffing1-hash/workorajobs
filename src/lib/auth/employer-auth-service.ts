@@ -192,7 +192,9 @@ export class EmployerAuthService {
       },
     });
 
-    return { success: true, otpCode }; // Return OTP code for demo/testing
+    // The plaintext OTP must only be delivered through the configured SMS
+    // provider. Never return it to the browser/API response.
+    return { success: true };
   }
 
   /**

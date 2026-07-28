@@ -37,11 +37,10 @@ export async function POST(request: NextRequest) {
     const { action, otpCode } = body;
 
     if (action === "send") {
-      const result = await EmployerAuthService.sendPhoneOtp(userId);
+      await EmployerAuthService.sendPhoneOtp(userId);
       return NextResponse.json({
         success: true,
         message: "SMS OTP sent successfully to registered employer phone.",
-        demoOtpCode: result.otpCode,
       });
     }
 

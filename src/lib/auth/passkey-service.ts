@@ -48,41 +48,65 @@ export class PasskeyService {
    * Complete WebAuthn Passkey Registration
    */
   static async registerPasskey(userId: string, name: string, credentialId: string, publicKey: string) {
-    try {
-      const passkey = await prisma.oAuthAccount
-        .create({
-          data: {
-            userId,
-            provider: "passkey",
-            providerAccountId: credentialId,
-            accessToken: publicKey,
-            scope: name || "Windows Hello / Touch ID",
-          },
-        })
-        .catch(() => null);
-
-      return { success: true, passkeyId: passkey?.id || `pk-${Date.now()}` };
-    } catch (_) {
-      return { success: true, passkeyId: `pk-demo-${Date.now()}` };
+    if (!credentialId || !publicKey) {
+      throw new Error("Passkey credentialId and publicKey are required.");
     }
+
+    const passkey = await prisma.oAuthAccount.create({
+      data: {
+        userId,
+        provider: "passkey",
+        providerAccountId: credentialId,
+        accessToken: publicKey,
+        scope: name || "Windows Hello / Touch ID",
+      },
+    });
+
+    return { success: true, passkeyId: passkey.id };
   }
 
   /**
    * Authenticate Passkey Login
    */
   static async verifyPasskeyLogin(credentialId: string) {
-    const cleanId = credentialId || "demo-credential-id";
+    if (!credentialId) {
+      throw new Error("Passkey credentialId is required.");
+    }
+
+    const passkey = await prisma.oAuthAccount.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: "passkey",
+          providerAccountId: credentialId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            deletedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!passkey || passkey.user.deletedAt) {
+      throw new Error("Passkey credential was not found.");
+    }
 
     const session = await SessionStore.createSession({
-      userId: "passkey-user-id",
-      email: "passkey.user@workorajobs.example.com",
-      role: "EMPLOYER",
+      userId: passkey.user.id,
+      email: passkey.user.email,
+      role: passkey.user.role,
     });
 
     const token = signJwt({
-      userId: "passkey-user-id",
-      email: "passkey.user@workorajobs.example.com",
-      role: "EMPLOYER",
+      userId: passkey.user.id,
+      email: passkey.user.email,
+      role: passkey.user.role,
     });
 
     return {
@@ -90,10 +114,10 @@ export class PasskeyService {
       token,
       sessionToken: session.sessionToken,
       user: {
-        id: "passkey-user-id",
-        email: "passkey.user@workorajobs.example.com",
-        name: "Passkey Verified Employer",
-        role: "EMPLOYER",
+        id: passkey.user.id,
+        email: passkey.user.email,
+        name: passkey.user.name,
+        role: passkey.user.role,
       },
     };
   }

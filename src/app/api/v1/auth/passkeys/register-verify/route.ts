@@ -13,12 +13,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { name, credentialId, publicKey } = body;
+    if (!credentialId || !publicKey) {
+      return NextResponse.json(
+        { success: false, error: "Passkey credentialId and publicKey are required." },
+        { status: 400 }
+      );
+    }
 
     const result = await PasskeyService.registerPasskey(
       userId,
       name || "Windows Hello / Touch ID",
-      credentialId || `cred-${Date.now()}`,
-      publicKey || "pubkey-sample"
+      credentialId,
+      publicKey
     );
 
     return NextResponse.json({

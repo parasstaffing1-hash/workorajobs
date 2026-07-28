@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signJwt } from "@/lib/jwt";
-import crypto from "crypto";
+import { SessionStore } from "@/lib/auth/session-store";
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +13,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Refresh token is required." }, { status: 400 });
     }
 
-    const newAccessToken = signJwt({ userId: "demo-user-id", email: "user@example.com", role: "JOB_SEEKER" });
-    const newRefreshToken = crypto.randomBytes(40).toString("hex");
+    const session = await SessionStore.getSession(refreshToken);
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Invalid or expired refresh token." }, { status: 401 });
+    }
+
+    const newSession = await SessionStore.createSession({
+      userId: session.userId,
+      email: session.email,
+      role: session.role,
+      ipAddress: request.headers.get("x-forwarded-for") ?? session.ipAddress,
+      userAgent: request.headers.get("user-agent") ?? "Browser",
+      rememberMe: true,
+    });
+    await SessionStore.revokeSession(refreshToken);
+
+    const newAccessToken = signJwt({ userId: session.userId, email: session.email, role: session.role });
 
     return NextResponse.json({
       success: true,
       accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      refreshToken: newSession.sessionToken,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: "Token rotation failed." }, { status: 401 });

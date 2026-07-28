@@ -8,7 +8,6 @@ import { AuthAlert } from "@/components/auth/AuthAlert";
 
 export default function EmployerVerifyEmailPage() {
   const [otpCode, setOtpCode] = useState("");
-  const [demoCode, setDemoCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
@@ -23,8 +22,7 @@ export default function EmployerVerifyEmailPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Failed to send OTP.");
-      setDemoCode(data.demoOtpCode || "");
-      setAlert({ type: "success", message: `SMS OTP code dispatched! (Demo Code: ${data.demoOtpCode})` });
+      setAlert({ type: "success", message: "SMS OTP code dispatched to the registered employer phone." });
     } catch (err: any) {
       setAlert({ type: "error", message: err.message || "Error sending OTP." });
     } finally {
