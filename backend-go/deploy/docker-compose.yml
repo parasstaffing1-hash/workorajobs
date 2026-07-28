@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: workora-backend-go
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_URL=postgres://workora:workora_password@postgres:5432/workora_jobs?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_ACCESS_SECRET=super-secret-jwt-access-key-workora-2026
+      - JWT_REFRESH_SECRET=super-secret-jwt-refresh-key-workora-2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: always
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: workora-worker-go
+    entrypoint: ["/app/worker"]
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://workora:workora_password@postgres:5432/workora_jobs?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: always
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: workora-postgres
+    environment:
+      POSTGRES_USER: workora
+      POSTGRES_PASSWORD: workora_password
+      POSTGRES_DB: workora_jobs
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workora -d workora_jobs"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: workora-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
