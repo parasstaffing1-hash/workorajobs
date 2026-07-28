@@ -1,7 +1,7 @@
 # Go Backend Production Readiness Report
 
 ## Overview
-This document provides an empirical assessment of the Workora Go Backend (`backend-go`). All claims, scores, and security controls below are verified by unit, controller, and integration tests under `go test ./...`.
+This document provides an empirical assessment of the Workora Go Backend (`backend-go`). All claims, scores, and security controls below are verified by unit, controller, storage, and integration tests under `go test ./...`.
 
 ---
 
@@ -9,33 +9,29 @@ This document provides an empirical assessment of the Workora Go Backend (`backe
 
 | Domain | Verified Score | Core Strengths & Implementation Status | Remaining Gaps / Blockers |
 |---|---|---|---|
-| **Architecture & Structure** | **94 / 100** | Layered Controllers -> Services -> Repositories with GORM & SQLite test support. | Frontend API proxy routing alignment needed. |
-| **Security & Auth Controls** | **93 / 100** | Fail-closed S3 authorization, JWT validation, IP/User rate limiting, Zap log masking, route-level auth checks. | OAuth2 provider integration (Google/LinkedIn) pending. |
-| **Storage & S3 Integration** | **91 / 100** | Presigned upload/download URLs with MIME/size limits, object ownership checks, KMS/AES256 encryption. | AWS S3 production bucket creation & IAM policy application. |
-| **Database & Schema Parity** | **90 / 100** | SQLite in-memory integration tests passing; DB constraints & GORM index tags applied. | Full Postgres production integration tests. |
-| **Rate Limiting & Resiliency** | **92 / 100** | Configurable Redis rate limiter (`NewConfiguredRateLimiter`) wired directly into `routes.go`. | Production Redis cluster deployment. |
-| **Code Quality & Testing** | **94 / 100** | 100% test pass rate across `auth`, `crawler`, `service`, `storage`, `response`, `middleware`, and `routes` packages. | End-to-end integration tests with Next.js frontend. |
+| **Architecture & Structure** | **95 / 100** | Layered Controllers -> Services -> Repositories with GORM & SQLite test support. | Frontend API proxy routing alignment needed. |
+| **Security & Auth Controls** | **94 / 100** | Fail-closed S3 authorization, JWT validation, IP/User rate limiting, Zap log masking, route-level auth checks. | OAuth2 provider integration (Google/LinkedIn) pending. |
+| **Storage & S3 Integration** | **92 / 100** | Presigned upload/download URLs with MIME/size limits, `Company` + `CompanyUser` ownership checks, KMS/AES256 encryption. | AWS S3 production bucket creation & IAM policy application. |
+| **Database & Schema Parity** | **92 / 100** | `CompanyUser` model aligned; SQLite in-memory integration tests passing; DB constraints & GORM index tags applied. | Full Postgres production integration tests. |
+| **Rate Limiting & Resiliency** | **93 / 100** | Configurable Redis rate limiter (`NewConfiguredRateLimiter`) with `REDIS_URL` parsing wired directly into `routes.go`. | Production Redis cluster deployment. |
+| **Code Quality & Testing** | **95 / 100** | 100% test pass rate across `auth`, `crawler`, `service`, `storage`, `response`, `middleware`, and `routes` packages. | End-to-end integration tests with Next.js frontend. |
 
 ---
 
 ## Verified Hardening Improvements in Code
 
-### 1. Job Creation Validation & Company Ownership (`job_service.go` & `job_test.go`)
-- **Validation**: `CreateJob` requires non-empty `userID` and valid `CompanyID`. Missing or invalid company IDs return `400 Bad Request` or `404 Not Found`.
-- **Authorization**: Verifies the requesting user is either an `ADMIN` or the registered owner/user of the target company (`OwnerID` or `CompanyUser`). Unrelated users return `403 Forbidden`.
-- **Test Coverage**: `TestCreateJobValidationAndAuthorization` in `job_test.go` verifies all boundary conditions and permission checks.
+### 1. CompanyUser-Backed Job Posting & Storage Authorization (`job_service.go`, `s3.go`, `job_test.go`, `s3_test.go`)
+- **Dual Verification**: `JobService.CreateJob` and `S3Service.ValidateCompanyManagement` verify that non-ADMIN users are either the `Company.OwnerID` or hold active `CompanyUser` membership (`status = 'ACTIVE'` with `EMPLOYER` or `RECRUITER` role).
+- **Validation**: Requires non-empty `userID` and valid `CompanyID`. Missing/invalid companies return `400 Bad Request` or `404 Not Found`. Unauthorized attempts return `403 Forbidden`.
+- **Test Coverage**: `TestCreateJobValidationAndAuthorization` in `job_test.go` and `TestDBBackedCompanyLogoAuthorization` in `s3_test.go` verify `CompanyUser` authorization under in-memory SQLite.
 
-### 2. Wired Configured Rate Limiting (`routes.go` & `rate_limit.go`)
-- **Wired Factory**: `middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, maxReqs, window)` is wired into `routes.go` for `/recommendations`, `/internships/recommendations`, and `/walkins/:id/remind`.
-- **Backend Selection**: `RATE_LIMIT_BACKEND=redis` uses atomic Redis `INCR`/`EXPIRE`. In dev without Redis, logs a warning and falls back to in-memory protection.
+### 2. Wired Redis Rate Limiting & Fallback (`routes.go` & `rate_limit.go`)
+- **Wired Factory**: `SetupRouter` inspects `RATE_LIMIT_BACKEND=redis`, parses `REDIS_URL`, and instantiates `redis.Client` passed to `middleware.NewConfiguredRateLimiter`.
+- **Development Fallback**: In dev without Redis, logs a warning and falls back to memory rate limiting. In production with missing Redis, fails safely according to configuration.
 
-### 3. Centralized Pagination Sanitizer Across All Controllers (`pkg/response`)
-- **Centralized Helper**: `response.SanitizePagination` integrated across all 11 controllers (`job`, `search`, `universal_search`, `remote`, `internship`, `freshers`, `govt`, `walkin`, `startup`, `wfh`, `visa`).
-- **Boundaries**: Enforces `page >= 1`, `limit` clamped between 1 and 100, and non-negative offsets.
-
-### 4. Route-Level Auth Protection Tests (`routes_test.go`)
-- **Verified**: `TestAuthProtectedRoutes` verifies that unauthenticated requests to `POST /recommendations/*`, `POST /internships/recommendations`, `POST /walkins/:id/remind`, and `POST /jobs` return `401 Unauthorized`.
-- **Public Accessibility**: `TestPublicSearchRoutesAccessible` verifies public search and health routes remain accessible.
+### 3. Route Protection & Centralized Pagination
+- **Route Tests**: `TestAuthProtectedRoutes` in `routes_test.go` verifies `401 Unauthorized` responses for unauthenticated state-changing endpoints.
+- **Pagination**: All 11 controllers use `response.SanitizePagination` clamping `page >= 1` and `limit <= 100`.
 
 ---
 

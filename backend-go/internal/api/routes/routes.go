@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"github.com/workorajobs/backend-go/internal/api/controllers"
 	"github.com/workorajobs/backend-go/internal/api/middleware"
 	"github.com/workorajobs/backend-go/internal/config"
@@ -47,6 +48,20 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	salaryService := service.NewSalaryService(db)
 	recommendationService := service.NewRecommendationService(db)
 	universalSearchService := service.NewUniversalSearchService(db)
+
+	var rdb *redis.Client
+	if cfg.RateLimitBackend == "redis" {
+		redisURL := cfg.RedisURL
+		if redisURL == "" {
+			redisURL = "redis://localhost:6379/0"
+		}
+		opts, err := redis.ParseURL(redisURL)
+		if err != nil {
+			log.Warn("Failed to parse Redis URL for rate limiter", zap.Error(err))
+		} else {
+			rdb = redis.NewClient(opts)
+		}
+	}
 
 	var s3Service *storage.S3Service
 	if cfg.EnableS3Uploads || cfg.S3Bucket != "" {
@@ -108,7 +123,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	isProd := cfg.Environment == "production"
 	recoGroup := r.Group("/api/v1/recommendations",
 		middleware.AuthMiddleware(cfg.JWTAccessSecret),
-		middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, nil, 30, time.Minute),
+		middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute),
 	)
 	{
 		recoGroup.POST("/jobs", recommendationCtrl.GetHybridRecommendations)
@@ -142,7 +157,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	{
 		walkinGroup.GET("", walkinCtrl.SearchWalkins)
 		walkinGroup.GET("/:id/calendar.ics", walkinCtrl.DownloadCalendar)
-		walkinGroup.POST("/:id/remind", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, nil, 10, time.Minute), walkinCtrl.SetReminder)
+		walkinGroup.POST("/:id/remind", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 10, time.Minute), walkinCtrl.SetReminder)
 		walkinGroup.GET("/seo-page/:slug", walkinCtrl.ResolveSeoPage)
 	}
 
@@ -171,7 +186,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	internshipGroup := r.Group("/api/v1/internships")
 	{
 		internshipGroup.GET("", internshipCtrl.SearchInternships)
-		internshipGroup.POST("/recommendations", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, nil, 30, time.Minute), internshipCtrl.GetRecommendations)
+		internshipGroup.POST("/recommendations", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute), internshipCtrl.GetRecommendations)
 	}
 
 	// Search Endpoints

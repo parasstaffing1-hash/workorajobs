@@ -15,7 +15,7 @@ func TestCreateJobValidationAndAuthorization(t *testing.T) {
 		t.Fatalf("Failed to open sqlite memory DB: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Company{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Company{}, &models.CompanyUser{}); err != nil {
 		t.Fatalf("Failed to auto migrate models: %v", err)
 	}
 
@@ -120,5 +120,29 @@ func TestCreateJobValidationAndAuthorization(t *testing.T) {
 	}
 	if adminCreatedJob == nil || adminCreatedJob.Title != "Admin Created Job" {
 		t.Errorf("Unexpected admin created job: %+v", adminCreatedJob)
+	}
+
+	// 7. User with CompanyUser active membership allowed
+	cuMemberID := "cu_member_user"
+	db.Create(&models.User{ID: cuMemberID, Email: "cu@workora.com", Role: models.RoleEmployer})
+	db.Create(&models.CompanyUser{
+		ID:        "cu_job_1",
+		CompanyID: compID,
+		UserID:    cuMemberID,
+		Role:      models.RoleEmployer,
+		Status:    "ACTIVE",
+	})
+	cuJobInput := &models.Job{
+		Title:       "CompanyUser Member Created Job",
+		Description: "Posted by authorized company member",
+		CompanyID:   &compID,
+		PostedAt:    time.Now(),
+	}
+	cuCreatedJob, err := jobSvc.CreateJob(cuMemberID, "EMPLOYER", cuJobInput)
+	if err != nil {
+		t.Fatalf("Failed for CompanyUser member: %v", err)
+	}
+	if cuCreatedJob == nil || cuCreatedJob.Title != "CompanyUser Member Created Job" {
+		t.Errorf("Unexpected CompanyUser created job: %+v", cuCreatedJob)
 	}
 }

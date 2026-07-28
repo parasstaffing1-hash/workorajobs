@@ -130,11 +130,12 @@ func TestDBBackedCompanyLogoAuthorization(t *testing.T) {
 		t.Fatalf("Failed to open sqlite memory DB: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.Company{}); err != nil {
-		t.Fatalf("Failed to migrate company model: %v", err)
+	if err := db.AutoMigrate(&models.Company{}, &models.CompanyUser{}); err != nil {
+		t.Fatalf("Failed to migrate company models: %v", err)
 	}
 
 	ownerID := "user_owner_100"
+	cuUserID := "user_cu_member"
 	comp := models.Company{
 		ID:      "comp_100",
 		Name:    "Acme Corp",
@@ -143,6 +144,14 @@ func TestDBBackedCompanyLogoAuthorization(t *testing.T) {
 	if err := db.Create(&comp).Error; err != nil {
 		t.Fatalf("Failed to create test company: %v", err)
 	}
+
+	db.Create(&models.CompanyUser{
+		ID:        "cu_1",
+		CompanyID: "comp_100",
+		UserID:    cuUserID,
+		Role:      models.RoleEmployer,
+		Status:    "ACTIVE",
+	})
 
 	svcWithDB := &S3Service{db: db}
 	svcNilDB := &S3Service{db: nil}
@@ -160,7 +169,12 @@ func TestDBBackedCompanyLogoAuthorization(t *testing.T) {
 		t.Error("EMPLOYER owner should be allowed for their company")
 	}
 
-	// 3. EMPLOYER/RECRUITER not associated is rejected
+	// 3. EMPLOYER with active CompanyUser membership is allowed
+	if !svcWithDB.ValidateCompanyManagement("comp_100", cuUserID, "EMPLOYER") {
+		t.Error("EMPLOYER CompanyUser member should be allowed for their company")
+	}
+
+	// 4. EMPLOYER/RECRUITER not associated is rejected
 	if svcWithDB.ValidateCompanyManagement("comp_100", "user_other", "EMPLOYER") {
 		t.Error("Unassociated EMPLOYER should be rejected")
 	}

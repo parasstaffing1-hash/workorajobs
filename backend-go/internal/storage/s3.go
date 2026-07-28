@@ -225,7 +225,15 @@ func (s *S3Service) ValidateCompanyManagement(companyID, userID, role string) bo
 	err := s.db.Model(&models.Company{}).
 		Where("id = ? AND owner_id = ?", companyID, userID).
 		Count(&count).Error
-	return err == nil && count > 0
+	if err == nil && count > 0 {
+		return true
+	}
+
+	var cuCount int64
+	err = s.db.Model(&models.CompanyUser{}).
+		Where("company_id = ? AND user_id = ? AND status = 'ACTIVE' AND role IN ('EMPLOYER', 'RECRUITER', 'ADMIN')", companyID, userID).
+		Count(&cuCount).Error
+	return err == nil && cuCount > 0
 }
 
 // ValidateOwnership verifies the key prefix belongs to the active user/entity

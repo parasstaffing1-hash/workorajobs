@@ -45,3 +45,20 @@ type Company struct {
 func (Company) TableName() string {
 	return "Company"
 }
+
+type CompanyUser struct {
+	ID        string    `gorm:"primaryKey;type:varchar(255)" json:"id"`
+	CompanyID string    `gorm:"type:varchar(255);not null;index" json:"companyId"`
+	UserID    string    `gorm:"type:varchar(255);not null;index" json:"userId"`
+	Role      Role      `gorm:"type:varchar(50);default:'EMPLOYER'" json:"role"`
+	Status    string    `gorm:"type:varchar(50);default:'ACTIVE'" json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+
+	Company *Company `gorm:"foreignKey:CompanyID" json:"company,omitempty"`
+	User    *User    `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+func (CompanyUser) TableName() string {
+	return "CompanyUser"
+}
