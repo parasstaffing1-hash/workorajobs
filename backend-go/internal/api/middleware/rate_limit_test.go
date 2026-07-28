@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 func TestRateLimitMiddleware(t *testing.T) {
@@ -45,16 +47,41 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 func TestNewConfiguredRateLimiter(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	logger := zap.NewNop()
 
-	// Memory Backend Selection
-	mwMemory := NewConfiguredRateLimiter("memory", false, nil, 5, time.Minute)
+	// 1. Memory Backend Selection by default
+	mwMemory := NewConfiguredRateLimiter("memory", false, nil, 5, time.Minute, logger)
 	if mwMemory == nil {
 		t.Error("Expected non-nil middleware for memory backend")
 	}
 
-	// Redis Backend Selection with nil client (Development fallback)
-	mwRedisFallback := NewConfiguredRateLimiter("redis", false, nil, 5, time.Minute)
-	if mwRedisFallback == nil {
-		t.Error("Expected non-nil middleware for redis backend with fallback")
+	// 2. Redis Backend Selection when client is provided
+	dummyRDB := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	mwRedis := NewConfiguredRateLimiter("redis", false, dummyRDB, 5, time.Minute, logger)
+	if mwRedis == nil {
+		t.Error("Expected non-nil middleware for redis backend with client")
+	}
+
+	// 3. Production Redis backend with nil client returns 500 middleware
+	mwProdNilRedis := NewConfiguredRateLimiter("redis", true, nil, 5, time.Minute, logger)
+	r := gin.New()
+	r.GET("/prod-test", mwProdNilRedis, func(c *gin.Context) { c.String(http.StatusOK, "ok") })
+	wProd := httptest.NewRecorder()
+	reqProd, _ := http.NewRequest("GET", "/prod-test", nil)
+	r.ServeHTTP(wProd, reqProd)
+	if wProd.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status 500 in production when Redis client is nil, got %d", wProd.Code)
+	}
+
+	// 4. Development Redis backend with nil client falls back to memory
+	mwDevNilRedis := NewConfiguredRateLimiter("redis", false, nil, 5, time.Minute, logger)
+	if mwDevNilRedis == nil {
+		t.Error("Expected non-nil fallback middleware in dev when Redis client is nil")
+	}
+
+	// 5. Invalid backend value falls back to memory
+	mwInvalid := NewConfiguredRateLimiter("invalid_backend", false, nil, 5, time.Minute, logger)
+	if mwInvalid == nil {
+		t.Error("Expected non-nil fallback middleware for invalid backend")
 	}
 }

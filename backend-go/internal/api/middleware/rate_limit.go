@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/workorajobs/backend-go/pkg/response"
+	"go.uber.org/zap"
 )
 
 type clientLimiter struct {
@@ -126,15 +126,26 @@ func RedisRateLimitMiddleware(rdb *redis.Client, maxReqs int, window time.Durati
 }
 
 // NewConfiguredRateLimiter returns the appropriate rate-limiting middleware based on configuration
-func NewConfiguredRateLimiter(backend string, isProd bool, rdb *redis.Client, maxReqs int, window time.Duration) gin.HandlerFunc {
+func NewConfiguredRateLimiter(backend string, isProd bool, rdb *redis.Client, maxReqs int, window time.Duration, logger *zap.Logger) gin.HandlerFunc {
 	if backend == "redis" {
 		if rdb != nil {
 			return RedisRateLimitMiddleware(rdb, maxReqs, window)
 		}
 		if isProd {
-			log.Println("[FATAL] RATE_LIMIT_BACKEND=redis requested but Redis client is nil in production")
-		} else {
-			log.Println("[WARN] RATE_LIMIT_BACKEND=redis requested but Redis client is nil; falling back to in-memory rate limiter")
+			if logger != nil {
+				logger.Error("RATE_LIMIT_BACKEND=redis requested but Redis client is nil in production")
+			}
+			return func(c *gin.Context) {
+				response.Error(c, http.StatusInternalServerError, "Rate limiter configuration error", "RATE_LIMIT_CONFIG_ERROR")
+				c.Abort()
+			}
+		}
+		if logger != nil {
+			logger.Warn("RATE_LIMIT_BACKEND=redis requested but Redis client is nil; falling back to in-memory rate limiter")
+		}
+	} else if backend != "" && backend != "memory" {
+		if logger != nil {
+			logger.Warn("Unknown RATE_LIMIT_BACKEND configured, falling back to in-memory rate limiter", zap.String("backend", backend))
 		}
 	}
 	return RateLimitMiddleware(maxReqs, window)

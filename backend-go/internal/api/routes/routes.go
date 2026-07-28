@@ -123,7 +123,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	isProd := cfg.Environment == "production"
 	recoGroup := r.Group("/api/v1/recommendations",
 		middleware.AuthMiddleware(cfg.JWTAccessSecret),
-		middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute),
+		middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute, log),
 	)
 	{
 		recoGroup.POST("/jobs", recommendationCtrl.GetHybridRecommendations)
@@ -157,7 +157,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	{
 		walkinGroup.GET("", walkinCtrl.SearchWalkins)
 		walkinGroup.GET("/:id/calendar.ics", walkinCtrl.DownloadCalendar)
-		walkinGroup.POST("/:id/remind", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 10, time.Minute), walkinCtrl.SetReminder)
+		walkinGroup.POST("/:id/remind", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 10, time.Minute, log), walkinCtrl.SetReminder)
 		walkinGroup.GET("/seo-page/:slug", walkinCtrl.ResolveSeoPage)
 	}
 
@@ -186,7 +186,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	internshipGroup := r.Group("/api/v1/internships")
 	{
 		internshipGroup.GET("", internshipCtrl.SearchInternships)
-		internshipGroup.POST("/recommendations", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute), internshipCtrl.GetRecommendations)
+		internshipGroup.POST("/recommendations", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.NewConfiguredRateLimiter(cfg.RateLimitBackend, isProd, rdb, 30, time.Minute, log), internshipCtrl.GetRecommendations)
 	}
 
 	// Search Endpoints

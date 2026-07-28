@@ -6,18 +6,21 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/glebarez/sqlite"
 	"github.com/workorajobs/backend-go/internal/config"
+	"github.com/workorajobs/backend-go/internal/domain/models"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func TestAuthProtectedRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	cfg := &config.Config{
-		Environment:       "test",
-		JWTAccessSecret:   "test-jwt-secret-key-32-chars-long!",
-		JWTRefreshSecret:  "test-jwt-refresh-secret-32-chars!",
-		EnableS3Uploads:   false,
-		RateLimitBackend:  "memory",
+		Environment:      "test",
+		JWTAccessSecret:  "test-jwt-secret-key-32-chars-long!",
+		JWTRefreshSecret: "test-jwt-refresh-secret-32-chars!",
+		EnableS3Uploads:  false,
+		RateLimitBackend: "memory",
 	}
 
 	logger := zap.NewNop()
@@ -45,7 +48,7 @@ func TestAuthProtectedRoutes(t *testing.T) {
 	}
 }
 
-func TestPublicSearchRoutesAccessible(t *testing.T) {
+func TestPublicSearchRoutesHealthy(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	cfg := &config.Config{
 		Environment:      "test",
@@ -53,22 +56,38 @@ func TestPublicSearchRoutesAccessible(t *testing.T) {
 		RateLimitBackend: "memory",
 	}
 
-	logger := zap.NewNop()
-	router := SetupRouter(cfg, nil, logger)
-
-	publicRoutes := []string{
-		"/api/v1/health/liveness",
-		"/api/v1/universal-search/autocomplete?q=dev",
-		"/api/v1/universal-search/trending",
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open test db: %v", err)
 	}
 
-	for _, path := range publicRoutes {
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", path, nil)
-		router.ServeHTTP(w, req)
+	_ = db.AutoMigrate(&models.Company{}, &models.User{})
+	_ = db.Exec(`CREATE TABLE "Job" (id VARCHAR(255) PRIMARY KEY, title VARCHAR(255), status VARCHAR(50) DEFAULT 'PUBLISHED', company_id VARCHAR(255), posted_at DATETIME, deleted_at DATETIME)`)
 
-		if w.Code == http.StatusUnauthorized {
-			t.Errorf("Public route %s should not return 401 Unauthorized", path)
-		}
+	logger := zap.NewNop()
+	router := SetupRouter(cfg, db, logger)
+
+	// 1. GET /api/v1/health/liveness MUST return 200 OK
+	wLive := httptest.NewRecorder()
+	reqLive, _ := http.NewRequest("GET", "/api/v1/health/liveness", nil)
+	router.ServeHTTP(wLive, reqLive)
+	if wLive.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for liveness health route, got %d", wLive.Code)
+	}
+
+	// 2. GET /api/v1/universal-search/trending MUST return 200 OK
+	wTrend := httptest.NewRecorder()
+	reqTrend, _ := http.NewRequest("GET", "/api/v1/universal-search/trending", nil)
+	router.ServeHTTP(wTrend, reqTrend)
+	if wTrend.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for trending search route, got %d", wTrend.Code)
+	}
+
+	// 3. GET /api/v1/jobs MUST return 200 OK
+	wJobs := httptest.NewRecorder()
+	reqJobs, _ := http.NewRequest("GET", "/api/v1/jobs", nil)
+	router.ServeHTTP(wJobs, reqJobs)
+	if wJobs.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for public jobs route, got %d", wJobs.Code)
 	}
 }

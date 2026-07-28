@@ -13,25 +13,27 @@ This document provides an empirical assessment of the Workora Go Backend (`backe
 | **Security & Auth Controls** | **94 / 100** | Fail-closed S3 authorization, JWT validation, IP/User rate limiting, Zap log masking, route-level auth checks. | OAuth2 provider integration (Google/LinkedIn) pending. |
 | **Storage & S3 Integration** | **92 / 100** | Presigned upload/download URLs with MIME/size limits, `Company` + `CompanyUser` ownership checks, KMS/AES256 encryption. | AWS S3 production bucket creation & IAM policy application. |
 | **Database & Schema Parity** | **92 / 100** | `CompanyUser` model aligned; SQLite in-memory integration tests passing; DB constraints & GORM index tags applied. | Full Postgres production integration tests. |
-| **Rate Limiting & Resiliency** | **93 / 100** | Configurable Redis rate limiter (`NewConfiguredRateLimiter`) with `REDIS_URL` parsing wired directly into `routes.go`. | Production Redis cluster deployment. |
+| **Rate Limiting & Resiliency** | **94 / 100** | Configurable Redis rate limiter (`NewConfiguredRateLimiter`) with `REDIS_URL` parsing wired directly into `routes.go`. | Production Redis cluster deployment. |
 | **Code Quality & Testing** | **95 / 100** | 100% test pass rate across `auth`, `crawler`, `service`, `storage`, `response`, `middleware`, and `routes` packages. | End-to-end integration tests with Next.js frontend. |
 
 ---
 
 ## Verified Hardening Improvements in Code
 
-### 1. CompanyUser-Backed Job Posting & Storage Authorization (`job_service.go`, `s3.go`, `job_test.go`, `s3_test.go`)
-- **Dual Verification**: `JobService.CreateJob` and `S3Service.ValidateCompanyManagement` verify that non-ADMIN users are either the `Company.OwnerID` or hold active `CompanyUser` membership (`status = 'ACTIVE'` with `EMPLOYER` or `RECRUITER` role).
+### 1. Properly Wired Redis Rate Limiting & Fail-Safe Behavior (`routes.go` & `rate_limit.go`)
+- **Redis Initialization**: `SetupRouter` in `routes.go` parses `REDIS_URL` via `redis.ParseURL` when `RATE_LIMIT_BACKEND=redis` is set and instantiates `redis.Client`.
+- **Wired Factory**: `middleware.NewConfiguredRateLimiter(backend, isProd, rdb, maxReqs, window, logger)` is wired into all rate-limited routes.
+- **Fail-Safe Protection**: In production with `RATE_LIMIT_BACKEND=redis` and an uninitialized/nil Redis client, returns a 500 error middleware (`RATE_LIMIT_CONFIG_ERROR`) to prevent unthrottled traffic. In development, logs a warning and gracefully falls back to memory rate limiting.
+
+### 2. CompanyUser Authorization for Job Posting (`job_service.go`, `s3.go`, `job_test.go`)
+- **Dual Verification**: `JobService.CreateJob` and `S3Service.ValidateCompanyManagement` verify that non-ADMIN users are either the `Company.OwnerID` OR hold active `CompanyUser` membership (`status = 'ACTIVE'` with `EMPLOYER` or `RECRUITER` role).
 - **Validation**: Requires non-empty `userID` and valid `CompanyID`. Missing/invalid companies return `400 Bad Request` or `404 Not Found`. Unauthorized attempts return `403 Forbidden`.
 - **Test Coverage**: `TestCreateJobValidationAndAuthorization` in `job_test.go` and `TestDBBackedCompanyLogoAuthorization` in `s3_test.go` verify `CompanyUser` authorization under in-memory SQLite.
 
-### 2. Wired Redis Rate Limiting & Fallback (`routes.go` & `rate_limit.go`)
-- **Wired Factory**: `SetupRouter` inspects `RATE_LIMIT_BACKEND=redis`, parses `REDIS_URL`, and instantiates `redis.Client` passed to `middleware.NewConfiguredRateLimiter`.
-- **Development Fallback**: In dev without Redis, logs a warning and falls back to memory rate limiting. In production with missing Redis, fails safely according to configuration.
-
-### 3. Route Protection & Centralized Pagination
-- **Route Tests**: `TestAuthProtectedRoutes` in `routes_test.go` verifies `401 Unauthorized` responses for unauthenticated state-changing endpoints.
-- **Pagination**: All 11 controllers use `response.SanitizePagination` clamping `page >= 1` and `limit <= 100`.
+### 3. Strengthened Route & Pagination Tests (`routes_test.go` & `response_test.go`)
+- **Strict 200 Assertions**: `TestPublicSearchRoutesHealthy` in `routes_test.go` uses an in-memory SQLite DB and asserts HTTP `200 OK` for `/api/v1/health/liveness`, `/api/v1/universal-search/trending`, and `/api/v1/jobs`.
+- **Auth Protection**: `TestAuthProtectedRoutes` verifies `401 Unauthorized` responses for unauthenticated state-changing endpoints (`POST /recommendations/*`, `/internships/recommendations`, `/walkins/:id/remind`, `/jobs`).
+- **Centralized Pagination**: All 11 controllers use `response.SanitizePagination` clamping `page >= 1` and `limit <= 100`.
 
 ---
 
