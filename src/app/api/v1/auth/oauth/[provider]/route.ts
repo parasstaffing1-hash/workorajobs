@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { oauthPublicUrl } from "@/lib/auth/oauth-public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export async function GET(
   const state = crypto.randomBytes(32).toString("base64url");
   const verifier = crypto.randomBytes(48).toString("base64url");
   const challenge = crypto.createHash("sha256").update(verifier).digest("base64url");
-  const callback = new URL(`/api/v1/auth/oauth/${provider}/callback`, request.url).toString();
+  const callback = oauthPublicUrl(request, `/api/v1/auth/oauth/${provider}/callback`).toString();
   const authorizationUrl = new URL(
     provider === "google"
       ? "https://accounts.google.com/o/oauth2/v2/auth"
