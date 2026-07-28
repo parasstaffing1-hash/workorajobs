@@ -33,6 +33,16 @@ if [[ -r /etc/workora/oauth.env ]]; then
 fi
 
 export DATABASE_URL="${DATABASE_URL:-postgresql://${POSTGRES_USER:-workora}:${POSTGRES_PASSWORD:-workora_password}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-workora_jobs}?schema=public}"
+
+# Production predates Prisma's migration ledger. Baseline only when the legacy
+# web User table exists and the ledger does not, so an empty database still
+# receives the initial migration normally.
+readonly PSQL_DATABASE_URL="${DATABASE_URL%%\?*}"
+MIGRATION_STATE="$(psql "${PSQL_DATABASE_URL}" -Atc "SELECT (to_regclass('public.\"User\"') IS NOT NULL)::int || '|' || (to_regclass('public._prisma_migrations') IS NOT NULL)::int")"
+if [[ "${MIGRATION_STATE}" == "1|0" ]]; then
+  pnpm exec prisma migrate resolve --applied 20260717163622_init
+fi
+
 pnpm exec prisma migrate deploy
 
 test -f .next/standalone/server.js
