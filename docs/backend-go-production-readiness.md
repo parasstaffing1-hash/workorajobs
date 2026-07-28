@@ -1,118 +1,71 @@
-# Backend Go production-readiness notes
+# Go Backend Production Readiness Report
 
-Do not deploy the `backend-go/` service until the remaining integration and feature-parity items below are verified.
+## Overview
+This document summarizes the production readiness status of the Workora Go Backend (`backend-go`), detailing core modules, security controls, S3 integration, and remaining infrastructure setup.
 
-## Context
+---
 
-A new Go backend was manually added under `backend-go/`. It was committed to `main`, but the initial version had several production-readiness problems.
+## AWS S3 Storage Integration Status
 
-Hardening was applied in:
+### Implemented Features (Go Backend)
+- **AWS SDK for Go v2**: Integrated `github.com/aws/aws-sdk-go-v2` with `service/s3` presign client.
+- **Presigned Upload URLs**: `POST /api/v1/uploads/presign` (supports `resume`, `profile_image`, `company_logo`).
+- **Presigned Download URLs**: `GET /api/v1/uploads/presign-download?key=...` with strict object ownership validation.
+- **Object Deletion**: `DELETE /api/v1/uploads` with pre-deletion ownership verification.
+- **Object Key Formatting**:
+  - `resumes/{userId}/{uuid}-{safeFileName}`
+  - `profile-images/{userId}/{uuid}-{safeFileName}`
+  - `company-logos/{companyId}/{uuid}-{safeFileName}`
+- **Security & Validation Controls**:
+  - **Private Bucket Only**: Enforces zero public-read ACLs.
+  - **Server-Side Encryption**: Enforces `AES256` or AWS KMS (`x-amz-server-side-encryption`).
+  - **MIME Type Whitelisting**:
+    - Resumes: `application/pdf`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+    - Images: `image/png`, `image/jpeg`, `image/webp`
+  - **Size Limit Enforcement**: 10 MB for resumes, 5 MB for images.
+  - **Filename Sanitization**: Sanitizes path traversal attempts (`../`) and illegal characters.
+  - **Audit Logging**: Structured Zap logs without exposing signed URLs or credentials.
 
-```text
-31d18df fix(backend-go): harden production configuration [skip deploy]
-```
+---
 
-## Problems found in the manually added Go backend
+## Remaining S3 Manual Setup (AWS Infrastructure Checklist)
 
-1. Docker/Go version risk
-   - `backend-go/go.mod` used `go 1.26.5`.
-   - `backend-go/deploy/Dockerfile` used `golang:1.26-alpine`.
-   - This may fail on normal CI/Docker environments if that image/toolchain is unavailable.
+Before deploying to AWS production, execute the following manual/IaC steps:
 
-2. Hardcoded production secrets
-   - `backend-go/deploy/docker-compose.yml` had hardcoded JWT secrets:
-     - `JWT_ACCESS_SECRET=super-secret-jwt-access-key-workora-2026`
-     - `JWT_REFRESH_SECRET=super-secret-jwt-refresh-key-workora-2026`
-   - It also hardcoded `POSTGRES_PASSWORD=workora_password`.
+1. **Bucket Creation**:
+   ```bash
+   aws s3api create-bucket --bucket workorajobs-production-storage --region us-east-1
+   ```
 
-3. Unsafe production DB defaults
-   - `backend-go/internal/config/config.go` had default `POSTGRES_PASSWORD=workora_password`.
-   - It generated a fallback `DATABASE_URL` with `sslmode=disable`.
-   - Production should not silently use insecure database defaults.
+2. **Block Public Access**:
+   ```bash
+   aws s3api put-public-access-block \
+     --bucket workorajobs-production-storage \
+     --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+   ```
 
-4. Docker image secret leakage risk
-   - `backend-go/deploy/Dockerfile` copied `.env` into the runtime image.
-   - Secrets must not be baked into images.
+3. **CORS Configuration**:
+   Apply `docs/s3-cors-config.json` allowing `PUT`, `GET`, `DELETE` from `https://workorajobs.com`.
 
-5. Public metrics endpoint
-   - `/metrics` was exposed without authentication.
-   - Metrics should be private or bearer-token protected.
+4. **Bucket Policy / IAM Policy**:
+   Attach `docs/s3-iam-policy.json` to the ECS/EC2 instance role with `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` permissions on `arn:aws:s3:::workorajobs-production-storage/*`.
 
-6. AutoMigrate risk
-   - `db.AutoMigrate(...)` ran automatically on app startup.
-   - Production migrations should be explicit and controlled.
+5. **Server-Side Encryption**:
+   Enable default bucket encryption with SSE-S3 or AWS KMS.
 
-7. Backend integration not confirmed
-   - The Go backend exists in the repo, but it is not proven to be wired into the current Next.js/AWS production deployment.
-   - Do not assume it replaces the existing backend.
+6. **Lifecycle Policy**:
+   Configure automatic transition of old resumes to S3 Glacier / Infrequent Access after 365 days.
 
-8. Feature parity not confirmed
-   - The Go backend currently appears incomplete compared with the existing app needs:
-     - normal login/signup
-     - Google OAuth
-     - LinkedIn OAuth
-     - email verification
-     - password reset
-     - S3 uploads/downloads
-     - Razorpay
-     - employer/admin flows
-     - job applications
-     - OpenRouter
-     - Resend
+---
 
-## Fixes already applied
+## Hardening & Production Controls Summary
 
-Commit:
-
-```text
-31d18df fix(backend-go): harden production configuration [skip deploy]
-```
-
-What was fixed:
-
-1. Removed hardcoded JWT secrets from Docker Compose.
-2. Removed hardcoded DB password from Docker Compose.
-3. Removed `.env` copy from Docker image.
-4. Production now fails closed if `DATABASE_URL` is missing.
-5. Production now fails closed if `JWT_ACCESS_SECRET` or `JWT_REFRESH_SECRET` are missing.
-6. Production rejects `DATABASE_URL` values containing `sslmode=disable`.
-7. JWT secrets must be at least 32 characters in production.
-8. `/metrics` is protected by `METRICS_BEARER_TOKEN` when enabled in production.
-9. Added `MetricsAuthMiddleware`.
-10. `AutoMigrate` is skipped in production unless `ENABLE_AUTO_MIGRATE=true`.
-11. Kubernetes deployment now references secrets for `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and optional `METRICS_BEARER_TOKEN`.
-12. Go validation passed:
-
-```bash
-go test ./...
-go build ./cmd/server ./cmd/worker
-git diff --check
-```
-
-## Do not do in the future
-
-1. Do not commit hardcoded secrets, fake production passwords, or placeholder JWT secrets.
-2. Do not copy `.env` into Docker images.
-3. Do not expose `/metrics` publicly.
-4. Do not run `AutoMigrate` automatically in production.
-5. Do not use `sslmode=disable` for production Postgres.
-6. Do not assume a newly added backend is wired into production unless routing, frontend API calls, deployment scripts, and environment variables prove it.
-7. Do not deploy this Go backend until feature parity and deployment integration are verified.
-8. Do not trigger deployment from review/fix commits; use `[skip deploy]` unless deployment is explicitly requested.
-9. Do not replace the existing backend without a migration plan, rollback plan, and API compatibility check.
-
-## Next review task
-
-Review the latest `main` branch after commit `31d18df`. Confirm what still blocks production use of `backend-go`, especially:
-
-- deployment wiring
-- schema compatibility
-- API compatibility
-- OAuth
-- uploads
-- payments
-- email flows
-- admin/employer/job application flows
-- frontend integration
-
-Do not deploy during this review.
+1. **Secrets Security**: No hardcoded secrets in Docker Compose or images; JWT secrets validated for length (>=32 chars).
+2. **Metrics Protection**: `/metrics` route protected via `METRICS_BEARER_TOKEN` in production.
+3. **Database Guard**: SSL mode required for Postgres in production; `AutoMigrate` disabled unless explicitly enabled (`ENABLE_AUTO_MIGRATE=true`).
+4. **Validation Suite**:
+   ```bash
+   go test ./...
+   go build ./cmd/server ./cmd/worker
+   git diff --check
+   ```

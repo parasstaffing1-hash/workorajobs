@@ -39,14 +39,32 @@ type Config struct {
 	CORSOrigins []string `mapstructure:"CORS_ORIGINS"`
 
 	// External Services
-	ResendAPIKey string `mapstructure:"RESEND_API_KEY"`
-	EmailFrom    string `mapstructure:"EMAIL_FROM"`
-	S3Bucket     string `mapstructure:"AWS_S3_BUCKET"`
-	AWSRegion    string `mapstructure:"AWS_REGION"`
+	ResendAPIKey           string `mapstructure:"RESEND_API_KEY"`
+	EmailFrom              string `mapstructure:"EMAIL_FROM"`
+	S3Bucket               string `mapstructure:"AWS_S3_BUCKET"`
+	AWSRegion              string `mapstructure:"AWS_REGION"`
+	AWSAccessKeyID         string `mapstructure:"AWS_ACCESS_KEY_ID"`
+	AWSSecretAccessKey     string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
+	AWSS3Endpoint          string `mapstructure:"AWS_S3_ENDPOINT"`
+	AWSS3ForcePathStyle    bool   `mapstructure:"AWS_S3_FORCE_PATH_STYLE"`
+	AWSS3KMSKeyID          string `mapstructure:"AWS_S3_KMS_KEY_ID"`
+	AWSS3PresignTTLSeconds int    `mapstructure:"AWS_S3_PRESIGN_TTL_SECONDS"`
 
 	// Operations
 	MetricsBearerToken string `mapstructure:"METRICS_BEARER_TOKEN"`
 	EnableAutoMigrate  bool   `mapstructure:"ENABLE_AUTO_MIGRATE"`
+}
+
+func (c *Config) ValidateS3Config() error {
+	if c.Environment == "production" {
+		if c.AWSRegion == "" {
+			return fmt.Errorf("AWS_REGION is required in production environment")
+		}
+		if c.S3Bucket == "" {
+			return fmt.Errorf("AWS_S3_BUCKET is required in production environment")
+		}
+	}
+	return nil
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -66,6 +84,7 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("JWT_ACCESS_EXPIRES_IN", "15m")
 	viper.SetDefault("JWT_REFRESH_EXPIRES_IN", "30d")
 	viper.SetDefault("ENABLE_AUTO_MIGRATE", false)
+	viper.SetDefault("AWS_S3_PRESIGN_TTL_SECONDS", 900)
 
 	viper.AutomaticEnv()
 
