@@ -22,6 +22,7 @@ import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type Job, jobs, getJobSlug, slugify } from "@/data/jobs";
+import { siteConfig } from "@/lib/site";
 
 type JobDetailProps = {
   job: Job;
@@ -32,58 +33,78 @@ export function JobDetail({ job }: JobDetailProps) {
   const [applied, setApplied] = useState(false);
 
   const jobSlug = getJobSlug(job);
-  const canonicalUrl = `https://workorajobs.com/jobs/${jobSlug}`;
+  const canonicalUrl = `${siteConfig.url}/jobs/${jobSlug}`;
   const isExpired = Boolean(job.isClosed);
   const datePosted = job.datePostedIso || "2026-07-01T00:00:00Z";
   const validThrough = job.validThroughIso || "2026-12-31T23:59:59Z";
+  const salaryRange = parseSalaryRange(job.salary);
 
   // Filter 3 related active jobs
   const relatedJobs = jobs
     .filter((j) => j.id !== job.id && !j.isClosed)
     .slice(0, 3);
+  const relatedCompanies = Array.from(
+    new Set(
+      jobs
+        .filter((j) => j.id !== job.id && j.company !== job.company && !j.isClosed)
+        .map((j) => j.company)
+    )
+  ).slice(0, 4);
 
   // JobPosting JSON-LD Schema
   const jobPostingSchema = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
-    "title": job.title,
-    "description": job.description,
-    "identifier": {
+    title: job.title,
+    description: [
+      job.description,
+      job.responsibilities?.length ? `Responsibilities: ${job.responsibilities.join("; ")}` : "",
+      job.requiredSkills?.length ? `Required skills: ${job.requiredSkills.join(", ")}` : "",
+    ].filter(Boolean).join("\n\n"),
+    url: canonicalUrl,
+    identifier: {
       "@type": "PropertyValue",
-      "name": "WorkoraJobs",
-      "value": job.id,
+      name: "WorkoraJobs",
+      value: job.id,
     },
-    "datePosted": datePosted,
-    "validThrough": validThrough,
-    "employmentType": job.type.toUpperCase().replace("-", "_"),
-    "hiringOrganization": {
+    datePosted,
+    validThrough,
+    employmentType: mapEmploymentType(job.type),
+    hiringOrganization: {
       "@type": "Organization",
-      "name": job.company,
-      "sameAs": `https://workorajobs.com/companies/${slugify(job.company)}`,
-
+      name: job.company,
+      sameAs: `${siteConfig.url}/companies/${slugify(job.company)}`,
     },
-    "jobLocation": {
+    jobLocation: {
       "@type": "Place",
-      "address": {
+      address: {
         "@type": "PostalAddress",
-        "addressLocality": job.location,
-        "addressCountry": job.location.includes("Remote") ? "Global" : "US",
+        addressLocality: job.location,
+        addressCountry: job.location.includes("Remote") ? "Global" : "US",
       },
     },
-    "jobLocationType": job.workMode === "Remote" ? "TELECOMMUTE" : undefined,
-    "applicantLocationRequirements": job.workMode === "Remote"
-      ? { "@type": "Country", "name": "Worldwide" }
+    jobLocationType: job.workMode === "Remote" ? "TELECOMMUTE" : undefined,
+    applicantLocationRequirements: job.workMode === "Remote"
+      ? { "@type": "Country", name: "Worldwide" }
       : undefined,
-    "baseSalary": {
-      "@type": "MonetaryAmount",
-      "currency": "USD",
-      "value": {
-        "@type": "QuantitativeValue",
-        "value": job.salary,
-        "unitText": "YEAR",
-      },
-    },
-    "directApply": true,
+    baseSalary: salaryRange
+      ? {
+          "@type": "MonetaryAmount",
+          currency: "USD",
+          value: {
+            "@type": "QuantitativeValue",
+            ...(salaryRange.min !== salaryRange.max
+              ? { minValue: salaryRange.min, maxValue: salaryRange.max }
+              : { value: salaryRange.min }),
+            unitText: "YEAR",
+          },
+        }
+      : undefined,
+    occupationalCategory: job.department,
+    qualifications: job.education,
+    responsibilities: job.responsibilities?.join("; "),
+    skills: job.requiredSkills.join(", "),
+    directApply: true,
   };
 
   // Breadcrumbs JSON-LD Schema
@@ -95,13 +116,13 @@ export function JobDetail({ job }: JobDetailProps) {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://workorajobs.com/",
+        "item": `${siteConfig.url}/`,
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Jobs",
-        "item": "https://workorajobs.com/jobs",
+        "item": `${siteConfig.url}/jobs`,
       },
       {
         "@type": "ListItem",
@@ -110,6 +131,19 @@ export function JobDetail({ job }: JobDetailProps) {
         "item": canonicalUrl,
       },
     ],
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: buildJobFaqs(job).map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
   };
 
   return (
@@ -125,6 +159,12 @@ export function JobDetail({ job }: JobDetailProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsSchema) }}
       />
+      {!isExpired && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       <Container>
         {/* Breadcrumb Navigation */}
@@ -177,7 +217,7 @@ export function JobDetail({ job }: JobDetailProps) {
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground">
                   <Link
-                    href={`/company/${slugify(job.company)}`}
+                    href={`/companies/${slugify(job.company)}`}
                     className="flex items-center gap-1.5 hover:text-blue-500 font-medium transition-colors"
                   >
                     <Building2 className="w-4 h-4 text-muted-foreground" />
@@ -270,6 +310,19 @@ export function JobDetail({ job }: JobDetailProps) {
                 </>
               )}
             </section>
+
+            {/* FAQ */}
+            <section className="p-6 rounded-2xl bg-card border border-border/60">
+              <h2 className="text-lg font-bold mb-4">Frequently Asked Questions</h2>
+              <div className="space-y-4">
+                {buildJobFaqs(job).map((faq) => (
+                  <div key={faq.question} className="space-y-1">
+                    <h3 className="text-sm font-semibold text-foreground">{faq.question}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
 
           {/* Sidebar Specs & Metadata */}
@@ -346,7 +399,62 @@ export function JobDetail({ job }: JobDetailProps) {
             </div>
           </section>
         )}
+        {relatedCompanies.length > 0 && (
+          <section className="mt-10 pt-10 border-t border-border/60">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-6">
+              Related Companies Hiring Similar Talent
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {relatedCompanies.map((company) => (
+                <Link
+                  key={company}
+                  href={`/companies/${slugify(company)}`}
+                  className="rounded-2xl bg-card border border-border/60 p-4 text-sm font-semibold hover:border-blue-500/40 hover:text-blue-500 transition-colors"
+                >
+                  {company}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </Container>
     </main>
   );
+}
+
+function mapEmploymentType(type: Job["type"]): string {
+  if (type === "Contract") return "CONTRACTOR";
+  if (type === "Internship") return "INTERN";
+  return "FULL_TIME";
+}
+
+function parseSalaryRange(salary: string): { min: number; max: number } | null {
+  const matches = [...salary.matchAll(/(?:\$|USD\s*)?(\d{2,3}(?:,\d{3})+|\d{2,3})\s*k?/gi)].map((match) => {
+    const value = Number(match[1].replace(/,/g, ""));
+    const usesThousandsSuffix = /k/i.test(match[0]);
+    return usesThousandsSuffix && value < 1000 ? value * 1000 : value;
+  });
+
+  if (!matches.length) return null;
+  return {
+    min: Math.min(...matches),
+    max: Math.max(...matches),
+  };
+}
+
+function buildJobFaqs(job: Job): Array<{ question: string; answer: string }> {
+  return [
+    {
+      question: `What skills are required for the ${job.title} role?`,
+      answer: `The main required skills for this role are ${job.requiredSkills.join(", ")}.`,
+    },
+    {
+      question: `Is the ${job.title} role remote or on-site?`,
+      answer: `This listing is marked as ${job.workMode} and is based in ${job.location}.`,
+    },
+    {
+      question: `When does this ${job.company} job expire?`,
+      answer: `The listed application validity date is ${job.validThroughIso || "not specified by the employer"}.`,
+    },
+  ];
 }

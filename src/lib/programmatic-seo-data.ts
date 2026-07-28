@@ -145,15 +145,15 @@ Candidates applying to ${companyName} should prepare to undergo a rigorous struc
     salaryInsights = { median: "$145,000", low: "$110,000", high: "$195,000", currency: "USD" };
     requiredSkills = ["System Design", "Cloud Infrastructure", "API Integration", "Security", "Agile"];
     similarJobs = [
-      { label: `Engineering Jobs at ${companyName}`, href: `/company/${cleanSlug}` },
-      { label: `Product Roles at ${companyName}`, href: `/company/${cleanSlug}` },
+      { label: `Engineering Jobs at ${companyName}`, href: `/companies/${cleanSlug}` },
+      { label: `Product Roles at ${companyName}`, href: `/companies/${cleanSlug}` },
     ];
     relatedSearches = [
-      { label: `${companyName} recruitment process`, href: `/company/${cleanSlug}` },
-      { label: `${companyName} salary guide`, href: `/company/${cleanSlug}` },
+      { label: `${companyName} recruitment process`, href: `/companies/${cleanSlug}` },
+      { label: `${companyName} salary guide`, href: `/companies/${cleanSlug}` },
     ];
 
-    breadcrumbs.push({ label: companyName, href: `/company/${cleanSlug}` });
+    breadcrumbs.push({ label: companyName, href: `/companies/${cleanSlug}` });
 
     faqs = [
       {

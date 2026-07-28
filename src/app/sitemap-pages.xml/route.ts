@@ -14,6 +14,7 @@ export async function GET() {
     "/services",
     "/resources",
     "/resume-builder",
+    "/sitemap",
     "/contact",
     "/terms",
     "/privacy",

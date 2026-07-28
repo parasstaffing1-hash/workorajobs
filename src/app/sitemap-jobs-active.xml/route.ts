@@ -1,31 +1,13 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { jobs, getJobSlug } from "@/data/jobs";
 import { siteConfig } from "@/lib/site";
+import { getActiveJobSitemapUrls, renderUrlSet } from "@/lib/seo/sitemap-utils";
 
-export async function GET() {
-  const now = new Date().toISOString();
-
-  // Include ONLY active, non-closed jobs
-  const activeJobs = jobs.filter((j) => !j.isClosed);
-
-  const urls = activeJobs
-    .map((job) => {
-      const slug = getJobSlug(job);
-      const datePosted = job.datePostedIso || now;
-      return `  <url>
-    <loc>${siteConfig.url}/jobs/${slug}</loc>
-    <lastmod>${datePosted}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>`;
-    })
-    .join("\n");
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
+export async function GET(request: NextRequest) {
+  const page = Number.parseInt(request.nextUrl.searchParams.get("page") || "0", 10);
+  const urls = await getActiveJobSitemapUrls(siteConfig.url, Number.isFinite(page) ? page : 0);
+  const xml = renderUrlSet(urls);
 
   return new NextResponse(xml, {
     headers: {

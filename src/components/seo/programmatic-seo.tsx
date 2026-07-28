@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { type Job } from "@/data/jobs";
+import { slugify, type Job } from "@/data/jobs";
 
 type SeoProps = {
   title: string;
@@ -80,11 +80,11 @@ export function ProgrammaticSeo({
     description: job.description || `${job.title} role at ${job.company} in ${job.location}.`,
     datePosted: "2026-07-01",
     validThrough: "2026-12-31",
-    employmentType: job.type === "Full-time" ? "FULL_TIME" : "PART_TIME",
+    employmentType: job.type === "Contract" ? "CONTRACTOR" : job.type === "Internship" ? "INTERN" : "FULL_TIME",
     hiringOrganization: {
       "@type": "Organization",
       name: job.company,
-      sameAs: `https://workorajobs.com/company/${job.company.toLowerCase().replace(/\s+/g, "-")}-jobs`,
+      sameAs: `https://workorajobs.com/companies/${slugify(job.company)}`,
     },
     jobLocation: {
       "@type": "Place",

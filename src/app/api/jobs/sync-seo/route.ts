@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { jobs } from "@/data/jobs";
+import { getJobSlug, jobs } from "@/data/jobs";
 import { slugify } from "@/lib/slugs";
 
 export const runtime = "nodejs";
@@ -21,20 +21,20 @@ export async function POST() {
       sitemapUrlsRegenerated: 0,
     };
 
-    const titleLocationPairs = new Set<string>();
+    const jobUrls = new Set<string>();
     const companyNames = new Set<string>();
     const skills = new Set<string>();
 
     activeJobs.forEach((job) => {
-      titleLocationPairs.add(`${slugify(job.title)}-in-${slugify(job.location)}`);
+      jobUrls.add(getJobSlug(job));
       companyNames.add(slugify(job.company));
       job.requiredSkills.forEach((s) => skills.add(slugify(s)));
     });
 
-    summary.processedTitles = titleLocationPairs.size;
+    summary.processedTitles = jobUrls.size;
     summary.processedCompanies = companyNames.size;
     summary.processedSkills = skills.size;
-    summary.sitemapUrlsRegenerated = titleLocationPairs.size + companyNames.size + skills.size + 2; // + remote & freshers
+    summary.sitemapUrlsRegenerated = jobUrls.size + companyNames.size + skills.size + 8;
 
     // Build URL list for IndexNow automatic submission
     const urlsToSubmit: string[] = [
@@ -49,13 +49,10 @@ export async function POST() {
     ];
 
     activeJobs.forEach((job) => {
-      const jobTitleSlug = slugify(job.title);
       const companySlug = slugify(job.company);
-      const locationSlug = slugify(job.location);
 
-      urlsToSubmit.push(`https://workorajobs.com/jobs/${jobTitleSlug}-in-${locationSlug}`);
-      urlsToSubmit.push(`https://workorajobs.com/jobs/${jobTitleSlug}-jobs`);
-      urlsToSubmit.push(`https://workorajobs.com/company/${companySlug}-jobs`);
+      urlsToSubmit.push(`https://workorajobs.com/jobs/${getJobSlug(job)}`);
+      urlsToSubmit.push(`https://workorajobs.com/companies/${companySlug}`);
     });
 
     const uniqueUrlsList = Array.from(new Set(urlsToSubmit));

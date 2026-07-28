@@ -39,7 +39,8 @@ export function SiteFooter() {
       title: "Resources",
       links: [
         { label: "Blog", href: "/blog" },
-        { label: "Help Center", href: "/help" },
+        { label: "Resources", href: "/resources" },
+        { label: "Sitemap", href: "/sitemap" },
         { label: "Resume Tips", href: "/resources" },
       ],
     },
