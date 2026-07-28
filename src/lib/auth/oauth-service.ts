@@ -34,7 +34,10 @@ export class OAuthService {
     userAgent = "Browser"
   ) {
     const cleanEmail = input.email.toLowerCase().trim();
-    const role = input.role || (cleanEmail.includes("employer") ? "EMPLOYER font" as any : "JOB_SEEKER");
+    // Provider callbacks supply no role selected by an untrusted browser. New
+    // social accounts always start as job seekers; employer upgrades use the
+    // authenticated employer onboarding flow.
+    const role = input.role || "JOB_SEEKER";
 
     // 1. Check if OAuthAccount link exists
     let oauthAccount = await prisma.oAuthAccount.findUnique({
@@ -92,14 +95,9 @@ export class OAuthService {
           },
         });
       } catch (err: any) {
-        // Fallback for resilient dev mode
-        user = {
-          id: `oauth-usr-${Date.now()}`,
-          email: cleanEmail,
-          name: input.name || cleanEmail.split("@")[0],
-          role,
-          isEmailVerified: true,
-        };
+        // Never create an in-memory identity on a database error: doing so can
+        // produce a signed-in user that has no durable account record.
+        throw err;
       }
     } else if (!user.isEmailVerified) {
       // Auto-verify email if logged in via trusted OAuth provider
