@@ -45,19 +45,19 @@ export class OAuthService {
   ) {}
 
   async getAuthorizationUrl(provider: OAuthProviderName) {
-    const state = randomBytes(24).toString("base64url");
-    await this.redis.set(`oauth_state:${state}`, provider, STATE_TTL_SECONDS);
-
     if (provider === "google") {
       const clientId = this.config.get<string>("oauth.google.clientId");
+      const clientSecret = this.config.get<string>("oauth.google.clientSecret");
       const callbackUrl = this.config.getOrThrow<string>(
         "oauth.google.callbackUrl",
       );
-      if (!clientId)
+      if (!clientId || !clientSecret)
         throw new ServiceUnavailableException(
           "Google OAuth is not configured.",
         );
 
+      const state = randomBytes(24).toString("base64url");
+      await this.redis.set(`oauth_state:${state}`, provider, STATE_TTL_SECONDS);
       const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
       url.searchParams.set("client_id", clientId);
       url.searchParams.set("redirect_uri", callbackUrl);
@@ -70,14 +70,17 @@ export class OAuthService {
     }
 
     const clientId = this.config.get<string>("oauth.linkedin.clientId");
+    const clientSecret = this.config.get<string>("oauth.linkedin.clientSecret");
     const callbackUrl = this.config.getOrThrow<string>(
       "oauth.linkedin.callbackUrl",
     );
-    if (!clientId)
+    if (!clientId || !clientSecret)
       throw new ServiceUnavailableException(
         "LinkedIn OAuth is not configured.",
       );
 
+    const state = randomBytes(24).toString("base64url");
+    await this.redis.set(`oauth_state:${state}`, provider, STATE_TTL_SECONDS);
     const url = new URL("https://www.linkedin.com/oauth/v2/authorization");
     url.searchParams.set("client_id", clientId);
     url.searchParams.set("redirect_uri", callbackUrl);
