@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -12,25 +13,25 @@ type Config struct {
 	Port        int    `mapstructure:"PORT"`
 
 	// Database
-	DatabaseURL          string `mapstructure:"DATABASE_URL"`
-	PostgresHost         string `mapstructure:"POSTGRES_HOST"`
-	PostgresPort         int    `mapstructure:"POSTGRES_PORT"`
-	PostgresUser         string `mapstructure:"POSTGRES_USER"`
-	PostgresPassword     string `mapstructure:"POSTGRES_PASSWORD"`
-	PostgresDB           string `mapstructure:"POSTGRES_DB"`
-	PostgresSchema       string `mapstructure:"POSTGRES_SCHEMA"`
-	PostgresMaxConns     int    `mapstructure:"POSTGRES_CONNECTION_LIMIT"`
-	PostgresIdleConns    int    `mapstructure:"POSTGRES_IDLE_LIMIT"`
+	DatabaseURL             string        `mapstructure:"DATABASE_URL"`
+	PostgresHost            string        `mapstructure:"POSTGRES_HOST"`
+	PostgresPort            int           `mapstructure:"POSTGRES_PORT"`
+	PostgresUser            string        `mapstructure:"POSTGRES_USER"`
+	PostgresPassword        string        `mapstructure:"POSTGRES_PASSWORD"`
+	PostgresDB              string        `mapstructure:"POSTGRES_DB"`
+	PostgresSchema          string        `mapstructure:"POSTGRES_SCHEMA"`
+	PostgresMaxConns        int           `mapstructure:"POSTGRES_CONNECTION_LIMIT"`
+	PostgresIdleConns       int           `mapstructure:"POSTGRES_IDLE_LIMIT"`
 	PostgresConnMaxLifetime time.Duration `mapstructure:"POSTGRES_CONN_MAX_LIFETIME"`
 
 	// Redis
 	RedisURL string `mapstructure:"REDIS_URL"`
 
 	// JWT
-	JWTSecret         string `mapstructure:"JWT_SECRET"`
-	JWTAccessSecret   string `mapstructure:"JWT_ACCESS_SECRET"`
-	JWTRefreshSecret  string `mapstructure:"JWT_REFRESH_SECRET"`
-	JWTAccessExpiresIn string `mapstructure:"JWT_ACCESS_EXPIRES_IN"`
+	JWTSecret           string `mapstructure:"JWT_SECRET"`
+	JWTAccessSecret     string `mapstructure:"JWT_ACCESS_SECRET"`
+	JWTRefreshSecret    string `mapstructure:"JWT_REFRESH_SECRET"`
+	JWTAccessExpiresIn  string `mapstructure:"JWT_ACCESS_EXPIRES_IN"`
 	JWTRefreshExpiresIn string `mapstructure:"JWT_REFRESH_EXPIRES_IN"`
 
 	// CORS & App
@@ -42,6 +43,10 @@ type Config struct {
 	EmailFrom    string `mapstructure:"EMAIL_FROM"`
 	S3Bucket     string `mapstructure:"AWS_S3_BUCKET"`
 	AWSRegion    string `mapstructure:"AWS_REGION"`
+
+	// Operations
+	MetricsBearerToken string `mapstructure:"METRICS_BEARER_TOKEN"`
+	EnableAutoMigrate  bool   `mapstructure:"ENABLE_AUTO_MIGRATE"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -55,12 +60,12 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("POSTGRES_PORT", 5432)
 	viper.SetDefault("POSTGRES_DB", "workora_jobs")
 	viper.SetDefault("POSTGRES_USER", "workora")
-	viper.SetDefault("POSTGRES_PASSWORD", "workora_password")
 	viper.SetDefault("POSTGRES_SCHEMA", "public")
 	viper.SetDefault("POSTGRES_CONNECTION_LIMIT", 25)
 	viper.SetDefault("POSTGRES_IDLE_LIMIT", 5)
 	viper.SetDefault("JWT_ACCESS_EXPIRES_IN", "15m")
 	viper.SetDefault("JWT_REFRESH_EXPIRES_IN", "30d")
+	viper.SetDefault("ENABLE_AUTO_MIGRATE", false)
 
 	viper.AutomaticEnv()
 
@@ -77,6 +82,9 @@ func LoadConfig(path string) (*Config, error) {
 
 	// Format DSN if DATABASE_URL is not set directly
 	if cfg.DatabaseURL == "" {
+		if cfg.Environment == "production" {
+			return nil, fmt.Errorf("DATABASE_URL is required in production")
+		}
 		cfg.DatabaseURL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable&search_path=%s",
 			cfg.PostgresUser,
 			cfg.PostgresPassword,
@@ -85,6 +93,18 @@ func LoadConfig(path string) (*Config, error) {
 			cfg.PostgresDB,
 			cfg.PostgresSchema,
 		)
+	}
+
+	if cfg.Environment == "production" {
+		if strings.TrimSpace(cfg.JWTAccessSecret) == "" || strings.TrimSpace(cfg.JWTRefreshSecret) == "" {
+			return nil, fmt.Errorf("JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production")
+		}
+		if len(cfg.JWTAccessSecret) < 32 || len(cfg.JWTRefreshSecret) < 32 {
+			return nil, fmt.Errorf("JWT secrets must be at least 32 characters in production")
+		}
+		if strings.Contains(cfg.DatabaseURL, "sslmode=disable") {
+			return nil, fmt.Errorf("production DATABASE_URL must not use sslmode=disable")
+		}
 	}
 
 	return &cfg, nil

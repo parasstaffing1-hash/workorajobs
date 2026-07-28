@@ -11,10 +11,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
-      - DATABASE_URL=postgres://workora:workora_password@postgres:5432/workora_jobs?sslmode=disable
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
       - REDIS_URL=redis://redis:6379
-      - JWT_ACCESS_SECRET=super-secret-jwt-access-key-workora-2026
-      - JWT_REFRESH_SECRET=super-secret-jwt-refresh-key-workora-2026
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      - METRICS_BEARER_TOKEN=${METRICS_BEARER_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,7 +31,7 @@ services:
     entrypoint: ["/app/worker"]
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://workora:workora_password@postgres:5432/workora_jobs?sslmode=disable
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
@@ -44,10 +45,10 @@ services:
     container_name: workora-postgres
     environment:
       POSTGRES_USER: workora
-      POSTGRES_PASSWORD: workora_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: workora_jobs
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -60,8 +61,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: workora-redis
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     restart: always

@@ -2,11 +2,11 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/workorajobs/backend-go/internal/api/controllers"
 	"github.com/workorajobs/backend-go/internal/api/middleware"
 	"github.com/workorajobs/backend-go/internal/config"
 	"github.com/workorajobs/backend-go/internal/service"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -25,8 +25,9 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.GzipMiddleware())
 
-	// Prometheus Metrics
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	if cfg.Environment != "production" || cfg.MetricsBearerToken != "" {
+		r.GET("/metrics", middleware.MetricsAuthMiddleware(cfg.MetricsBearerToken), gin.WrapH(promhttp.Handler()))
+	}
 
 	// Services
 	authService := service.NewAuthService(db, cfg)

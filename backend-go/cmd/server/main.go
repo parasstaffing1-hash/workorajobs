@@ -58,21 +58,24 @@ func main() {
 
 	logger.Log.Info("Database connection pool established successfully")
 
-	// AutoMigrate core models
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.UserProfile{},
-		&models.EmployerProfile{},
-		&models.RefreshToken{},
-		&models.UserSession{},
-		&models.OAuthAccount{},
-		&models.Company{},
-		&models.Job{},
-		&models.SavedJob{},
-		&models.JobCategory{},
-		&models.Application{},
-	); err != nil {
-		logger.Log.Warn("AutoMigrate encounter warning", zap.Error(err))
+	if cfg.Environment != "production" || cfg.EnableAutoMigrate {
+		if err := db.AutoMigrate(
+			&models.User{},
+			&models.UserProfile{},
+			&models.EmployerProfile{},
+			&models.RefreshToken{},
+			&models.UserSession{},
+			&models.OAuthAccount{},
+			&models.Company{},
+			&models.Job{},
+			&models.SavedJob{},
+			&models.JobCategory{},
+			&models.Application{},
+		); err != nil {
+			logger.Log.Warn("AutoMigrate encounter warning", zap.Error(err))
+		}
+	} else {
+		logger.Log.Info("AutoMigrate skipped in production; run controlled migrations before release")
 	}
 
 	// Setup Router

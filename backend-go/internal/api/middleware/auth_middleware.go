@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +43,31 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		c.Set(CtxUserID, claims.UserID)
 		c.Set(CtxUserEmail, claims.Email)
 		c.Set(CtxUserRole, claims.Role)
+
+		c.Next()
+	}
+}
+
+func MetricsAuthMiddleware(metricsToken string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if metricsToken == "" {
+			c.Next()
+			return
+		}
+
+		authHeader := c.GetHeader(AuthorizationHeader)
+		if !strings.HasPrefix(authHeader, BearerPrefix) {
+			response.Unauthorized(c, "Metrics authorization required")
+			c.Abort()
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, BearerPrefix)
+		if subtle.ConstantTimeCompare([]byte(token), []byte(metricsToken)) != 1 {
+			response.Unauthorized(c, "Invalid metrics authorization")
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}
