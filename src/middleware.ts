@@ -27,6 +27,31 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
+  // Employer workspace pages require a real authenticated employer session.
+  // API routes independently validate the server-side session and role.
+  const publicEmployerPaths = new Set([
+    "/employer/login",
+    "/employer/signup",
+    "/employer/forgot-password",
+    "/employer/reset-password",
+    "/employer/verify-email",
+  ]);
+  const isEmployerWorkspace =
+    (pathname === "/employer" || pathname.startsWith("/employer/")) &&
+    !publicEmployerPaths.has(pathname);
+
+  if (isEmployerWorkspace) {
+    const sessionToken = request.cookies.get("sessionToken")?.value;
+    const userRole = request.cookies.get("userRole")?.value;
+    if (!sessionToken || (userRole !== "EMPLOYER" && userRole !== "ADMIN")) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/employer/login";
+      loginUrl.search = "";
+      loginUrl.searchParams.set("returnUrl", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl, 307);
+    }
+  }
+
   const response = NextResponse.next();
 
   // 4. Control filter parameters & search queries indexing (Prompt 7)

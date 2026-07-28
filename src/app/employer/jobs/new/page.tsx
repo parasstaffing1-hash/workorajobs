@@ -1,5 +1,6 @@
+import { redirect } from "next/navigation";
+
 import { createMetadata } from "@/lib/site";
-import PageClient from "./page-client";
 
 export const metadata = createMetadata({
   title: "Post a New Job Opening & Attract Talent",
@@ -8,6 +9,6 @@ export const metadata = createMetadata({
   path: "/employer/jobs/new",
 });
 
-export default function Page(props: any) {
-  return <PageClient {...props} />;
+export default function Page() {
+  redirect("/employer/jobs/create");
 }

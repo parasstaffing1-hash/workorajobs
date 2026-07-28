@@ -20,33 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result: any = null;
-    try {
-      result = await EmployerAuthService.loginEmployer(validation.data, ip, userAgent);
-    } catch (_) {}
-
-    // Resilient fallback for dev preview mode when DB is uninitialized/offline
-    if (!result) {
-      const demoUserId = "emp-demo-id";
-      const session = await SessionStore.createSession({
-        userId: demoUserId,
-        email: validation.data.email.toLowerCase(),
-        role: "EMPLOYER",
-        rememberMe: validation.data.rememberMe,
-      }).catch(() => ({ sessionToken: `dev-emp-session-${Date.now()}` }));
-
-      result = {
-        user: {
-          id: demoUserId,
-          email: validation.data.email.toLowerCase(),
-          name: "Acme Enterprise Corp",
-          role: "EMPLOYER",
-          isEmailVerified: true,
-          companyName: "Acme Enterprise Corp",
-        },
-        sessionToken: session.sessionToken,
-      };
-    }
+    const result = await EmployerAuthService.loginEmployer(validation.data, ip, userAgent);
 
     const token = signJwt({
       userId: result.user.id,

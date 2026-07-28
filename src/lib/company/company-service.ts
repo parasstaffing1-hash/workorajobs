@@ -1,81 +1,97 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { calculateCompanyCompletion } from "@/lib/company/company-completion";
 
-async function safeDb<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
-  try {
-    const result = await fn();
-    return result !== null && result !== undefined ? result : fallback;
-  } catch (_) {
-    return fallback;
-  }
+const PERSONAL_EMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "hotmail.com",
+  "outlook.com",
+  "yahoo.com",
+]);
+
+function companySlug(name: string, userId: string) {
+  const base = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "company";
+  return `${base.slice(0, 70)}-${userId.slice(-8).toLowerCase()}`;
 }
 
 export class CompanyService {
   /**
-   * Fetch company profile linked to employer user with Database Fallback Isolation
+   * Provision or repair the real company workspace owned by an employer.
+   * This never returns fabricated IDs and is safe to call repeatedly.
    */
-  static async getEmployerCompany(userId: string) {
-    const employerProfile = await safeDb(
-      () =>
-        prisma.employerProfile.findUnique({
-          where: { userId },
-          include: { company: true },
-        }),
-      null
-    );
+  static async provisionEmployerCompany(db: Prisma.TransactionClient, userId: string) {
+    const account = await db.user.findUnique({
+      where: { id: userId },
+      include: { employerProfile: { include: { company: true } } },
+    });
 
-    if (employerProfile && employerProfile.company) {
-      const completion = calculateCompanyCompletion(employerProfile.company);
-      return { company: employerProfile.company, employerProfile, completion };
+    if (!account || account.role !== "EMPLOYER" || !account.employerProfile) {
+      throw new Error("A valid employer account is required to manage job postings.");
     }
 
-    // Resilient Fallback Company Profile for local dev & uninitialized DB
-    const fallbackCompany: any = {
-      id: "demo-company-id",
-      name: "Acme Enterprise Corp",
-      tagline: "Building Next-Gen Enterprise Platforms",
-      description: "Acme Corp is a leading global technology company specializing in cloud software, recruitment analytics, and AI.",
-      logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80",
-      coverImageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80",
-      websiteUrl: "https://acmeenterprise.example.com",
-      industry: "Technology & Software",
-      employeeRange: "500-1000 employees",
-      foundedYear: 2018,
-      headquarters: "San Francisco, CA",
-      gstNumber: "27AAACA0000A1Z5",
-      cinNumber: "L72200MH2018PLC000000",
-      hiringEmail: "careers@acmeenterprise.example.com",
-      linkedinUrl: "https://linkedin.com/company/acmeenterprise",
-      isGstVerified: true,
-      isCinVerified: true,
-      isWebsiteVerified: true,
-      isPhoneVerified: true,
-      verificationStatus: "VERIFIED",
-      activeJobCount: 12,
-      branchOffices: [
-        { city: "New York", address: "100 Broadway, NY 10005" },
-        { city: "London", address: "25 Bank Street, London E14 5JP" },
-      ],
-      hrContact: { name: "Sarah Jenkins", email: "sarah.j@acmeenterprise.example.com", phone: "+1 555-0199" },
-      recruiterContact: { name: "David Chen", email: "david.c@acmeenterprise.example.com", phone: "+1 555-0188" },
-    };
+    if (account.employerProfile.company && !account.employerProfile.company.deletedAt) {
+      return {
+        company: account.employerProfile.company,
+        employerProfile: account.employerProfile,
+      };
+    }
 
-    const fallbackProfile: any = {
-      id: "demo-profile-id",
-      userId,
-      companyName: fallbackCompany.name,
-      designation: "Hiring Manager",
-      companyId: fallbackCompany.id,
-      company: fallbackCompany,
-    };
+    let company = await db.company.findUnique({
+      where: { ownerId: userId },
+    });
 
-    const completion = calculateCompanyCompletion(fallbackCompany);
+    if (!company || company.deletedAt) {
+      const emailDomain = account.email.split("@")[1]?.toLowerCase() || null;
+      const usableDomain = emailDomain && !PERSONAL_EMAIL_DOMAINS.has(emailDomain) ? emailDomain : null;
+      const domainOwner = usableDomain
+        ? await db.company.findFirst({
+            where: {
+              OR: [{ officialDomain: usableDomain }, { domain: usableDomain }],
+            },
+            select: { id: true },
+          })
+        : null;
 
-    return {
-      company: fallbackCompany,
-      employerProfile: fallbackProfile,
-      completion,
-    };
+      company = await db.company.create({
+        data: {
+          name: account.employerProfile.companyName,
+          slug: companySlug(account.employerProfile.companyName, userId),
+          ownerId: userId,
+          officialDomain: domainOwner ? null : usableDomain,
+          domain: domainOwner ? null : usableDomain,
+          hiringEmail: account.employerProfile.businessEmail || account.email,
+          verificationStatus: "PENDING",
+          indexingStatus: "draft",
+          contentQualityScore: 0,
+        },
+      });
+    }
+
+    const employerProfile = await db.employerProfile.update({
+      where: { userId },
+      data: { companyId: company.id },
+      include: { company: true },
+    });
+
+    return { company, employerProfile };
+  }
+
+  static async ensureEmployerCompany(userId: string) {
+    return prisma.$transaction((db) => this.provisionEmployerCompany(db, userId));
+  }
+
+  /**
+   * Fetch the real company profile linked to an employer user.
+   */
+  static async getEmployerCompany(userId: string) {
+    const { company, employerProfile } = await this.ensureEmployerCompany(userId);
+    const completion = calculateCompanyCompletion(company);
+    return { company, employerProfile, completion };
   }
 
   /**
@@ -84,37 +100,32 @@ export class CompanyService {
   static async updateCompanyProfile(userId: string, data: any) {
     const { company } = await this.getEmployerCompany(userId);
 
-    const updatedCompany = await safeDb(
-      () =>
-        prisma.company.update({
-          where: { id: company.id },
-          data: {
-            name: data.name !== undefined ? data.name : company.name,
-            tagline: data.tagline !== undefined ? data.tagline : company.tagline,
-            description: data.description !== undefined ? data.description : company.description,
-            logoUrl: data.logoUrl !== undefined ? data.logoUrl : company.logoUrl,
-            coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : company.coverImageUrl,
-            websiteUrl: data.websiteUrl || data.website !== undefined ? data.websiteUrl || data.website : company.websiteUrl,
-            industry: data.industry !== undefined ? data.industry : company.industry,
-            employeeRange: data.employeeRange !== undefined ? data.employeeRange : company.employeeRange,
-            foundedYear: data.foundedYear ? parseInt(data.foundedYear, 10) : company.foundedYear,
-            gstNumber: data.gstNumber !== undefined ? data.gstNumber : company.gstNumber,
-            cinNumber: data.cinNumber !== undefined ? data.cinNumber : company.cinNumber,
-            hiringEmail: data.hiringEmail !== undefined ? data.hiringEmail : company.hiringEmail,
-            hrContact: data.hrContact !== undefined ? data.hrContact : company.hrContact,
-            recruiterContact: data.recruiterContact !== undefined ? data.recruiterContact : company.recruiterContact,
-            linkedinUrl: data.linkedinUrl !== undefined ? data.linkedinUrl : company.linkedinUrl,
-            twitterUrl: data.twitterUrl !== undefined ? data.twitterUrl : company.twitterUrl,
-          },
-        }),
-      null
-    );
+    const updatedCompany = await prisma.company.update({
+      where: { id: company.id },
+      data: {
+        name: data.name !== undefined ? data.name : company.name,
+        tagline: data.tagline !== undefined ? data.tagline : company.tagline,
+        description: data.description !== undefined ? data.description : company.description,
+        logoUrl: data.logoUrl !== undefined ? data.logoUrl : company.logoUrl,
+        coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : company.coverImageUrl,
+        websiteUrl: data.websiteUrl || data.website !== undefined ? data.websiteUrl || data.website : company.websiteUrl,
+        industry: data.industry !== undefined ? data.industry : company.industry,
+        employeeRange: data.employeeRange !== undefined ? data.employeeRange : company.employeeRange,
+        foundedYear: data.foundedYear ? parseInt(data.foundedYear, 10) : company.foundedYear,
+        gstNumber: data.gstNumber !== undefined ? data.gstNumber : company.gstNumber,
+        cinNumber: data.cinNumber !== undefined ? data.cinNumber : company.cinNumber,
+        hiringEmail: data.hiringEmail !== undefined ? data.hiringEmail : company.hiringEmail,
+        hrContact: data.hrContact !== undefined ? data.hrContact : company.hrContact,
+        recruiterContact: data.recruiterContact !== undefined ? data.recruiterContact : company.recruiterContact,
+        linkedinUrl: data.linkedinUrl !== undefined ? data.linkedinUrl : company.linkedinUrl,
+        twitterUrl: data.twitterUrl !== undefined ? data.twitterUrl : company.twitterUrl,
+      },
+    });
 
-    const finalCompany = updatedCompany || { ...company, ...data };
-    const completion = calculateCompanyCompletion(finalCompany);
+    const completion = calculateCompanyCompletion(updatedCompany);
 
     return {
-      company: finalCompany,
+      company: updatedCompany,
       completion,
     };
   }

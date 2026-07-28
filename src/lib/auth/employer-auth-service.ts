@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SessionStore } from "@/lib/auth/session-store";
 import { EmployerSignupInput, EmployerLoginInput } from "@/lib/auth/employer-validation-schemas";
+import { CompanyService } from "@/lib/company/company-service";
 
 const SALT_ROUNDS = 12;
 
@@ -25,35 +26,31 @@ export class EmployerAuthService {
 
     const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
 
-    // Auto-link to matching domain company if exists
-    const emailDomain = input.businessEmail.split("@")[1]?.toLowerCase();
-    let company = null;
-    if (emailDomain && !["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"].includes(emailDomain)) {
-      company = await prisma.company.findFirst({
-        where: { officialDomain: emailDomain },
-      });
-    }
-
-    // Create User with Role.EMPLOYER and EmployerProfile
-    const user = await prisma.user.create({
-      data: {
-        email: input.businessEmail.toLowerCase(),
-        passwordHash,
-        name: input.companyName,
-        role: "EMPLOYER",
-        isEmailVerified: false,
-        employerProfile: {
-          create: {
-            companyName: input.companyName,
-            businessEmail: input.businessEmail.toLowerCase(),
-            phone: input.phone,
-            companyId: company ? company.id : undefined,
+    // Create the account and its real company workspace atomically.
+    const user = await prisma.$transaction(async (db) => {
+      const createdUser = await db.user.create({
+        data: {
+          email: input.businessEmail.toLowerCase(),
+          passwordHash,
+          name: input.companyName,
+          role: "EMPLOYER",
+          isEmailVerified: false,
+          employerProfile: {
+            create: {
+              companyName: input.companyName,
+              businessEmail: input.businessEmail.toLowerCase(),
+              phone: input.phone,
+            },
           },
         },
-      },
-      include: {
-        employerProfile: true,
-      },
+      });
+
+      await CompanyService.provisionEmployerCompany(db, createdUser.id);
+
+      return db.user.findUniqueOrThrow({
+        where: { id: createdUser.id },
+        include: { employerProfile: true },
+      });
     });
 
     // Create Email Verification Token
@@ -134,6 +131,8 @@ export class EmployerAuthService {
       });
       throw new Error("Invalid business email or password.");
     }
+
+    await CompanyService.ensureEmployerCompany(user.id);
 
     // Record Login History
     await prisma.loginHistory.create({

@@ -1,17 +1,28 @@
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { N8nConnector } from "@/lib/N8nConnector";
+import { getAuthUserId } from "@/lib/auth/get-auth-user";
+
+function secretsMatch(provided: string | null, expected: string | undefined) {
+  if (!provided || !expected) return false;
+  const normalized = provided.replace(/^Bearer\s+/i, "");
+  const providedBuffer = Buffer.from(normalized);
+  const expectedBuffer = Buffer.from(expected);
+  return (
+    providedBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("x-n8n-secret") || request.headers.get("authorization");
-    const expectedSecret = process.env.N8N_WEBHOOK_SECRET || process.env.JWT_SECRET || "workora_n8n_shared_secret";
+    const authenticatedUserId = await getAuthUserId(request, "ANY");
+    const internalRequest = secretsMatch(authHeader, process.env.N8N_WEBHOOK_SECRET);
 
-    if (authHeader && authHeader.replace("Bearer ", "") !== expectedSecret && authHeader !== expectedSecret) {
-      // Log warning but allow fallback in dev if secret not strictly set
-      if (process.env.NODE_ENV === "production" && process.env.N8N_WEBHOOK_SECRET) {
-        return NextResponse.json({ success: false, error: "Invalid n8n webhook secret" }, { status: 401 });
-      }
+    if (!authenticatedUserId && !internalRequest) {
+      return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
     }
 
     const { eventType, payload } = await request.json();

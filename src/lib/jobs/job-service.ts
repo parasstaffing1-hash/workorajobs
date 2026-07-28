@@ -11,6 +11,35 @@ export interface EmployerJobsOptions {
 }
 
 export class JobService {
+  private static async getAuthorizedJob(userId: string, jobId: string) {
+    const { company } = await CompanyService.getEmployerCompany(userId);
+    const job = await prisma.job.findFirst({
+      where: {
+        id: jobId,
+        companyId: company.id,
+        deletedAt: null,
+      },
+      include: { company: true },
+    });
+
+    if (!job) {
+      throw new Error("Job posting not found or access denied.");
+    }
+
+    return job;
+  }
+
+  static async getEmployerJob(userId: string, jobId: string) {
+    const job = await this.getAuthorizedJob(userId, jobId);
+    return prisma.job.findUniqueOrThrow({
+      where: { id: job.id },
+      include: {
+        company: true,
+        versionHistory: { orderBy: { version: "desc" } },
+      },
+    });
+  }
+
   /**
    * Create Job Posting (Draft, Published, Scheduled)
    */
@@ -21,128 +50,128 @@ export class JobService {
     const deadline = input.deadlineAt ? new Date(input.deadlineAt) : null;
     const scheduled = input.scheduledPublishAt ? new Date(input.scheduledPublishAt) : null;
 
-    const job = await prisma.job.create({
-      data: {
-        title: input.title,
-        slug,
-        department: input.department || null,
-        description: input.description,
-        responsibilities: input.responsibilities || null,
-        requirements: input.requirements || null,
-        location: input.location,
-        salaryMin: input.salaryMin || null,
-        salaryMax: input.salaryMax || null,
-        salary: input.salary || input.salaryMax || input.salaryMin || null,
-        type: input.type,
-        workMode: input.workMode,
-        experience: input.experience,
-        education: input.education || null,
-        skillsRequired: input.skillsRequired,
-        openingsCount: input.openingsCount,
-        noticePeriod: input.noticePeriod,
-        benefits: input.benefits,
-        screeningQuestions: input.screeningQuestions || [],
-        externalApplyUrl: input.externalApplyUrl || null,
-        deadlineAt: deadline,
-        scheduledPublishAt: scheduled,
-        status: input.status,
-        companyId: company.id,
-        postedById: userId,
-        version: 1,
-      },
-      include: { company: true },
-    });
+    return prisma.$transaction(async (db) => {
+      const job = await db.job.create({
+        data: {
+          title: input.title,
+          slug,
+          department: input.department || null,
+          description: input.description,
+          responsibilities: input.responsibilities || null,
+          requirements: input.requirements || null,
+          location: input.location,
+          salaryMin: input.salaryMin || null,
+          salaryMax: input.salaryMax || null,
+          salary: input.salary || input.salaryMax || input.salaryMin || null,
+          type: input.type,
+          workMode: input.workMode,
+          experience: input.experience,
+          education: input.education || null,
+          skillsRequired: input.skillsRequired,
+          openingsCount: input.openingsCount,
+          noticePeriod: input.noticePeriod,
+          benefits: input.benefits,
+          screeningQuestions: input.screeningQuestions || [],
+          externalApplyUrl: input.externalApplyUrl || null,
+          deadlineAt: deadline,
+          scheduledPublishAt: scheduled,
+          status: input.status,
+          companyId: company.id,
+          postedById: userId,
+          version: 1,
+        },
+        include: { company: true },
+      });
 
-    // Create Initial Version History
-    await prisma.jobVersionHistory.create({
-      data: {
-        jobId: job.id,
-        version: 1,
-        title: job.title,
-        description: job.description,
-        responsibilities: job.responsibilities,
-        requirements: job.requirements,
-        changedById: userId,
-        changeSummary: `Initial ${input.status.toLowerCase()} creation`,
-      },
-    });
+      await db.jobVersionHistory.create({
+        data: {
+          jobId: job.id,
+          version: 1,
+          title: job.title,
+          description: job.description,
+          responsibilities: job.responsibilities,
+          requirements: job.requirements,
+          changedById: userId,
+          changeSummary: `Initial ${input.status.toLowerCase()} creation`,
+        },
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: `JOB_POSTING_CREATED:${job.title}:${job.id}`,
-      },
-    });
+      await db.auditLog.create({
+        data: {
+          userId,
+          action: `JOB_POSTING_CREATED:${job.title}:${job.id}`,
+        },
+      });
 
-    return job;
+      return job;
+    });
   }
 
   /**
    * Update Job Posting (With Version Increment)
    */
   static async updateJob(userId: string, jobId: string, input: Partial<JobPostInput>) {
-    const existing = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: { company: true },
-    });
-
-    if (!existing || existing.deletedAt) {
-      throw new Error("Job posting not found.");
-    }
+    const existing = await this.getAuthorizedJob(userId, jobId);
 
     const nextVersion = existing.version + 1;
 
-    const updatedJob = await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        title: input.title !== undefined ? input.title : existing.title,
-        department: input.department !== undefined ? input.department : existing.department,
-        description: input.description !== undefined ? input.description : existing.description,
-        responsibilities: input.responsibilities !== undefined ? input.responsibilities : existing.responsibilities,
-        requirements: input.requirements !== undefined ? input.requirements : existing.requirements,
-        location: input.location !== undefined ? input.location : existing.location,
-        salaryMin: input.salaryMin !== undefined ? input.salaryMin : existing.salaryMin,
-        salaryMax: input.salaryMax !== undefined ? input.salaryMax : existing.salaryMax,
-        salary: input.salary !== undefined ? input.salary : existing.salary,
-        type: input.type !== undefined ? input.type : existing.type,
-        workMode: input.workMode !== undefined ? input.workMode : existing.workMode,
-        experience: input.experience !== undefined ? input.experience : existing.experience,
-        education: input.education !== undefined ? input.education : existing.education,
-        skillsRequired: input.skillsRequired !== undefined ? input.skillsRequired : existing.skillsRequired,
-        openingsCount: input.openingsCount !== undefined ? input.openingsCount : existing.openingsCount,
-        noticePeriod: input.noticePeriod !== undefined ? input.noticePeriod : existing.noticePeriod,
-        benefits: input.benefits !== undefined ? input.benefits : existing.benefits,
-        screeningQuestions: input.screeningQuestions !== undefined ? input.screeningQuestions : (existing.screeningQuestions as any),
-        externalApplyUrl: input.externalApplyUrl !== undefined ? input.externalApplyUrl : existing.externalApplyUrl,
-        deadlineAt: input.deadlineAt ? new Date(input.deadlineAt) : existing.deadlineAt,
-        scheduledPublishAt: input.scheduledPublishAt ? new Date(input.scheduledPublishAt) : existing.scheduledPublishAt,
-        status: input.status !== undefined ? input.status : existing.status,
-        version: nextVersion,
-      },
-      include: { company: true },
-    });
+    return prisma.$transaction(async (db) => {
+      const updatedJob = await db.job.update({
+        where: { id: jobId },
+        data: {
+          title: input.title !== undefined ? input.title : existing.title,
+          department: input.department !== undefined ? input.department : existing.department,
+          description: input.description !== undefined ? input.description : existing.description,
+          responsibilities: input.responsibilities !== undefined ? input.responsibilities : existing.responsibilities,
+          requirements: input.requirements !== undefined ? input.requirements : existing.requirements,
+          location: input.location !== undefined ? input.location : existing.location,
+          salaryMin: input.salaryMin !== undefined ? input.salaryMin : existing.salaryMin,
+          salaryMax: input.salaryMax !== undefined ? input.salaryMax : existing.salaryMax,
+          salary: input.salary !== undefined ? input.salary : existing.salary,
+          type: input.type !== undefined ? input.type : existing.type,
+          workMode: input.workMode !== undefined ? input.workMode : existing.workMode,
+          experience: input.experience !== undefined ? input.experience : existing.experience,
+          education: input.education !== undefined ? input.education : existing.education,
+          skillsRequired: input.skillsRequired !== undefined ? input.skillsRequired : existing.skillsRequired,
+          openingsCount: input.openingsCount !== undefined ? input.openingsCount : existing.openingsCount,
+          noticePeriod: input.noticePeriod !== undefined ? input.noticePeriod : existing.noticePeriod,
+          benefits: input.benefits !== undefined ? input.benefits : existing.benefits,
+          screeningQuestions: input.screeningQuestions !== undefined ? input.screeningQuestions : (existing.screeningQuestions as any),
+          externalApplyUrl: input.externalApplyUrl !== undefined ? input.externalApplyUrl : existing.externalApplyUrl,
+          deadlineAt: input.deadlineAt ? new Date(input.deadlineAt) : existing.deadlineAt,
+          scheduledPublishAt: input.scheduledPublishAt ? new Date(input.scheduledPublishAt) : existing.scheduledPublishAt,
+          status: input.status !== undefined ? input.status : existing.status,
+          version: nextVersion,
+        },
+        include: { company: true },
+      });
 
-    // Record Version History
-    await prisma.jobVersionHistory.create({
-      data: {
-        jobId: updatedJob.id,
-        version: nextVersion,
-        title: updatedJob.title,
-        description: updatedJob.description,
-        responsibilities: updatedJob.responsibilities,
-        requirements: updatedJob.requirements,
-        changedById: userId,
-        changeSummary: `Updated to version ${nextVersion}`,
-      },
-    });
+      await db.jobVersionHistory.create({
+        data: {
+          jobId: updatedJob.id,
+          version: nextVersion,
+          title: updatedJob.title,
+          description: updatedJob.description,
+          responsibilities: updatedJob.responsibilities,
+          requirements: updatedJob.requirements,
+          changedById: userId,
+          changeSummary: `Updated to version ${nextVersion}`,
+        },
+      });
 
-    return updatedJob;
+      return updatedJob;
+    });
   }
 
   /**
    * Change Job Status (PUBLISHED, PAUSED, CLOSED, ARCHIVED)
    */
   static async changeJobStatus(userId: string, jobId: string, status: string) {
+    const allowedStatuses = new Set(["DRAFT", "PUBLISHED", "SCHEDULED", "PAUSED", "CLOSED", "ARCHIVED"]);
+    if (!allowedStatuses.has(status)) {
+      throw new Error("Invalid job status.");
+    }
+    await this.getAuthorizedJob(userId, jobId);
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: { status },
@@ -154,12 +183,7 @@ export class JobService {
    * Duplicate Job Posting into a new Draft
    */
   static async duplicateJob(userId: string, jobId: string) {
-    const source = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: { company: true },
-    });
-
-    if (!source) throw new Error("Source job posting not found.");
+    const source = await this.getAuthorizedJob(userId, jobId);
 
     const duplicatedInput: JobPostInput = {
       title: `${source.title} (Copy)`,
@@ -191,6 +215,7 @@ export class JobService {
    * Soft Delete Job
    */
   static async deleteJob(userId: string, jobId: string) {
+    await this.getAuthorizedJob(userId, jobId);
     await prisma.job.update({
       where: { id: jobId },
       data: { deletedAt: new Date() },

@@ -36,7 +36,15 @@ export default function EmployerLoginPage() {
 
       setAlert({ type: "success", message: "Employer login successful! Redirecting to dashboard..." });
       setTimeout(() => {
-        router.push("/employer/dashboard");
+        const requestedUrl = new URLSearchParams(window.location.search).get("returnUrl");
+        const returnUrl =
+          requestedUrl &&
+          (requestedUrl === "/employer" || requestedUrl.startsWith("/employer/")) &&
+          !requestedUrl.startsWith("//")
+            ? requestedUrl
+            : "/employer/dashboard";
+        router.push(returnUrl);
+        router.refresh();
       }, 1200);
     } catch (err: any) {
       setAlert({ type: "error", message: err.message || "Invalid credentials." });

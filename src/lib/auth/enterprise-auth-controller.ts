@@ -11,6 +11,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SessionStore } from "@/lib/auth/session-store";
 import { signJwt } from "@/lib/jwt";
+import { CompanyService } from "@/lib/company/company-service";
 
 export interface SignupInput {
   email: string;
@@ -67,38 +68,60 @@ export class EnterpriseAuthController {
     // 3. Create real user record in PostgreSQL
     let user: any;
     try {
-      user = await prisma.user.create({
-        data: {
-          email: cleanEmail,
-          passwordHash,
-          name,
-          role,
-          isEmailVerified: false,
-          ...(role === "EMPLOYER"
-            ? {
-                employerProfile: {
-                  create: {
-                    companyName: input.companyName || `${name}'s Company`,
-                    businessEmail: cleanEmail,
-                  },
+      if (role === "EMPLOYER") {
+        user = await prisma.$transaction(async (db) => {
+          const createdUser = await db.user.create({
+            data: {
+              email: cleanEmail,
+              passwordHash,
+              name,
+              role,
+              isEmailVerified: false,
+              employerProfile: {
+                create: {
+                  companyName: input.companyName || `${name}'s Company`,
+                  businessEmail: cleanEmail,
                 },
-              }
-            : {
-                profile: {
-                  create: {
-                    location: input.location || "Remote",
-                  },
-                },
-              }),
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          isEmailVerified: true,
-        },
-      });
+              },
+            },
+          });
+
+          await CompanyService.provisionEmployerCompany(db, createdUser.id);
+
+          return db.user.findUniqueOrThrow({
+            where: { id: createdUser.id },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isEmailVerified: true,
+            },
+          });
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            email: cleanEmail,
+            passwordHash,
+            name,
+            role,
+            isEmailVerified: false,
+            profile: {
+              create: {
+                location: input.location || "Remote",
+              },
+            },
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isEmailVerified: true,
+          },
+        });
+      }
     } catch (err: any) {
       console.error("Prisma user creation error:", err);
       const createErr: any = new Error("Failed to create user account. Please check database connectivity.");

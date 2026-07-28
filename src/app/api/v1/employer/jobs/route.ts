@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { JobService } from "@/lib/jobs/job-service";
 import { getAuthUserId } from "@/lib/auth/get-auth-user";
+import { JobPostSchema } from "@/lib/jobs/job-validation-schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +37,23 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const isDraft = body.action === "save_draft" || body.status === "DRAFT";
-
-    const job = await JobService.createJob(userId, {
+    const validation = JobPostSchema.safeParse({
       ...body,
       status: isDraft ? "DRAFT" : "PUBLISHED",
     });
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid job posting details.",
+          details: validation.error.issues.map((issue) => issue.message),
+        },
+        { status: 400 }
+      );
+    }
+
+    const job = await JobService.createJob(userId, validation.data);
 
     return NextResponse.json({
       success: true,
