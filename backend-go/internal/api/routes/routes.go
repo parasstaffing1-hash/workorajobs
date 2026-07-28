@@ -86,6 +86,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	sitemapService := service.NewSitemapService(db, cfg.AppURL)
 	pseoService := service.NewPseoService(db, seoService, cfg.AppURL)
 	linkingService := service.NewInternalLinkingService(db, cfg.AppURL)
+	aiMetadataService := service.NewAiMetadataService(db, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -95,6 +96,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	sitemapCtrl := controllers.NewSitemapController(sitemapService)
 	pseoCtrl := controllers.NewPseoController(pseoService)
 	linkingCtrl := controllers.NewInternalLinkingController(linkingService)
+	aiMetadataCtrl := controllers.NewAiMetadataController(aiMetadataService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -109,6 +111,15 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// AI Metadata Engine Endpoints
+	aiMetadataGroup := r.Group("/api/v1/ai-metadata")
+	{
+		aiMetadataGroup.POST("/generate", aiMetadataCtrl.GenerateMetadata)
+		aiMetadataGroup.POST("/bulk-generate", aiMetadataCtrl.BulkGenerate)
+		aiMetadataGroup.GET("/versions", aiMetadataCtrl.GetVersions)
+		aiMetadataGroup.POST("/rollback", aiMetadataCtrl.RollbackVersion)
 	}
 
 	// Programmatic SEO Engine Endpoints
