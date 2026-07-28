@@ -82,13 +82,46 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	walkinCtrl := controllers.NewWalkinController(walkinService)
 	startupCtrl := controllers.NewStartupController(startupService)
 	wfhCtrl := controllers.NewWFHController(wfhService)
+	seoService := service.NewSeoServiceWithBaseURL(db, cfg.AppURL)
+	sitemapService := service.NewSitemapService(db, cfg.AppURL)
+
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
 	recommendationCtrl := controllers.NewRecommendationController(recommendationService)
 	universalSearchCtrl := controllers.NewUniversalSearchController(universalSearchService)
+	seoCtrl := controllers.NewSeoController(seoService, jobService)
+	sitemapCtrl := controllers.NewSitemapController(sitemapService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
+	}
+
+	// Technical SEO Engine Endpoints
+	seoGroup := r.Group("/api/v1/seo")
+	{
+		seoGroup.GET("/metadata", seoCtrl.GetMetadata)
+		seoGroup.GET("/schema/job/:id", seoCtrl.GetJobPostingSchema)
+		seoGroup.GET("/schema/organization", seoCtrl.GetOrganizationSchema)
+		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
+		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
+		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// XML Sitemap Engine Endpoints
+	sitemapGroup := r.Group("/api/v1/sitemaps")
+	{
+		sitemapGroup.GET("/index.xml", sitemapCtrl.GetIndex)
+		sitemapGroup.GET("/jobs.xml", sitemapCtrl.GetJobs)
+		sitemapGroup.GET("/companies.xml", sitemapCtrl.GetCompanies)
+		sitemapGroup.GET("/skills.xml", sitemapCtrl.GetSkills)
+		sitemapGroup.GET("/cities.xml", sitemapCtrl.GetCities)
+		sitemapGroup.GET("/states.xml", sitemapCtrl.GetStates)
+		sitemapGroup.GET("/salaries.xml", sitemapCtrl.GetSalaries)
+		sitemapGroup.GET("/careers.xml", sitemapCtrl.GetCareers)
+		sitemapGroup.GET("/industries.xml", sitemapCtrl.GetIndustries)
+		sitemapGroup.GET("/faq.xml", sitemapCtrl.GetFaq)
+		sitemapGroup.GET("/blog.xml", sitemapCtrl.GetBlog)
+		sitemapGroup.GET("/static.xml", sitemapCtrl.GetStatic)
 	}
 
 	// Health Endpoints

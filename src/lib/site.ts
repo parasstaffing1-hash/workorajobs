@@ -110,6 +110,12 @@ export function createMetadata({
     },
     alternates: {
       canonical: url,
+      languages: {
+        "en-US": url,
+        "en-IN": url,
+        "en-GB": url,
+        "x-default": url,
+      },
     },
     verification: {
       google: "ZoizFnzetExF1JnQGv6uSexXzOlDCVJBZTx7SA9JwUM",
