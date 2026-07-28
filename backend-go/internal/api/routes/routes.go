@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/workorajobs/backend-go/internal/api/controllers"
@@ -46,7 +48,18 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	recommendationService := service.NewRecommendationService(db)
 	universalSearchService := service.NewUniversalSearchService(db)
 
-	s3Service, _ := storage.NewS3Service(cfg, log)
+	var s3Service *storage.S3Service
+	if cfg.EnableS3Uploads || cfg.S3Bucket != "" {
+		var err error
+		s3Service, err = storage.NewS3Service(cfg, log, db)
+		if err != nil {
+			if cfg.Environment == "production" && cfg.EnableS3Uploads {
+				log.Fatal("Failed to initialize S3 storage service in production", zap.Error(err))
+			} else {
+				log.Warn("S3 storage service disabled: invalid configuration", zap.Error(err))
+			}
+		}
+	}
 
 	// Controllers
 	healthCtrl := controllers.NewHealthController(db)
@@ -91,8 +104,11 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		salaryGroup.GET("/chart", salaryCtrl.GetChartData)
 	}
 
-	// AI Recommendation Endpoints
-	recoGroup := r.Group("/api/v1/recommendations")
+	// AI Recommendation Endpoints (Protected & Rate Limited)
+	recoGroup := r.Group("/api/v1/recommendations",
+		middleware.AuthMiddleware(cfg.JWTAccessSecret),
+		middleware.RateLimitMiddleware(30, time.Minute),
+	)
 	{
 		recoGroup.POST("/jobs", recommendationCtrl.GetHybridRecommendations)
 		recoGroup.POST("/salary-predict", recommendationCtrl.PredictSalary)

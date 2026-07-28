@@ -36,13 +36,13 @@ type Job struct {
 	Responsibilities   *string        `gorm:"type:text" json:"responsibilities"`
 	Requirements       *string        `gorm:"type:text" json:"requirements"`
 	Department         *string        `json:"department"`
-	Location           *string        `json:"location"`
+	Location           *string        `gorm:"index;type:varchar(255)" json:"location"`
 	Salary             *int           `json:"salary"`
 	SalaryMin          *int           `json:"salaryMin"`
 	SalaryMax          *int           `json:"salaryMax"`
 	Currency           *string        `gorm:"default:'USD'" json:"currency"`
-	Type               JobType        `gorm:"type:varchar(50);default:'FULL_TIME'" json:"type"`
-	WorkMode           *string        `gorm:"default:'Remote'" json:"workMode"`
+	Type               JobType        `gorm:"type:varchar(50);default:'FULL_TIME';index" json:"type"`
+	WorkMode           *string        `gorm:"type:varchar(50);default:'Remote';index" json:"workMode"`
 	Experience         *string        `gorm:"default:'Mid Level'" json:"experience"`
 	Education          *string        `json:"education"`
 	SkillsRequired     []string       `gorm:"type:text[]" json:"skillsRequired"`

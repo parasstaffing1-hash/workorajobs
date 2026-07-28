@@ -215,9 +215,11 @@ func (s *RecommendationService) PredictSalary(ctx context.Context, input *models
 	predicted := baseSalary*expMultiplier + skillPremium
 
 	return &models.SalaryPredictionOutputDTO{
-		PredictedMin: math.Round(predicted * 0.85),
-		PredictedMax: math.Round(predicted * 1.15),
-		PredictedMid: math.Round(predicted),
-		Confidence:   0.78,
+		PredictedMin:        math.Round(predicted * 0.85),
+		PredictedMax:        math.Round(predicted * 1.15),
+		PredictedMid:        math.Round(predicted),
+		Confidence:          0.78,
+		IsHeuristicEstimate: true,
+		CalculationMethod:   "rule_based_heuristic_v1_beta",
 	}, nil
 }

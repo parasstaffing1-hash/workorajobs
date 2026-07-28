@@ -36,10 +36,12 @@ type SalaryPredictionInputDTO struct {
 }
 
 type SalaryPredictionOutputDTO struct {
-	PredictedMin  float64 `json:"predictedMin"`
-	PredictedMax  float64 `json:"predictedMax"`
-	PredictedMid  float64 `json:"predictedMid"`
-	Confidence    float64 `json:"confidence"` // 0.0 - 1.0
+	PredictedMin        float64 `json:"predictedMin"`
+	PredictedMax        float64 `json:"predictedMax"`
+	PredictedMid        float64 `json:"predictedMid"`
+	Confidence          float64 `json:"confidence"` // 0.0 - 1.0
+	IsHeuristicEstimate bool    `json:"isHeuristicEstimate"`
+	CalculationMethod   string  `json:"calculationMethod"` // e.g. "rule_based_heuristic_v1_beta"
 }
 
 type ResumeMatchInputDTO struct {

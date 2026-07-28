@@ -86,36 +86,56 @@ func TestGenerateObjectKey(t *testing.T) {
 }
 
 func TestValidateOwnership(t *testing.T) {
+	svc := &S3Service{}
 	userID := "user_123"
 
 	userResumeKey := "resumes/user_123/uuid-resume.pdf"
 	otherResumeKey := "resumes/user_456/uuid-resume.pdf"
 
 	// Owner allowed
-	if !ValidateOwnership(userResumeKey, userID, "CANDIDATE") {
+	if !svc.ValidateOwnership(userResumeKey, userID, "CANDIDATE") {
 		t.Error("Expected candidate to own their resume key")
 	}
 
 	// Non-owner candidate rejected
-	if ValidateOwnership(otherResumeKey, userID, "CANDIDATE") {
+	if svc.ValidateOwnership(otherResumeKey, userID, "CANDIDATE") {
 		t.Error("Expected candidate to be rejected for another user's key")
 	}
 
 	// Admin allowed for any key
-	if !ValidateOwnership(otherResumeKey, userID, "ADMIN") {
+	if !svc.ValidateOwnership(otherResumeKey, userID, "ADMIN") {
 		t.Error("Expected admin to be allowed for any key")
 	}
 
 	// Employer allowed for company logo
 	logoKey := "company-logos/comp_999/uuid-logo.png"
-	if !ValidateOwnership(logoKey, userID, "EMPLOYER") {
+	if !svc.ValidateOwnership(logoKey, userID, "EMPLOYER") {
 		t.Error("Expected employer to be allowed for company logo")
 	}
 
 	// Candidate rejected for other user's profile image
 	otherProfileKey := "profile-images/user_456/uuid-pic.jpg"
-	if ValidateOwnership(otherProfileKey, userID, "CANDIDATE") {
+	if svc.ValidateOwnership(otherProfileKey, userID, "CANDIDATE") {
 		t.Error("Expected candidate to be rejected for other user's profile image")
+	}
+}
+
+func TestCompanyLogoAuthorization(t *testing.T) {
+	svc := &S3Service{}
+
+	// Admin can upload any company logo
+	if !svc.ValidateCompanyManagement("comp_100", "user_admin", "ADMIN") {
+		t.Error("Expected ADMIN role to be allowed for company logo management")
+	}
+
+	// Employer allowed
+	if !svc.ValidateCompanyManagement("comp_100", "user_emp", "EMPLOYER") {
+		t.Error("Expected EMPLOYER role to be allowed for company logo management")
+	}
+
+	// Candidate rejected
+	if svc.ValidateCompanyManagement("comp_100", "user_cand", "CANDIDATE") {
+		t.Error("Expected CANDIDATE role to be rejected for company logo management")
 	}
 }
 

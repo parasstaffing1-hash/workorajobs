@@ -16,14 +16,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 	"github.com/workorajobs/backend-go/internal/config"
+	"github.com/workorajobs/backend-go/internal/domain/models"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var (
-	ErrInvalidPurpose     = errors.New("invalid upload purpose; must be resume, company_logo, or profile_image")
-	ErrInvalidMimeType    = errors.New("unsupported content type for given purpose")
-	ErrFileTooLarge       = errors.New("file size exceeds maximum allowed threshold")
-	ErrUnauthorizedAccess = errors.New("unauthorized: user does not own this storage object")
+	ErrInvalidPurpose      = errors.New("invalid upload purpose; must be resume, company_logo, or profile_image")
+	ErrInvalidMimeType     = errors.New("unsupported content type for given purpose")
+	ErrFileTooLarge        = errors.New("file size exceeds maximum allowed threshold")
+	ErrUnauthorizedAccess  = errors.New("unauthorized: user does not own or manage this storage object")
+	ErrTargetIDRequired    = errors.New("targetId is required for company_logo upload")
 )
 
 const (
@@ -44,6 +47,7 @@ type S3Service struct {
 	kmsKeyID      string
 	ttlSeconds    int
 	logger        *zap.Logger
+	db            *gorm.DB
 }
 
 type PresignUploadRequest struct {
@@ -66,7 +70,7 @@ type DeleteObjectRequest struct {
 	Key string `json:"key" binding:"required"`
 }
 
-func NewS3Service(cfg *config.Config, logger *zap.Logger) (*S3Service, error) {
+func NewS3Service(cfg *config.Config, logger *zap.Logger, db *gorm.DB) (*S3Service, error) {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -114,6 +118,7 @@ func NewS3Service(cfg *config.Config, logger *zap.Logger) (*S3Service, error) {
 		kmsKeyID:      cfg.AWSS3KMSKeyID,
 		ttlSeconds:    ttl,
 		logger:        logger,
+		db:            db,
 	}, nil
 }
 
@@ -201,8 +206,34 @@ func GenerateObjectKey(purpose, entityID, fileName string) (string, error) {
 	}
 }
 
+// ValidateCompanyManagement checks if a user is allowed to manage a company's logo
+func (s *S3Service) ValidateCompanyManagement(companyID, userID, role string) bool {
+	if role == "ADMIN" {
+		return true
+	}
+
+	if role != "EMPLOYER" && role != "RECRUITER" {
+		return false
+	}
+
+	// If DB is available, perform DB-backed check
+	if s.db != nil {
+		var count int64
+		err := s.db.Model(&models.Company{}).
+			Where("id = ? AND owner_id = ?", companyID, userID).
+			Count(&count).Error
+		if err == nil && count > 0 {
+			return true
+		}
+		return false
+	}
+
+	// Default true for employer in standalone/mock mode without DB
+	return true
+}
+
 // ValidateOwnership verifies the key prefix belongs to the active user/entity
-func ValidateOwnership(key, userID, role string) bool {
+func (s *S3Service) ValidateOwnership(key, userID, role string) bool {
 	if role == "ADMIN" {
 		return true
 	}
@@ -224,23 +255,35 @@ func ValidateOwnership(key, userID, role string) bool {
 	}
 
 	if strings.HasPrefix(cleanKey, "company-logos/") {
-		// Admin/employer role allowed or matching entity prefix
-		if role == "EMPLOYER" || role == "ADMIN" {
-			return true
+		parts := strings.Split(cleanKey, "/")
+		if len(parts) >= 2 {
+			companyID := parts[1]
+			return s.ValidateCompanyManagement(companyID, userID, role)
 		}
 	}
 
 	return false
 }
 
-// GeneratePresignedUpload creates a presigned PUT URL
+// GeneratePresignedUpload creates a presigned PUT URL with strict authorization
 func (s *S3Service) GeneratePresignedUpload(ctx context.Context, req *PresignUploadRequest, userID, role string) (*PresignUploadResponse, error) {
 	if err := ValidateMimeAndSize(req.Purpose, req.ContentType, req.SizeBytes); err != nil {
 		return nil, err
 	}
 
 	entityID := userID
-	if req.Purpose == PurposeCompanyLogo && req.TargetID != "" {
+	if req.Purpose == PurposeCompanyLogo {
+		if strings.TrimSpace(req.TargetID) == "" {
+			return nil, ErrTargetIDRequired
+		}
+		if !s.ValidateCompanyManagement(req.TargetID, userID, role) {
+			s.logger.Warn("unauthorized company logo upload attempt",
+				zap.String("companyId", req.TargetID),
+				zap.String("userId", userID),
+				zap.String("role", role),
+			)
+			return nil, ErrUnauthorizedAccess
+		}
 		entityID = req.TargetID
 	}
 
@@ -294,7 +337,7 @@ func (s *S3Service) GeneratePresignedUpload(ctx context.Context, req *PresignUpl
 
 // GeneratePresignedDownload creates a presigned GET URL after validating ownership
 func (s *S3Service) GeneratePresignedDownload(ctx context.Context, key, userID, role string) (string, error) {
-	if !ValidateOwnership(key, userID, role) {
+	if !s.ValidateOwnership(key, userID, role) {
 		s.logger.Warn("unauthorized download attempt", zap.String("key", key), zap.String("userId", userID))
 		return "", ErrUnauthorizedAccess
 	}
@@ -321,7 +364,7 @@ func (s *S3Service) GeneratePresignedDownload(ctx context.Context, key, userID, 
 
 // DeleteObject removes an object from S3 after validating ownership
 func (s *S3Service) DeleteObject(ctx context.Context, key, userID, role string) error {
-	if !ValidateOwnership(key, userID, role) {
+	if !s.ValidateOwnership(key, userID, role) {
 		s.logger.Warn("unauthorized delete attempt", zap.String("key", key), zap.String("userId", userID))
 		return ErrUnauthorizedAccess
 	}

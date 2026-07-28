@@ -49,6 +49,7 @@ type Config struct {
 	AWSS3ForcePathStyle    bool   `mapstructure:"AWS_S3_FORCE_PATH_STYLE"`
 	AWSS3KMSKeyID          string `mapstructure:"AWS_S3_KMS_KEY_ID"`
 	AWSS3PresignTTLSeconds int    `mapstructure:"AWS_S3_PRESIGN_TTL_SECONDS"`
+	EnableS3Uploads        bool   `mapstructure:"ENABLE_S3_UPLOADS"`
 
 	// Operations
 	MetricsBearerToken string `mapstructure:"METRICS_BEARER_TOKEN"`
@@ -85,6 +86,7 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("JWT_REFRESH_EXPIRES_IN", "30d")
 	viper.SetDefault("ENABLE_AUTO_MIGRATE", false)
 	viper.SetDefault("AWS_S3_PRESIGN_TTL_SECONDS", 900)
+	viper.SetDefault("ENABLE_S3_UPLOADS", false)
 
 	viper.AutomaticEnv()
 
