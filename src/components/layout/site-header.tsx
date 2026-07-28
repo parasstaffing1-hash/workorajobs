@@ -201,7 +201,7 @@ export function SiteHeader() {
             <ThemeToggle />
 
             <Link
-              href="/search"
+              href="/jobs"
               className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Search jobs or candidates"
             >
