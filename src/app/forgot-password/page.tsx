@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { FormInput } from "@/components/auth/FormInput";
 import { AuthAlert } from "@/components/auth/AuthAlert";
@@ -12,13 +11,11 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [resetToken, setResetToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAlert(null);
     setError("");
-    setResetToken(null);
 
     const validation = ForgotPasswordSchema.safeParse({ email });
     if (!validation.success) {
@@ -44,10 +41,6 @@ export default function ForgotPasswordPage() {
         type: "success",
         message: data.message || "If an account exists with that email, a password reset link has been generated.",
       });
-
-      if (data.resetToken) {
-        setResetToken(data.resetToken);
-      }
     } catch (err: any) {
       setAlert({
         type: "error",
@@ -68,24 +61,6 @@ export default function ForgotPasswordPage() {
         footerLinkHref="/login"
       >
         {alert && <AuthAlert type={alert.type} message={alert.message} />}
-
-        {resetToken && (
-          <div className="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-2">
-            <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
-              Password Reset Link Simulated
-            </p>
-            <p className="text-xs text-blue-800">
-              You can complete password reset immediately by clicking below:
-            </p>
-            <Link
-              href={`/reset-password?token=${resetToken}`}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 transition-colors"
-            >
-              Reset Password Now &rarr;
-            </Link>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormInput
             label="Email Address"
