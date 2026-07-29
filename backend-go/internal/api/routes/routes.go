@@ -88,6 +88,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	linkingService := service.NewInternalLinkingService(db, cfg.AppURL)
 	aiMetadataService := service.NewAiMetadataService(db, cfg.AppURL)
 	seoContentService := service.NewSeoContentService(db, seoService, linkingService, cfg.AppURL)
+	indexingService := service.NewSearchIndexingService(db, sitemapService, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -99,6 +100,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	linkingCtrl := controllers.NewInternalLinkingController(linkingService)
 	aiMetadataCtrl := controllers.NewAiMetadataController(aiMetadataService)
 	seoContentCtrl := controllers.NewSeoContentController(seoContentService)
+	indexingCtrl := controllers.NewSearchIndexingController(indexingService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -113,6 +115,15 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// Search Engine Indexing System Endpoints
+	indexingGroup := r.Group("/api/v1/indexing")
+	{
+		indexingGroup.GET("/dashboard", indexingCtrl.GetDashboard)
+		indexingGroup.POST("/trigger", indexingCtrl.TriggerJob)
+		indexingGroup.POST("/retry", indexingCtrl.RetryFailed)
+		indexingGroup.GET("/queue", indexingCtrl.GetQueue)
 	}
 
 	// SEO Content Engine Endpoints
