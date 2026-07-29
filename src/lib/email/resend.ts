@@ -158,7 +158,7 @@ export class ResendEmailService {
    */
   static async sendPasswordResetEmail(to: string, token: string): Promise<boolean> {
     const appUrl = this.getAppUrl();
-    const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(to)}`;
+    const resetUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(to)}`;
 
     const html = `
 <!DOCTYPE html>

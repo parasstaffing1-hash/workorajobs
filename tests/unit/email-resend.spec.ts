@@ -105,7 +105,7 @@ describe("Resend Email Service Unit Tests", () => {
       expect.objectContaining({
         to: email,
         subject: "Reset your password - Workora Jobs",
-        html: expect.stringContaining("https://workorajobs.com/reset-password?token=reset7890&email=user%40example.com"),
+        html: expect.stringContaining("https://workorajobs.com/auth/reset-password?token=reset7890&email=user%40example.com"),
       })
     );
 

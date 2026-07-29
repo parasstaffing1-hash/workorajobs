@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { SessionStore } from "@/lib/auth/session-store";
 import { EmployerSignupInput, EmployerLoginInput } from "@/lib/auth/employer-validation-schemas";
 import { CompanyService } from "@/lib/company/company-service";
+import { ResendEmailService } from "@/lib/email/resend";
 
 const SALT_ROUNDS = 12;
 
@@ -74,6 +75,11 @@ export class EmployerAuthService {
         ipAddress: ipAddress || null,
         userAgent: userAgent || null,
       },
+    });
+
+    // Send verification email via Resend
+    await ResendEmailService.sendVerificationEmail(user.email, verificationToken).catch((err) => {
+      console.error("[Employer Signup Verification Email Failure]", err.message || err);
     });
 
     return {
