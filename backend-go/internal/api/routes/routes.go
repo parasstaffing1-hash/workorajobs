@@ -87,6 +87,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	pseoService := service.NewPseoService(db, seoService, cfg.AppURL)
 	linkingService := service.NewInternalLinkingService(db, cfg.AppURL)
 	aiMetadataService := service.NewAiMetadataService(db, cfg.AppURL)
+	seoContentService := service.NewSeoContentService(db, seoService, linkingService, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -97,6 +98,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	pseoCtrl := controllers.NewPseoController(pseoService)
 	linkingCtrl := controllers.NewInternalLinkingController(linkingService)
 	aiMetadataCtrl := controllers.NewAiMetadataController(aiMetadataService)
+	seoContentCtrl := controllers.NewSeoContentController(seoContentService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -111,6 +113,13 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// SEO Content Engine Endpoints
+	seoContentGroup := r.Group("/api/v1/seo-content")
+	{
+		seoContentGroup.GET("/guide", seoContentCtrl.GetGuide)
+		seoContentGroup.POST("/refresh", seoContentCtrl.RefreshGuide)
 	}
 
 	// AI Metadata Engine Endpoints
