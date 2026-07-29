@@ -1,0 +1,54 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth/get-auth-user";
+import { capturePayPalOrder } from "@/lib/payments/paypal";
+
+export const runtime = "nodejs";
+
+/**
+ * POST /api/v1/payments/paypal/capture-order
+ * Captures an approved PayPal order.
+ * Requires authenticated user.
+ */
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  try {
+    const userId = await getAuthUserId(request, "ANY");
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Authentication required to capture payment." },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { orderId } = body;
+
+    if (!orderId || typeof orderId !== "string" || orderId.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Missing required field 'orderId'." },
+        { status: 400 }
+      );
+    }
+
+    const result = await capturePayPalOrder({ orderId });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.message || "Payment capture failed." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "PayPal payment captured successfully.",
+      data: result,
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[API PayPal Capture Order Error]:", err.message);
+    return NextResponse.json(
+      { success: false, error: err.message || "Failed to capture PayPal order." },
+      { status: 500 }
+    );
+  }
+}
