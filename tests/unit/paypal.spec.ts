@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * UNIT TEST SUITE: PayPal Payment Gateway Service
- * Tests PayPal Access Token, Order Creation, Capture & Validation
+ * Tests PayPal Access Token, Order Creation, Capture, Validation, Mode Checks & Webhook Verification
  * ============================================================================
  */
 
@@ -9,9 +9,10 @@ import {
   createPayPalOrder,
   capturePayPalOrder,
   getPayPalAccessToken,
+  verifyPayPalWebhookSignature,
+  getPayPalApiBase,
 } from "@/lib/payments/paypal";
 
-// Mock global fetch for PayPal REST API calls
 const originalFetch = global.fetch;
 
 describe("PayPal Payment Service Unit Tests", () => {
@@ -19,7 +20,9 @@ describe("PayPal Payment Service Unit Tests", () => {
     process.env.PAYPAL_MODE = "sandbox";
     process.env.PAYPAL_CLIENT_ID = "test_paypal_client_id_12345";
     process.env.PAYPAL_CLIENT_SECRET = "test_paypal_client_secret_67890";
+    process.env.PAYPAL_WEBHOOK_ID = "test_webhook_id_99999";
     process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+    delete process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     jest.clearAllMocks();
   });
 
@@ -29,13 +32,34 @@ describe("PayPal Payment Service Unit Tests", () => {
 
   it("throws error if PayPal client credentials are missing", async () => {
     delete process.env.PAYPAL_CLIENT_ID;
-    delete process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     delete process.env.PAYPAL_CLIENT_SECRET;
 
     await expect(getPayPalAccessToken()).rejects.toThrow("[PayPal Config Error]");
   });
 
-  it("successfully retrieves OAuth2 access token from PayPal REST API", async () => {
+  it("does NOT fall back to NEXT_PUBLIC_PAYPAL_CLIENT_ID for server authorization", async () => {
+    delete process.env.PAYPAL_CLIENT_ID;
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID = "public_client_id_attempt";
+
+    await expect(getPayPalAccessToken()).rejects.toThrow("[PayPal Config Error]");
+  });
+
+  it("throws error if PAYPAL_MODE is invalid", () => {
+    process.env.PAYPAL_MODE = "invalid_mode_string";
+    expect(() => getPayPalApiBase()).toThrow("[PayPal Config Error]");
+  });
+
+  it("returns sandbox endpoint when PAYPAL_MODE=sandbox", () => {
+    process.env.PAYPAL_MODE = "sandbox";
+    expect(getPayPalApiBase()).toBe("https://api-m.sandbox.paypal.com");
+  });
+
+  it("returns live endpoint when PAYPAL_MODE=live", () => {
+    process.env.PAYPAL_MODE = "live";
+    expect(getPayPalApiBase()).toBe("https://api-m.paypal.com");
+  });
+
+  it("retrieves OAuth2 access token from PayPal REST API", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({
@@ -50,15 +74,12 @@ describe("PayPal Payment Service Unit Tests", () => {
   });
 
   it("creates a PayPal order with valid amount and currency", async () => {
-
     global.fetch = jest
       .fn()
-      // First call for OAuth token
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({ access_token: "token_123" }),
       } as unknown as Response)
-      // Second call for Order creation
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({
@@ -95,12 +116,10 @@ describe("PayPal Payment Service Unit Tests", () => {
   it("captures an approved PayPal order successfully", async () => {
     global.fetch = jest
       .fn()
-      // First call for OAuth token
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({ access_token: "token_123" }),
       } as unknown as Response)
-      // Second call for Order capture
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({
@@ -124,5 +143,55 @@ describe("PayPal Payment Service Unit Tests", () => {
     expect(result.captureId).toBe("CAPTURE_555");
     expect(result.status).toBe("COMPLETED");
     expect(result.payerEmail).toBe("buyer@example.com");
+  });
+
+  it("verifies valid PayPal webhook signature", async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ access_token: "token_123" }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ verification_status: "SUCCESS" }),
+      } as unknown as Response);
+
+    const isValid = await verifyPayPalWebhookSignature({
+      authAlgo: "SHA256withRSA",
+      certUrl: "https://api-m.sandbox.paypal.com/v1/notifications/certs/CERT-123",
+      transmissionId: "trans_123",
+      transmissionSig: "sig_abc_123",
+      transmissionTime: "2026-07-29T12:00:00Z",
+      webhookId: "test_webhook_id_99999",
+      webhookEvent: { event_type: "PAYMENT.CAPTURE.COMPLETED" },
+    });
+
+    expect(isValid).toBe(true);
+  });
+
+  it("rejects invalid PayPal webhook signature", async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ access_token: "token_123" }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ verification_status: "FAILURE" }),
+      } as unknown as Response);
+
+    const isValid = await verifyPayPalWebhookSignature({
+      authAlgo: "SHA256withRSA",
+      certUrl: "https://api-m.sandbox.paypal.com/v1/notifications/certs/CERT-123",
+      transmissionId: "trans_invalid",
+      transmissionSig: "sig_invalid",
+      transmissionTime: "2026-07-29T12:00:00Z",
+      webhookId: "test_webhook_id_99999",
+      webhookEvent: { event_type: "PAYMENT.CAPTURE.COMPLETED" },
+    });
+
+    expect(isValid).toBe(false);
   });
 });

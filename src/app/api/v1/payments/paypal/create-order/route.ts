@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/v1/payments/paypal/create-order
  * Creates a PayPal Order for checkout.
- * Requires authenticated user.
+ * Requires authenticated user. Returns sanitized client errors.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -29,6 +29,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    const allowedCurrencies = ["USD", "EUR", "GBP", "CAD", "AUD", "INR"];
+    if (typeof currency !== "string" || !allowedCurrencies.includes(currency.toUpperCase())) {
+      return NextResponse.json(
+        { success: false, error: `Invalid currency. Allowed currencies: ${allowedCurrencies.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const order = await createPayPalOrder({
       amount,
       currency,
@@ -43,10 +51,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[API PayPal Create Order Error]:", err.message);
-    const status = err.message.includes("Config") ? 503 : 400;
+    console.error("[API PayPal Create Order Internal Error]:", err.message);
+    
+    // Return sanitized client response
+    const status = err.message.includes("Config") || err.message.includes("OAuth") ? 503 : 400;
+    const clientError = err.message.includes("Validation")
+      ? err.message.replace(/^\[PayPal Validation Error\]\s*/, "")
+      : "Unable to process payment order at this time. Please try again later.";
+
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to create PayPal order." },
+      { success: false, error: clientError },
       { status }
     );
   }

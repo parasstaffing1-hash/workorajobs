@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/v1/payments/paypal/capture-order
  * Captures an approved PayPal order.
- * Requires authenticated user.
+ * Requires authenticated user. Returns sanitized client errors.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, error: result.message || "Payment capture failed." },
+        { success: false, error: "Payment capture was not successful." },
         { status: 400 }
       );
     }
@@ -41,13 +41,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       message: "PayPal payment captured successfully.",
-      data: result,
+      data: {
+        orderId: result.orderId,
+        captureId: result.captureId,
+        status: result.status,
+      },
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[API PayPal Capture Order Error]:", err.message);
+    console.error("[API PayPal Capture Order Internal Error]:", err.message);
+
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to capture PayPal order." },
+      { success: false, error: "Unable to process payment capture at this time. Please try again later." },
       { status: 500 }
     );
   }

@@ -1,8 +1,9 @@
 /**
  * PayPal Payment Gateway Service Engine for WorkoraJobs
  *
- * Implements PayPal REST API v2 Order Creation, Order Capture, and Access Token Management
- * Without hardcoded credentials (reads from process.env strictly).
+ * Implements PayPal REST API v2 Order Creation, Order Capture, Access Token Management,
+ * and Webhook Signature Verification.
+ * Reads strictly from process.env without client fallback.
  */
 
 export interface CreatePayPalOrderParams {
@@ -11,6 +12,7 @@ export interface CreatePayPalOrderParams {
   description?: string;
   returnUrl?: string;
   cancelUrl?: string;
+  requestId?: string; // Optional idempotency key
 }
 
 export interface PayPalOrderResponse {
@@ -23,6 +25,7 @@ export interface PayPalOrderResponse {
 
 export interface CapturePayPalOrderParams {
   orderId: string;
+  requestId?: string; // Optional idempotency key
 }
 
 export interface PayPalCaptureResponse {
@@ -34,15 +37,28 @@ export interface PayPalCaptureResponse {
   message?: string;
 }
 
-function getPayPalApiBase(): string {
-  const mode = process.env.PAYPAL_MODE || "sandbox";
+export interface VerifyPayPalWebhookParams {
+  authAlgo: string;
+  certUrl: string;
+  transmissionId: string;
+  transmissionSig: string;
+  transmissionTime: string;
+  webhookId: string;
+  webhookEvent: Record<string, unknown>;
+}
+
+export function getPayPalApiBase(): string {
+  const mode = (process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox").toLowerCase();
+  if (mode !== "sandbox" && mode !== "live" && mode !== "production") {
+    throw new Error("[PayPal Config Error] Invalid PAYPAL_MODE. Allowed values are 'sandbox' or 'live'.");
+  }
   return mode === "live" || mode === "production"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
 
-function getPayPalCredentials(): { clientId: string; clientSecret: string } {
-  const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+export function getPayPalCredentials(): { clientId: string; clientSecret: string } {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
@@ -83,7 +99,7 @@ export async function getPayPalAccessToken(): Promise<string> {
  * STEP 1: Backend - Create PayPal Order
  */
 export async function createPayPalOrder(params: CreatePayPalOrderParams): Promise<PayPalOrderResponse> {
-  const { amount, currency = "USD", description = "WorkoraJobs Premium Service", returnUrl, cancelUrl } = params;
+  const { amount, currency = "USD", description = "WorkoraJobs Premium Service", returnUrl, cancelUrl, requestId } = params;
 
   if (typeof amount !== "number" || amount <= 0 || !Number.isFinite(amount)) {
     throw new Error("[PayPal Validation Error] Invalid order amount. Must be a positive number.");
@@ -126,12 +142,18 @@ export async function createPayPalOrder(params: CreatePayPalOrderParams): Promis
     },
   };
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
+  };
+
+  if (requestId) {
+    headers["PayPal-Request-Id"] = requestId;
+  }
+
   const response = await fetch(`${apiBase}/v2/checkout/orders`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
@@ -157,7 +179,7 @@ export async function createPayPalOrder(params: CreatePayPalOrderParams): Promis
  * STEP 2: Backend - Capture PayPal Order
  */
 export async function capturePayPalOrder(params: CapturePayPalOrderParams): Promise<PayPalCaptureResponse> {
-  const { orderId } = params;
+  const { orderId, requestId } = params;
 
   if (!orderId || typeof orderId !== "string" || orderId.trim().length === 0) {
     throw new Error("[PayPal Validation Error] Order ID is required for capture.");
@@ -166,12 +188,18 @@ export async function capturePayPalOrder(params: CapturePayPalOrderParams): Prom
   const accessToken = await getPayPalAccessToken();
   const apiBase = getPayPalApiBase();
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
+  };
+
+  if (requestId) {
+    headers["PayPal-Request-Id"] = requestId;
+  }
+
   const response = await fetch(`${apiBase}/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -197,4 +225,42 @@ export async function capturePayPalOrder(params: CapturePayPalOrderParams): Prom
     payerEmail,
     message: captureData.status === "COMPLETED" ? "Payment completed successfully." : "Payment pending completion.",
   };
+}
+
+/**
+ * Webhook Signature Verification Helper
+ */
+export async function verifyPayPalWebhookSignature(params: VerifyPayPalWebhookParams): Promise<boolean> {
+  const { authAlgo, certUrl, transmissionId, transmissionSig, transmissionTime, webhookId, webhookEvent } = params;
+
+  if (!webhookId) {
+    throw new Error("[PayPal Webhook Error] PAYPAL_WEBHOOK_ID is missing.");
+  }
+
+  const accessToken = await getPayPalAccessToken();
+  const apiBase = getPayPalApiBase();
+
+  const response = await fetch(`${apiBase}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      auth_algo: authAlgo,
+      cert_url: certUrl,
+      transmission_id: transmissionId,
+      transmission_sig: transmissionSig,
+      transmission_time: transmissionTime,
+      webhook_id: webhookId,
+      webhook_event: webhookEvent,
+    }),
+  });
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const data = await response.json();
+  return data.verification_status === "SUCCESS";
 }
