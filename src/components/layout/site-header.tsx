@@ -217,33 +217,45 @@ export function SiteHeader() {
             </Link>
 
             {/* Sign In Trigger */}
-            <button
-              onClick={() => setIsSignInOpen(true)}
+            <Link
+              href="/auth/login"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsSignInOpen(true);
+              }}
               className="px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 transition-colors cursor-pointer"
             >
               Sign In
-            </button>
+            </Link>
 
             {/* Primary CTA: Join Now */}
-            <button
-              onClick={() => handleOpenJoinNow()}
+            <Link
+              href="/auth/signup"
+              onClick={(e) => {
+                e.preventDefault();
+                handleOpenJoinNow();
+              }}
               className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
             >
               <UserPlus className="h-3.5 w-3.5" />
               <span>Join Now</span>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Action Buttons */}
           <div className="flex items-center gap-2 lg:hidden">
             <ThemeToggle />
 
-            <button
-              onClick={() => handleOpenJoinNow()}
-              className="h-8 px-3 rounded-full bg-blue-600 text-white font-bold text-xs shadow-sm"
+            <Link
+              href="/auth/signup"
+              onClick={(e) => {
+                e.preventDefault();
+                handleOpenJoinNow();
+              }}
+              className="h-8 px-3 rounded-full bg-blue-600 text-white font-bold text-xs shadow-sm flex items-center justify-center"
             >
               Join Now
-            </button>
+            </Link>
 
             <Button
               aria-expanded={open}
@@ -335,15 +347,17 @@ export function SiteHeader() {
                   For Employers Landing Page
                 </Link>
 
-                <button
-                  onClick={() => {
+                <Link
+                  href="/auth/login"
+                  onClick={(e) => {
                     setOpen(false);
+                    e.preventDefault();
                     setIsSignInOpen(true);
                   }}
-                  className="w-full text-center py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white"
+                  className="block w-full text-center py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white"
                 >
                   Sign In
-                </button>
+                </Link>
               </div>
             </motion.div>
           )}

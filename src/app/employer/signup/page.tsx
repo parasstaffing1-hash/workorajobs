@@ -1,9 +1,11 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, Mail, Phone, Lock, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
+import { Building2, ArrowRight } from "lucide-react";
 import { FormInput } from "@/components/auth/FormInput";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 import { AuthAlert } from "@/components/auth/AuthAlert";
