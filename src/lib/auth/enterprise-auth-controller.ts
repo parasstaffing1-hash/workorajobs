@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { SessionStore } from "@/lib/auth/session-store";
 import { signJwt } from "@/lib/jwt";
 import { CompanyService } from "@/lib/company/company-service";
+import { ResendEmailService } from "@/lib/email/resend";
 
 export interface SignupInput {
   email: string;
@@ -133,7 +134,7 @@ export class EnterpriseAuthController {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    Promise.all([
+    await Promise.all([
       prisma.passwordReset.create({
         data: {
           email: cleanEmail,
@@ -150,6 +151,11 @@ export class EnterpriseAuthController {
         },
       }),
     ]).catch(() => null);
+
+    // Send verification email via Resend
+    await ResendEmailService.sendVerificationEmail(cleanEmail, verificationToken).catch((err) => {
+      console.error("[Signup Verification Email Failure]", err.message || err);
+    });
 
     // 5. Create Session in DB/Redis
     const session = await SessionStore.createSession({
@@ -307,6 +313,11 @@ export class EnterpriseAuthController {
           tokenHash,
           expiresAt,
         },
+      });
+
+      // Send password reset email via Resend
+      await ResendEmailService.sendPasswordResetEmail(cleanEmail, resetToken).catch((err) => {
+        console.error("[Password Reset Email Failure]", err.message || err);
       });
     } catch (_) {}
 

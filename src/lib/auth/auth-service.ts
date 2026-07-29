@@ -5,6 +5,7 @@ import { signJwt, verifyJwt } from "@/lib/jwt";
 import { SessionStore } from "./session-store";
 import { AuthRateLimiter } from "./rate-limiter";
 import { UserRole } from "./rbac";
+import { ResendEmailService } from "@/lib/email/resend";
 
 export class AuthService {
   /**
@@ -90,6 +91,11 @@ export class AuthService {
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
       },
+    });
+
+    // 6. Send Verification Email via Resend
+    await ResendEmailService.sendVerificationEmail(normEmail, verificationTokenRaw).catch((err) => {
+      console.error("[Signup Verification Email Failure]", err.message || err);
     });
 
     return {
@@ -307,6 +313,11 @@ export class AuthService {
       },
     });
 
+    // Send verification email via Resend
+    await ResendEmailService.sendVerificationEmail(normEmail, verificationTokenRaw).catch((err) => {
+      console.error("[Resend Verification Email Failure]", err.message || err);
+    });
+
     return { success: true, verificationToken: verificationTokenRaw };
   }
 
@@ -343,6 +354,11 @@ export class AuthService {
         action: "PASSWORD_RESET_REQUESTED",
         ipAddress,
       },
+    });
+
+    // Send password reset email via Resend
+    await ResendEmailService.sendPasswordResetEmail(normEmail, resetTokenRaw).catch((err) => {
+      console.error("[Password Reset Email Failure]", err.message || err);
     });
 
     return { success: true, resetToken: resetTokenRaw };

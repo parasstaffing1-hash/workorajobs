@@ -44,6 +44,7 @@
 ## Communication
 
 - `EMAIL_PROVIDER`
+- `RESEND_API_KEY`
 - `EMAIL_FROM`
 - `SMS_PROVIDER`
 - `SMS_API_KEY`
