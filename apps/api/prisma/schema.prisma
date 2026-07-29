@@ -1400,39 +1400,39 @@ model CsvExport {
 }
 
 model SubscriptionPlan {
-  id            String                @id @default(uuid()) @db.Uuid
-  key           String                @unique
-  name          String
-  description   String?
-  interval      BillingInterval
-  priceCents    Int
-  currency      String                @default("USD")
-  stripePriceId String?
-  features      Json?
-  active        Boolean               @default(true)
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  subscriptions BillingSubscription[]
+  id                 String                @id @default(uuid()) @db.Uuid
+  key                String                @unique
+  name               String
+  description        String?
+  interval           BillingInterval
+  priceCents         Int
+  currency           String                @default("USD")
+  externalPriceId    String?
+  features           Json?
+  active             Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  subscriptions      BillingSubscription[]
 
   @@index([active])
   @@map("subscription_plans")
 }
 
 model BillingSubscription {
-  id                   String                    @id @default(uuid()) @db.Uuid
-  companyId            String                    @db.Uuid
-  planId               String                    @db.Uuid
-  status               BillingSubscriptionStatus @default(INCOMPLETE)
-  stripeCustomerId     String?
-  stripeSubscriptionId String?
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  gstNumber            String?
-  createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
-  company              Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  plan                 SubscriptionPlan          @relation(fields: [planId], references: [id], onDelete: Restrict)
-  invoices             Invoice[]
+  id                        String                    @id @default(uuid()) @db.Uuid
+  companyId                 String                    @db.Uuid
+  planId                    String                    @db.Uuid
+  status                    BillingSubscriptionStatus @default(INCOMPLETE)
+  externalCustomerId        String?
+  externalSubscriptionId    String?
+  currentPeriodStart        DateTime?
+  currentPeriodEnd          DateTime?
+  gstNumber                 String?
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
+  company                   Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan                      SubscriptionPlan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  invoices                  Invoice[]
 
   @@index([companyId])
   @@index([planId])
@@ -1441,23 +1441,23 @@ model BillingSubscription {
 }
 
 model Invoice {
-  id              String               @id @default(uuid()) @db.Uuid
-  companyId       String               @db.Uuid
-  subscriptionId  String?              @db.Uuid
-  number          String               @unique
-  status          InvoiceStatus        @default(DRAFT)
-  subtotalCents   Int
-  taxCents        Int                  @default(0)
-  totalCents      Int
-  currency        String               @default("USD")
-  gstNumber       String?
-  stripeInvoiceId String?
-  dueAt           DateTime?
-  paidAt          DateTime?
-  createdAt       DateTime             @default(now())
-  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  subscription    BillingSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  payments        Payment[]
+  id                   String               @id @default(uuid()) @db.Uuid
+  companyId            String               @db.Uuid
+  subscriptionId       String?              @db.Uuid
+  number               String               @unique
+  status               InvoiceStatus        @default(DRAFT)
+  subtotalCents        Int
+  taxCents             Int                  @default(0)
+  totalCents           Int
+  currency             String               @default("USD")
+  gstNumber            String?
+  externalInvoiceId    String?
+  dueAt                DateTime?
+  paidAt               DateTime?
+  createdAt            DateTime             @default(now())
+  company              Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subscription         BillingSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  payments             Payment[]
 
   @@index([companyId])
   @@index([subscriptionId])
@@ -1472,7 +1472,7 @@ model Payment {
   status            PaymentStatus @default(PENDING)
   amountCents       Int
   currency          String        @default("USD")
-  provider          String        @default("stripe")
+  provider          String        @default("razorpay")
   providerPaymentId String?
   receiptUrl        String?
   paidAt            DateTime?
@@ -1487,17 +1487,17 @@ model Payment {
 }
 
 model Coupon {
-  id             String    @id @default(uuid()) @db.Uuid
-  code           String    @unique
-  description    String?
-  percentOff     Int?
-  amountOffCents Int?
-  currency       String?
-  active         Boolean   @default(true)
-  expiresAt      DateTime?
-  stripeCouponId String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                  String    @id @default(uuid()) @db.Uuid
+  code                String    @unique
+  description         String?
+  percentOff          Int?
+  amountOffCents      Int?
+  currency            String?
+  active              Boolean   @default(true)
+  expiresAt           DateTime?
+  externalCouponId    String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([active])
   @@map("coupons")

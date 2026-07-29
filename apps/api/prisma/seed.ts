@@ -1084,7 +1084,7 @@ async function main() {
       interval: BillingInterval.MONTHLY,
       priceCents: 29900,
       currency: "USD",
-      stripePriceId: "price_configure_in_stripe",
+      externalPriceId: "price_configure_external",
       features: {
         jobs: 25,
         recruiters: 5,

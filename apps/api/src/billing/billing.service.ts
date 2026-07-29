@@ -42,7 +42,7 @@ export class BillingService {
         interval: dto.interval,
         priceCents: dto.priceCents,
         currency: dto.currency ?? "USD",
-        stripePriceId: dto.stripePriceId,
+        externalPriceId: dto.externalPriceId,
         features: dto.features as Prisma.InputJsonValue | undefined,
       },
       where: { key: dto.key },

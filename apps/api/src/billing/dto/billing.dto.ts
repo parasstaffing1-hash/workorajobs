@@ -40,7 +40,7 @@ export class SubscriptionPlanDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  stripePriceId?: string;
+  externalPriceId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
