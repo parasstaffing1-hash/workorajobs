@@ -11,32 +11,35 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "accent";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "accent" | "glass" | "destructive";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-b from-primary to-blue-700 text-primary-foreground shadow-premium hover:shadow-[0_22px_54px_-28px_hsl(var(--primary)/0.85)] focus-visible:shadow-focus-ring",
+    "bg-gradient-to-b from-blue-600 to-blue-700 text-white font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
   secondary:
-    "border border-border/70 bg-card/80 text-secondary-foreground shadow-sm backdrop-blur-xl hover:border-primary/30 hover:bg-secondary/80 focus-visible:shadow-focus-ring",
+    "border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold hover:bg-slate-200 dark:hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-400",
   ghost:
-    "bg-transparent text-foreground hover:bg-secondary/80 hover:text-primary focus-visible:shadow-focus-ring",
+    "bg-transparent text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-slate-400",
   outline:
-    "border border-border/70 bg-background/70 text-foreground shadow-sm backdrop-blur-xl hover:border-primary/40 hover:bg-card focus-visible:shadow-focus-ring",
+    "border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-blue-500",
   accent:
-    "bg-gradient-to-b from-accent to-orange-600 text-accent-foreground shadow-[0_18px_52px_-32px_hsl(var(--accent)/0.9)] hover:shadow-[0_22px_62px_-34px_hsl(var(--accent)/0.95)] focus-visible:shadow-focus-ring",
+    "bg-gradient-to-b from-amber-500 to-orange-600 text-white font-bold shadow-md shadow-orange-500/20 hover:from-amber-600 hover:to-orange-700 focus-visible:ring-2 focus-visible:ring-orange-500",
+  glass:
+    "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-white font-bold shadow-sm hover:bg-white dark:hover:bg-slate-900",
+  destructive:
+    "bg-red-600 text-white font-bold hover:bg-red-700 shadow-sm focus-visible:ring-2 focus-visible:ring-red-500",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-sm",
-  lg: "h-12 px-5 text-base",
-  icon: "h-10 w-10 p-0",
+  sm: "min-h-[38px] px-3.5 text-xs rounded-xl",
+  md: "min-h-[44px] px-4 text-xs sm:text-sm rounded-xl",
+  lg: "min-h-[48px] px-6 text-sm sm:text-base rounded-2xl",
+  icon: "min-h-[44px] min-w-[44px] p-0 rounded-xl flex items-center justify-center",
 };
 
 const base =
-  "btn-ripple-container animated-sheen inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium ring-offset-background transition-[background,border-color,box-shadow,color,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 cursor-pointer gpu-accelerated";
-
+  "btn-ripple-container inline-flex shrink-0 items-center justify-center gap-2 font-bold tracking-tight transition-all duration-200 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none gpu-layer";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
