@@ -18,7 +18,20 @@ jest.mock("@/lib/prisma", () => ({
       updateMany: jest.fn(),
       findMany: jest.fn(),
     },
-    oAuthAccount: { create: jest.fn() },
+    oAuthAccount: {
+      create: jest.fn().mockResolvedValue({ id: "passkey-db-1" }),
+      findUnique: jest.fn().mockResolvedValue({
+        id: "passkey-db-1",
+        userId: "user-passkey-1",
+        user: {
+          id: "user-passkey-1",
+          email: "passkey@example.com",
+          name: "Passkey User",
+          role: "EMPLOYER",
+          deletedAt: null,
+        },
+      }),
+    },
     auditLog: { create: jest.fn() },
   },
 }));

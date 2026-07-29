@@ -31,13 +31,13 @@ func (StartupProfile) TableName() string {
 }
 
 type StartupFilterDTO struct {
-	FundingStage       string `form:"fundingStage"`       // SEED, SERIES_A, SERIES_B, BOOTSTRAPPED, UNICORN
-	EmployeeCountRange string `form:"employeeCountRange"` // 1-10, 11-50, 51-200, 200+
-	HasESOP            *bool  `form:"hasESOP"`
-	RemoteFriendly     *bool  `form:"remoteFriendly"`
+	FundingStage       string   `form:"fundingStage"`       // SEED, SERIES_A, SERIES_B, BOOTSTRAPPED, UNICORN
+	EmployeeCountRange string   `form:"employeeCountRange"` // 1-10, 11-50, 51-200, 200+
+	HasESOP            *bool    `form:"hasESOP"`
+	RemoteFriendly     *bool    `form:"remoteFriendly"`
 	MinFundingUSD      *float64 `form:"minFundingUSD"`
-	Page               int    `form:"page,default=1"`
-	Limit              int    `form:"limit,default=20"`
+	Page               int      `form:"page,default=1"`
+	Limit              int      `form:"limit,default=20"`
 }
 
 type StartupRankedResultDTO struct {

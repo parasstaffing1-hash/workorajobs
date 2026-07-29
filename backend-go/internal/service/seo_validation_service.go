@@ -20,13 +20,13 @@ const (
 )
 
 type ValidationRuleResult struct {
-	RuleID      string     `json:"ruleId"`
-	RuleName    string     `json:"ruleName"`
-	Status      RuleStatus `json:"status"`
-	Weight      int        `json:"weight"`
-	PointsEarned int       `json:"pointsEarned"`
-	Message     string     `json:"message"`
-	Remedy      string     `json:"remedy"`
+	RuleID       string     `json:"ruleId"`
+	RuleName     string     `json:"ruleName"`
+	Status       RuleStatus `json:"status"`
+	Weight       int        `json:"weight"`
+	PointsEarned int        `json:"pointsEarned"`
+	Message      string     `json:"message"`
+	Remedy       string     `json:"remedy"`
 }
 
 type PageInput struct {
@@ -50,11 +50,11 @@ type PageInput struct {
 }
 
 type PageValidationReport struct {
-	URL          string                 `json:"url"`
-	HealthScore  int                    `json:"healthScore"` // 0 - 100
-	PassedRules  int                    `json:"passedRules"`
-	FailedRules  int                    `json:"failedRules"`
-	RuleResults  []ValidationRuleResult `json:"ruleResults"`
+	URL         string                 `json:"url"`
+	HealthScore int                    `json:"healthScore"` // 0 - 100
+	PassedRules int                    `json:"passedRules"`
+	FailedRules int                    `json:"failedRules"`
+	RuleResults []ValidationRuleResult `json:"ruleResults"`
 }
 
 type SiteValidationReport struct {
@@ -67,10 +67,10 @@ type SiteValidationReport struct {
 }
 
 type SeoValidationService struct {
-	db        *gorm.DB
-	baseURL   string
+	db         *gorm.DB
+	baseURL    string
 	lastReport *SiteValidationReport
-	mu        sync.RWMutex
+	mu         sync.RWMutex
 }
 
 func NewSeoValidationService(db *gorm.DB, baseURL string) *SeoValidationService {

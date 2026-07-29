@@ -14,29 +14,29 @@ import (
 )
 
 type SeoOptimizationMetrics struct {
-	TargetCapacity      string  `json:"targetCapacity"`
-	PeakRamMb           int     `json:"peakRamMb"`
-	AverageCpuLoadPct   float64 `json:"averageCpuLoadPct"`
-	ThroughputQps       int64   `json:"throughputQps"`
-	L1CacheHitRatio     float64 `json:"l1CacheHitRatio"`
-	L2CacheHitRatio     float64 `json:"l2CacheHitRatio"`
-	P99LatencyMs        float64 `json:"p99LatencyMs"`
-	TotalPagesGenerated int64   `json:"totalPagesGenerated"`
-	PagesSkippedIncremental int64 `json:"pagesSkippedIncremental"`
+	TargetCapacity          string  `json:"targetCapacity"`
+	PeakRamMb               int     `json:"peakRamMb"`
+	AverageCpuLoadPct       float64 `json:"averageCpuLoadPct"`
+	ThroughputQps           int64   `json:"throughputQps"`
+	L1CacheHitRatio         float64 `json:"l1CacheHitRatio"`
+	L2CacheHitRatio         float64 `json:"l2CacheHitRatio"`
+	P99LatencyMs            float64 `json:"p99LatencyMs"`
+	TotalPagesGenerated     int64   `json:"totalPagesGenerated"`
+	PagesSkippedIncremental int64   `json:"pagesSkippedIncremental"`
 }
 
 type SeoOptimizationService struct {
-	db                  *gorm.DB
-	baseURL             string
-	bufferPool          sync.Pool
-	l1Cache             sync.Map
-	fingerprints        sync.Map
-	totalRequests       uint64
-	l1Hits              uint64
-	l2Hits              uint64
-	totalPagesGen       uint64
-	pagesSkippedIncr    uint64
-	mu                  sync.RWMutex
+	db               *gorm.DB
+	baseURL          string
+	bufferPool       sync.Pool
+	l1Cache          sync.Map
+	fingerprints     sync.Map
+	totalRequests    uint64
+	l1Hits           uint64
+	l2Hits           uint64
+	totalPagesGen    uint64
+	pagesSkippedIncr uint64
+	mu               sync.RWMutex
 }
 
 func NewSeoOptimizationService(db *gorm.DB, baseURL string) *SeoOptimizationService {

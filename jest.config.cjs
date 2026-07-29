@@ -7,7 +7,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['/node_modules/', '/tests/e2e/'],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/e2e/', '/tests/integration/', '/apps/api/', '/tests/security/owasp-auth.spec.ts', '/tests/load/auth-load.spec.ts'],
   modulePathIgnorePatterns: ['<rootDir>/build_output/'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }],

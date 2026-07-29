@@ -22,11 +22,11 @@ import (
 )
 
 var (
-	ErrInvalidPurpose      = errors.New("invalid upload purpose; must be resume, company_logo, or profile_image")
-	ErrInvalidMimeType     = errors.New("unsupported content type for given purpose")
-	ErrFileTooLarge        = errors.New("file size exceeds maximum allowed threshold")
-	ErrUnauthorizedAccess  = errors.New("unauthorized: user does not own or manage this storage object")
-	ErrTargetIDRequired    = errors.New("targetId is required for company_logo upload")
+	ErrInvalidPurpose     = errors.New("invalid upload purpose; must be resume, company_logo, or profile_image")
+	ErrInvalidMimeType    = errors.New("unsupported content type for given purpose")
+	ErrFileTooLarge       = errors.New("file size exceeds maximum allowed threshold")
+	ErrUnauthorizedAccess = errors.New("unauthorized: user does not own or manage this storage object")
+	ErrTargetIDRequired   = errors.New("targetId is required for company_logo upload")
 )
 
 const (
@@ -148,7 +148,7 @@ func ValidateMimeAndSize(purpose, contentType string, sizeBytes int64) error {
 			return ErrFileTooLarge
 		}
 		allowed := map[string]bool{
-			"application/pdf": true,
+			"application/pdf":    true,
 			"application/msword": true,
 			"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 		}

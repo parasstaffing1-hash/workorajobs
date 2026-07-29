@@ -118,7 +118,7 @@ export class AdminAuthService {
       null
     );
 
-    if (users !== null && users.length > 0) {
+    if (users !== null) {
       return users.map((u) => ({
         id: u.id,
         email: u.email,
@@ -132,13 +132,7 @@ export class AdminAuthService {
       }));
     }
 
-    // Default Fallback User List for dev preview mode
-    return [
-      { id: "usr-demo-1", email: "sarah.jenkins@acme.corp", name: "Sarah Jenkins", role: "EMPLOYER", status: "ACTIVE", company: "Acme Corp", activeSessions: 3, riskScore: 12, lastLogin: new Date().toISOString() },
-      { id: "usr-demo-2", email: "alex.rivera@gmail.com", name: "Alex Rivera", role: "JOB_SEEKER", status: "ACTIVE", company: "Independent", activeSessions: 1, riskScore: 5, lastLogin: new Date().toISOString() },
-      { id: "usr-demo-3", email: "admin@workorajobs.com", name: "System Admin", role: "ADMIN", status: "ACTIVE", company: "Workora Platform", activeSessions: 2, riskScore: 0, lastLogin: new Date().toISOString() },
-      { id: "usr-demo-4", email: "suspicious.user@tempmail.com", name: "Suspicious User", role: "USER", status: "LOCKED", company: "Unknown", activeSessions: 0, riskScore: 92, lastLogin: new Date().toISOString() },
-    ];
+    return [];
   }
 
   /**

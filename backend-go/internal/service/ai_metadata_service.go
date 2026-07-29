@@ -16,23 +16,23 @@ type AiFaqItem struct {
 }
 
 type AiMetadataPackage struct {
-	EntityID           string            `json:"entityId"`
-	Version            int               `json:"version"`
-	SeoTitle           string            `json:"seoTitle"`
-	MetaDescription    string            `json:"metaDescription"`
-	OpenGraphTitle     string            `json:"openGraphTitle"`
-	TwitterTitle       string            `json:"twitterTitle"`
-	TwitterDescription string            `json:"twitterDescription"`
-	RichSnippets       string            `json:"richSnippets"`
-	Faq                []AiFaqItem       `json:"faq"`
-	PageIntroduction   string            `json:"pageIntroduction"`
-	PageSummary        []string          `json:"pageSummary"`
-	ContentHash        string            `json:"contentHash"`
+	EntityID           string      `json:"entityId"`
+	Version            int         `json:"version"`
+	SeoTitle           string      `json:"seoTitle"`
+	MetaDescription    string      `json:"metaDescription"`
+	OpenGraphTitle     string      `json:"openGraphTitle"`
+	TwitterTitle       string      `json:"twitterTitle"`
+	TwitterDescription string      `json:"twitterDescription"`
+	RichSnippets       string      `json:"richSnippets"`
+	Faq                []AiFaqItem `json:"faq"`
+	PageIntroduction   string      `json:"pageIntroduction"`
+	PageSummary        []string    `json:"pageSummary"`
+	ContentHash        string      `json:"contentHash"`
 }
 
 type MetadataVersionRecord struct {
-	Version   int               `json:"version"`
-	Package   AiMetadataPackage `json:"package"`
+	Version int               `json:"version"`
+	Package AiMetadataPackage `json:"package"`
 }
 
 type AiMetadataService struct {
@@ -101,7 +101,7 @@ func (s *AiMetadataService) GenerateMetaDescription(rawTitle, location string) s
 	}
 
 	desc := fmt.Sprintf("Apply to verified %s roles %s. Explore clear salary insights, remote flexibility, tech stacks, and direct company applications on WorkoraJobs.", cleanTitle, locStr)
-	
+
 	// Enforce 120-160 chars
 	if len(desc) < 120 {
 		desc += " Start your career application today."

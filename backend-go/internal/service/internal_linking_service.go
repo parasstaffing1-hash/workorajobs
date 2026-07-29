@@ -21,27 +21,27 @@ const (
 )
 
 type LinkNode struct {
-	AnchorText  string `json:"anchorText"`
-	URL         string `json:"url"`
-	TargetType  string `json:"targetType"`
-	Rel         string `json:"rel,omitempty"`
-	Category    string `json:"category"`
+	AnchorText string `json:"anchorText"`
+	URL        string `json:"url"`
+	TargetType string `json:"targetType"`
+	Rel        string `json:"rel,omitempty"`
+	Category   string `json:"category"`
 }
 
 type EntityLinkGraphResponse struct {
-	EntityType  string     `json:"entityType"`
-	EntityID    string     `json:"entityId"`
-	Canonical   string     `json:"canonicalUrl"`
-	CrawlDepth  int        `json:"crawlDepth"`
-	Outbound    []LinkNode `json:"outboundLinks"`
-	Inbound     []LinkNode `json:"inboundLinks"`
-	Similar     []LinkNode `json:"similarEntities"`
+	EntityType string     `json:"entityType"`
+	EntityID   string     `json:"entityId"`
+	Canonical  string     `json:"canonicalUrl"`
+	CrawlDepth int        `json:"crawlDepth"`
+	Outbound   []LinkNode `json:"outboundLinks"`
+	Inbound    []LinkNode `json:"inboundLinks"`
+	Similar    []LinkNode `json:"similarEntities"`
 }
 
 type OrphanAuditItem struct {
-	URL        string `json:"url"`
-	EntityType string `json:"entityType"`
-	Title      string `json:"title"`
+	URL          string `json:"url"`
+	EntityType   string `json:"entityType"`
+	Title        string `json:"title"`
 	ActionNeeded string `json:"actionNeeded"`
 }
 

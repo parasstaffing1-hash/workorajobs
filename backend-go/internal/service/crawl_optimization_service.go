@@ -29,30 +29,30 @@ type CrawlIssue struct {
 }
 
 type CrawlDiagnosticReport struct {
-	Timestamp      time.Time    `json:"timestamp"`
-	TotalAudited   int          `json:"totalAudited"`
-	CrawlHealth    int          `json:"crawlHealth"` // 0 - 100
-	CriticalCount  int          `json:"criticalCount"`
-	WarningCount   int          `json:"warningCount"`
-	InfoCount      int          `json:"infoCount"`
-	Issues         []CrawlIssue `json:"issues"`
-	Recommendations []string    `json:"recommendations"`
+	Timestamp       time.Time    `json:"timestamp"`
+	TotalAudited    int          `json:"totalAudited"`
+	CrawlHealth     int          `json:"crawlHealth"` // 0 - 100
+	CriticalCount   int          `json:"criticalCount"`
+	WarningCount    int          `json:"warningCount"`
+	InfoCount       int          `json:"infoCount"`
+	Issues          []CrawlIssue `json:"issues"`
+	Recommendations []string     `json:"recommendations"`
 }
 
 type CrawlPageSample struct {
-	URL        string
-	StatusCode int
-	BodyText   string
-	WordCount  int
-	Canonical  string
+	URL          string
+	StatusCode   int
+	BodyText     string
+	WordCount    int
+	Canonical    string
 	InboundLinks int
 }
 
 type CrawlOptimizationService struct {
-	db          *gorm.DB
-	baseURL     string
-	lastReport  *CrawlDiagnosticReport
-	mu          sync.RWMutex
+	db         *gorm.DB
+	baseURL    string
+	lastReport *CrawlDiagnosticReport
+	mu         sync.RWMutex
 }
 
 func NewCrawlOptimizationService(db *gorm.DB, baseURL string) *CrawlOptimizationService {

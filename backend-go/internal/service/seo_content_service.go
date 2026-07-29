@@ -43,10 +43,10 @@ type RelatedJobWidget struct {
 }
 
 type RelatedCompanyWidget struct {
-	Name    string `json:"name"`
-	Logo    string `json:"logo"`
+	Name     string `json:"name"`
+	Logo     string `json:"logo"`
 	Industry string `json:"industry"`
-	URL     string `json:"url"`
+	URL      string `json:"url"`
 }
 
 type GuideResponse struct {
@@ -68,10 +68,10 @@ type GuideResponse struct {
 }
 
 type SeoContentService struct {
-	db          *gorm.DB
-	seoService  *SeoService
-	linkingSvc  *InternalLinkingService
-	baseURL     string
+	db         *gorm.DB
+	seoService *SeoService
+	linkingSvc *InternalLinkingService
+	baseURL    string
 }
 
 func NewSeoContentService(db *gorm.DB, seoService *SeoService, linkingSvc *InternalLinkingService, baseURL string) *SeoContentService {
@@ -85,10 +85,10 @@ func NewSeoContentService(db *gorm.DB, seoService *SeoService, linkingSvc *Inter
 		linkingSvc = NewInternalLinkingService(db, baseURL)
 	}
 	return &SeoContentService{
-		db:          db,
-		seoService:  seoService,
-		linkingSvc:  linkingSvc,
-		baseURL:     strings.TrimRight(baseURL, "/"),
+		db:         db,
+		seoService: seoService,
+		linkingSvc: linkingSvc,
+		baseURL:    strings.TrimRight(baseURL, "/"),
 	}
 }
 
@@ -265,11 +265,11 @@ func (s *SeoContentService) GetGuide(categoryStr string, rawSlug string) (*Guide
 
 	// JSON-LD Schema
 	jsonLdMap := map[string]interface{}{
-		"@context": "https://schema.org",
-		"@type":    schemaType,
-		"headline": fullTitle,
+		"@context":    "https://schema.org",
+		"@type":       schemaType,
+		"headline":    fullTitle,
 		"description": description,
-		"url": canonicalURL,
+		"url":         canonicalURL,
 		"publisher": map[string]interface{}{
 			"@type": "Organization",
 			"name":  siteName,

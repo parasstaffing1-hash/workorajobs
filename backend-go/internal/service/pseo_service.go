@@ -215,10 +215,10 @@ func (s *PseoService) ResolvePseoPage(dimensionStr string, rawSlug string) (*Pse
 
 	// Build JSON-LD
 	jsonLdMap := map[string]interface{}{
-		"@context": "https://schema.org",
-		"@type":    primaryType,
-		"name":     fullTitle,
-		"url":      canonicalURL,
+		"@context":    "https://schema.org",
+		"@type":       primaryType,
+		"name":        fullTitle,
+		"url":         canonicalURL,
 		"description": description,
 		"breadcrumb": map[string]interface{}{
 			"@type": "BreadcrumbList",

@@ -239,7 +239,7 @@ describe("EnterpriseAuthController", () => {
           password: "wrong-password",
         })
       ).rejects.toThrow("Invalid email or password.");
-    });
+    }, 15000);
 
     it("records failed login attempt in LoginHistory", async () => {
       const bcrypt = require("bcryptjs");

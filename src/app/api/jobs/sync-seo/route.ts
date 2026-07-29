@@ -1,12 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth/get-auth-user";
 
 import { getJobSlug, jobs } from "@/data/jobs";
 import { slugify } from "@/lib/slugs";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const adminId = await getAuthUserId(request, "ADMIN");
+    if (!adminId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Admin authorization required." },
+        { status: 403 }
+      );
+    }
+
     // In a fully seeded production environment, this would run Prisma queries:
     // const activeJobs = await prisma.job.findMany({ where: { status: 'ACTIVE' } });
     // This script simulates the check:

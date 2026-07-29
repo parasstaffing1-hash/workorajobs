@@ -100,15 +100,15 @@ type WebSiteSchema struct {
 }
 
 type SeoMetadataResponse struct {
-	Title          string            `json:"title"`
-	Description    string            `json:"description"`
-	CanonicalURL   string            `json:"canonicalUrl"`
-	Keywords       []string          `json:"keywords"`
-	Robots         string            `json:"robots"`
-	OpenGraph      map[string]string `json:"openGraph"`
-	TwitterCard    map[string]string `json:"twitterCard"`
-	Hreflang       map[string]string `json:"hreflang"`
-	FaviconLinks   []map[string]string `json:"faviconLinks"`
+	Title        string              `json:"title"`
+	Description  string              `json:"description"`
+	CanonicalURL string              `json:"canonicalUrl"`
+	Keywords     []string            `json:"keywords"`
+	Robots       string              `json:"robots"`
+	OpenGraph    map[string]string   `json:"openGraph"`
+	TwitterCard  map[string]string   `json:"twitterCard"`
+	Hreflang     map[string]string   `json:"hreflang"`
+	FaviconLinks []map[string]string `json:"faviconLinks"`
 }
 
 // -----------------------------------------------------------------------------
@@ -164,8 +164,8 @@ func (s *SeoService) GenerateJobPostingSchema(job *models.Job) (string, error) {
 			"value": job.ID,
 		},
 		HiringOrganization: map[string]interface{}{
-			"@type": "Organization",
-			"name":  companyName,
+			"@type":  "Organization",
+			"name":   companyName,
 			"sameAs": companyURL,
 			"logo":   companyLogo,
 		},

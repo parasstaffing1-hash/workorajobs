@@ -8,10 +8,10 @@ import (
 )
 
 type CoreWebVitals struct {
-	LCP float64 `json:"lcp"` // Largest Contentful Paint (sec) - Target < 2.5s
-	INP int     `json:"inp"` // Interaction to Next Paint (ms) - Target < 200ms
-	CLS float64 `json:"cls"` // Cumulative Layout Shift - Target < 0.1
-	Status string `json:"status"` // "good", "needs-improvement", "poor"
+	LCP    float64 `json:"lcp"`    // Largest Contentful Paint (sec) - Target < 2.5s
+	INP    int     `json:"inp"`    // Interaction to Next Paint (ms) - Target < 200ms
+	CLS    float64 `json:"cls"`    // Cumulative Layout Shift - Target < 0.1
+	Status string  `json:"status"` // "good", "needs-improvement", "poor"
 }
 
 type SearchPerformanceData struct {
@@ -22,34 +22,34 @@ type SearchPerformanceData struct {
 }
 
 type SeoOverviewMetrics struct {
-	IndexedPages         int64                 `json:"indexedPages"`
-	NonIndexedPages      int64                 `json:"nonIndexedPages"`
-	BrokenLinks          int                   `json:"brokenLinks"`
-	RedirectChains       int                   `json:"redirectChains"`
-	DuplicateTitles      int                   `json:"duplicateTitles"`
-	DuplicateDescriptions int                  `json:"duplicateDescriptions"`
-	MissingMetadata      int                   `json:"missingMetadata"`
-	MissingSchema        int                   `json:"missingSchema"`
-	CoreWebVitals        CoreWebVitals         `json:"coreWebVitals"`
-	InternalLinksCount   int                   `json:"internalLinksCount"`
-	OrphanPages          int                   `json:"orphanPages"`
-	SitemapStatus        string                `json:"sitemapStatus"`
-	SearchPerformance    SearchPerformanceData `json:"searchPerformance"`
+	IndexedPages          int64                 `json:"indexedPages"`
+	NonIndexedPages       int64                 `json:"nonIndexedPages"`
+	BrokenLinks           int                   `json:"brokenLinks"`
+	RedirectChains        int                   `json:"redirectChains"`
+	DuplicateTitles       int                   `json:"duplicateTitles"`
+	DuplicateDescriptions int                   `json:"duplicateDescriptions"`
+	MissingMetadata       int                   `json:"missingMetadata"`
+	MissingSchema         int                   `json:"missingSchema"`
+	CoreWebVitals         CoreWebVitals         `json:"coreWebVitals"`
+	InternalLinksCount    int                   `json:"internalLinksCount"`
+	OrphanPages           int                   `json:"orphanPages"`
+	SitemapStatus         string                `json:"sitemapStatus"`
+	SearchPerformance     SearchPerformanceData `json:"searchPerformance"`
 }
 
 type TimeSeriesPoint struct {
-	Date        string  `json:"date"`
-	Clicks      int64   `json:"clicks"`
-	Impressions int64   `json:"impressions"`
-	CrawlHealth int     `json:"crawlHealth"`
-	Indexed     int64   `json:"indexed"`
+	Date        string `json:"date"`
+	Clicks      int64  `json:"clicks"`
+	Impressions int64  `json:"impressions"`
+	CrawlHealth int    `json:"crawlHealth"`
+	Indexed     int64  `json:"indexed"`
 }
 
 type SeoChartDataResponse struct {
-	CrawlHealthTrend     []TimeSeriesPoint `json:"crawlHealthTrend"`
-	SearchClicksTrend    []TimeSeriesPoint `json:"searchClicksTrend"`
-	IssueDistribution    map[string]int    `json:"issueDistribution"`
-	CoreWebVitalsGauges  CoreWebVitals     `json:"coreWebVitalsGauges"`
+	CrawlHealthTrend    []TimeSeriesPoint `json:"crawlHealthTrend"`
+	SearchClicksTrend   []TimeSeriesPoint `json:"searchClicksTrend"`
+	IssueDistribution   map[string]int    `json:"issueDistribution"`
+	CoreWebVitalsGauges CoreWebVitals     `json:"coreWebVitalsGauges"`
 }
 
 type SeoAnalyticsService struct {
@@ -163,11 +163,11 @@ func (s *SeoAnalyticsService) GetChartData() *SeoChartDataResponse {
 
 	for i := 29; i >= 0; i-- {
 		dateStr := now.AddDate(0, 0, -i).Format("2006-01-02")
-		
+
 		crawlTrend = append(crawlTrend, TimeSeriesPoint{
 			Date:        dateStr,
 			CrawlHealth: 90 + (i % 8),
-			Indexed:     int64(1400 + (30 - i)*15),
+			Indexed:     int64(1400 + (30-i)*15),
 		})
 
 		clicksTrend = append(clicksTrend, TimeSeriesPoint{

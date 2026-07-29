@@ -60,9 +60,9 @@ type Job struct {
 	UpdatedAt          time.Time      `json:"updatedAt"`
 
 	// Foreign Keys
-	CompanyID *string `gorm:"index" json:"companyId"`
-	Company   *Company `gorm:"foreignKey:CompanyID;constraint:OnDelete:SET NULL" json:"company,omitempty"`
-	PostedByID *string `gorm:"index" json:"postedById"`
+	CompanyID  *string  `gorm:"index" json:"companyId"`
+	Company    *Company `gorm:"foreignKey:CompanyID;constraint:OnDelete:SET NULL" json:"company,omitempty"`
+	PostedByID *string  `gorm:"index" json:"postedById"`
 	PostedBy   *User    `gorm:"foreignKey:PostedByID;constraint:OnDelete:SET NULL" json:"postedBy,omitempty"`
 }
 
@@ -84,11 +84,11 @@ func (SavedJob) TableName() string {
 }
 
 type JobCategory struct {
-	ID               string        `gorm:"primaryKey;type:varchar(255)" json:"id"`
-	Name             string        `gorm:"type:varchar(255);not null" json:"name"`
-	Slug             string        `gorm:"uniqueIndex;type:varchar(255);not null" json:"slug"`
-	ParentCategoryID *string       `gorm:"index" json:"parentCategoryId"`
-	CreatedAt        time.Time     `json:"createdAt"`
+	ID               string    `gorm:"primaryKey;type:varchar(255)" json:"id"`
+	Name             string    `gorm:"type:varchar(255);not null" json:"name"`
+	Slug             string    `gorm:"uniqueIndex;type:varchar(255);not null" json:"slug"`
+	ParentCategoryID *string   `gorm:"index" json:"parentCategoryId"`
+	CreatedAt        time.Time `json:"createdAt"`
 }
 
 func (JobCategory) TableName() string {

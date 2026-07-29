@@ -23,26 +23,26 @@ type SeoAutomationConfig struct {
 }
 
 type SeoWorkerStatus struct {
-	IsRunning         bool      `json:"isRunning"`
-	LastExecutionTime time.Time `json:"lastExecutionTime"`
-	NextExecutionTime time.Time `json:"nextExecutionTime"`
-	TotalCyclesRun    int64     `json:"totalCyclesRun"`
-	TotalPagesRefreshed int64   `json:"totalPagesRefreshed"`
-	LastCycleStatus   string    `json:"lastCycleStatus"`
+	IsRunning           bool      `json:"isRunning"`
+	LastExecutionTime   time.Time `json:"lastExecutionTime"`
+	NextExecutionTime   time.Time `json:"nextExecutionTime"`
+	TotalCyclesRun      int64     `json:"totalCyclesRun"`
+	TotalPagesRefreshed int64     `json:"totalPagesRefreshed"`
+	LastCycleStatus     string    `json:"lastCycleStatus"`
 }
 
 type AutomationCycleResult struct {
-	Timestamp          time.Time `json:"timestamp"`
-	MetadataGenerated  int       `json:"metadataGenerated"`
-	SchemaGenerated    int       `json:"schemaGenerated"`
-	SitemapsRefreshed  int       `json:"sitemapsRefreshed"`
-	SalaryRefreshed    int       `json:"salaryRefreshed"`
-	CompanyRefreshed   int       `json:"companyRefreshed"`
-	SkillRefreshed     int       `json:"skillRefreshed"`
-	JobRefreshed       int       `json:"jobRefreshed"`
-	StalePagesUpdated  int       `json:"stalePagesUpdated"`
-	LinksRecalculated  int       `json:"linksRecalculated"`
-	IndexedOptimized   int       `json:"indexedOptimized"`
+	Timestamp         time.Time `json:"timestamp"`
+	MetadataGenerated int       `json:"metadataGenerated"`
+	SchemaGenerated   int       `json:"schemaGenerated"`
+	SitemapsRefreshed int       `json:"sitemapsRefreshed"`
+	SalaryRefreshed   int       `json:"salaryRefreshed"`
+	CompanyRefreshed  int       `json:"companyRefreshed"`
+	SkillRefreshed    int       `json:"skillRefreshed"`
+	JobRefreshed      int       `json:"jobRefreshed"`
+	StalePagesUpdated int       `json:"stalePagesUpdated"`
+	LinksRecalculated int       `json:"linksRecalculated"`
+	IndexedOptimized  int       `json:"indexedOptimized"`
 }
 
 type SeoAutomationService struct {
@@ -187,16 +187,16 @@ func (s *SeoAutomationService) RunAutomationCycle() *AutomationCycleResult {
 	s.status.LastCycleStatus = fmt.Sprintf("completed successfully at %s", start.Format("15:04:05"))
 
 	return &AutomationCycleResult{
-		Timestamp:          start,
-		MetadataGenerated:  metaGen,
-		SchemaGenerated:    schemaGen,
-		SitemapsRefreshed:  sitemapRef,
-		SalaryRefreshed:    salaryRef,
-		CompanyRefreshed:   companyRef,
-		SkillRefreshed:     skillRef,
-		JobRefreshed:       jobRef,
-		StalePagesUpdated:  staleUpd,
-		LinksRecalculated:  linksRecalc,
-		IndexedOptimized:   indexOpt,
+		Timestamp:         start,
+		MetadataGenerated: metaGen,
+		SchemaGenerated:   schemaGen,
+		SitemapsRefreshed: sitemapRef,
+		SalaryRefreshed:   salaryRef,
+		CompanyRefreshed:  companyRef,
+		SkillRefreshed:    skillRef,
+		JobRefreshed:      jobRef,
+		StalePagesUpdated: staleUpd,
+		LinksRecalculated: linksRecalc,
+		IndexedOptimized:  indexOpt,
 	}
 }

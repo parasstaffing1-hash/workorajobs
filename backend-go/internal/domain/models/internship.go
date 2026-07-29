@@ -3,16 +3,16 @@ package models
 type InternshipType string
 
 const (
-	InternshipTypePaid       InternshipType = "PAID"
-	InternshipTypeUnpaid     InternshipType = "UNPAID"
-	InternshipTypePPO        InternshipType = "PPO_OFFERED"
+	InternshipTypePaid         InternshipType = "PAID"
+	InternshipTypeUnpaid       InternshipType = "UNPAID"
+	InternshipTypePPO          InternshipType = "PPO_OFFERED"
 	InternshipTypeWorkFromHome InternshipType = "WORK_FROM_HOME"
-	InternshipTypeHybrid     InternshipType = "HYBRID"
+	InternshipTypeHybrid       InternshipType = "HYBRID"
 )
 
 type InternshipSearchFilterDTO struct {
-	Type           string   `form:"type"`           // PAID, UNPAID, PPO_OFFERED, WORK_FROM_HOME, HYBRID
-	HasPPO         *bool    `form:"hasPPO"`         // Pre-placement offer
+	Type           string   `form:"type"`   // PAID, UNPAID, PPO_OFFERED, WORK_FROM_HOME, HYBRID
+	HasPPO         *bool    `form:"hasPPO"` // Pre-placement offer
 	MinStipend     *int     `form:"minStipend"`
 	DurationMonths *int     `form:"durationMonths"` // 1, 2, 3, 6
 	CollegeYear    string   `form:"collegeYear"`    // FIRST_YEAR, SECOND_YEAR, THIRD_YEAR, FINAL_YEAR

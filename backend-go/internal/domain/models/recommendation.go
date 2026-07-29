@@ -10,22 +10,22 @@ const (
 )
 
 type UserProfileVector struct {
-	UserID         string   `json:"userId"`
-	Skills         []string `json:"skills"`
-	JobTitles      []string `json:"jobTitles"`
-	Experience     int      `json:"experience"`
-	Location       string   `json:"location"`
-	ViewedJobIDs   []string `json:"viewedJobIds"`
-	SavedJobIDs    []string `json:"savedJobIds"`
-	AppliedJobIDs  []string `json:"appliedJobIds"`
+	UserID        string   `json:"userId"`
+	Skills        []string `json:"skills"`
+	JobTitles     []string `json:"jobTitles"`
+	Experience    int      `json:"experience"`
+	Location      string   `json:"location"`
+	ViewedJobIDs  []string `json:"viewedJobIds"`
+	SavedJobIDs   []string `json:"savedJobIds"`
+	AppliedJobIDs []string `json:"appliedJobIds"`
 }
 
 type RecommendationResultDTO struct {
-	Type      RecommendationType `json:"type"`
-	ItemID    string             `json:"itemId"`
-	Title     string             `json:"title"`
-	Score     float64            `json:"score"`
-	Reason    string             `json:"reason"` // e.g. "Based on your skills", "Similar to saved jobs"
+	Type   RecommendationType `json:"type"`
+	ItemID string             `json:"itemId"`
+	Title  string             `json:"title"`
+	Score  float64            `json:"score"`
+	Reason string             `json:"reason"` // e.g. "Based on your skills", "Similar to saved jobs"
 }
 
 type SalaryPredictionInputDTO struct {
@@ -51,8 +51,8 @@ type ResumeMatchInputDTO struct {
 }
 
 type ResumeMatchOutputDTO struct {
-	JobID          string  `json:"jobId"`
-	MatchScore     float64 `json:"matchScore"` // 0.0 - 100.0
-	MatchedSkills  []string `json:"matchedSkills"`
-	MissingSkills  []string `json:"missingSkills"`
+	JobID         string   `json:"jobId"`
+	MatchScore    float64  `json:"matchScore"` // 0.0 - 100.0
+	MatchedSkills []string `json:"matchedSkills"`
+	MissingSkills []string `json:"missingSkills"`
 }

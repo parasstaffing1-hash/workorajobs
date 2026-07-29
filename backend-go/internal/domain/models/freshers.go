@@ -11,15 +11,15 @@ const (
 )
 
 type FresherFilterDTO struct {
-	Category   string   `form:"category"` // GRADUATE_JOB, TRAINEE, APPRENTICESHIP, ENTRY_LEVEL, CAMPUS_HIRING
-	Degree     string   `form:"degree"`   // B.Tech, B.Sc, B.Com, MBA
-	Stream     string   `form:"stream"`   // CS, IT, ECE, Finance
-	College    string   `form:"college"`
-	MinSalary  *int     `form:"minSalary"`
-	Location   string   `form:"location"`
-	Company    string   `form:"company"`
-	Page       int      `form:"page,default=1"`
-	Limit      int      `form:"limit,default=20"`
+	Category  string `form:"category"` // GRADUATE_JOB, TRAINEE, APPRENTICESHIP, ENTRY_LEVEL, CAMPUS_HIRING
+	Degree    string `form:"degree"`   // B.Tech, B.Sc, B.Com, MBA
+	Stream    string `form:"stream"`   // CS, IT, ECE, Finance
+	College   string `form:"college"`
+	MinSalary *int   `form:"minSalary"`
+	Location  string `form:"location"`
+	Company   string `form:"company"`
+	Page      int    `form:"page,default=1"`
+	Limit     int    `form:"limit,default=20"`
 }
 
 type FresherSeoPageDTO struct {

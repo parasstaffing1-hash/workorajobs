@@ -17,7 +17,7 @@ const (
 
 type UniversalSearchQueryDTO struct {
 	Query    string   `form:"q" binding:"required"`
-	Types    []string `form:"types"`    // Filter by result type: JOB, COMPANY, etc.
+	Types    []string `form:"types"` // Filter by result type: JOB, COMPANY, etc.
 	Location string   `form:"location"`
 	Page     int      `form:"page,default=1"`
 	Limit    int      `form:"limit,default=20"`
@@ -35,12 +35,12 @@ type UniversalSearchResultDTO struct {
 }
 
 type UniversalSearchResponseDTO struct {
-	Query        string                     `json:"query"`
-	CorrectedQuery string                   `json:"correctedQuery,omitempty"`
-	TotalResults int64                      `json:"totalResults"`
-	Results      []UniversalSearchResultDTO `json:"results"`
-	Facets       map[string][]FacetBucket   `json:"facets"`
-	Suggestions  []string                   `json:"suggestions,omitempty"`
+	Query          string                     `json:"query"`
+	CorrectedQuery string                     `json:"correctedQuery,omitempty"`
+	TotalResults   int64                      `json:"totalResults"`
+	Results        []UniversalSearchResultDTO `json:"results"`
+	Facets         map[string][]FacetBucket   `json:"facets"`
+	Suggestions    []string                   `json:"suggestions,omitempty"`
 }
 
 type FacetBucket struct {
@@ -49,7 +49,7 @@ type FacetBucket struct {
 }
 
 type AutocompleteResponseDTO struct {
-	Query       string               `json:"query"`
+	Query       string                   `json:"query"`
 	Suggestions []AutocompleteSuggestion `json:"suggestions"`
 }
 
@@ -60,6 +60,6 @@ type AutocompleteSuggestion struct {
 }
 
 type TrendingSearchDTO struct {
-	Query     string `json:"query"`
-	SearchCount int  `json:"searchCount"`
+	Query       string `json:"query"`
+	SearchCount int    `json:"searchCount"`
 }

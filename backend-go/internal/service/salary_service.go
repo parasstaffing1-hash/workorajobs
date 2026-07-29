@@ -66,16 +66,16 @@ func (s *SalaryService) CompareSalaries(ctx context.Context, input *models.Salar
 	bands := s.computeSalaryBands(input.JobTitle)
 
 	return &models.SalaryCompareOutputDTO{
-		JobTitle:          input.JobTitle,
-		Location:          input.Location,
-		AverageSalary:     math.Round(avgSal*100) / 100,
-		MedianSalary:      math.Round(medianSal*100) / 100,
-		MinSalary:         minSal,
-		MaxSalary:         maxSal,
-		SampleSize:        len(salaries),
-		DemandIndex:       math.Round(demandIndex*100) / 100,
-		YoYGrowthPercent:  8.5, // Placeholder — compute from historical data
-		SalaryBands:       bands,
+		JobTitle:         input.JobTitle,
+		Location:         input.Location,
+		AverageSalary:    math.Round(avgSal*100) / 100,
+		MedianSalary:     math.Round(medianSal*100) / 100,
+		MinSalary:        minSal,
+		MaxSalary:        maxSal,
+		SampleSize:       len(salaries),
+		DemandIndex:      math.Round(demandIndex*100) / 100,
+		YoYGrowthPercent: 8.5, // Placeholder — compute from historical data
+		SalaryBands:      bands,
 	}, nil
 }
 

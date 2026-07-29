@@ -14,13 +14,13 @@ const (
 )
 
 type VisaSponsorshipDetail struct {
-	ID                    string      `gorm:"primaryKey;type:varchar(255)" json:"id"`
-	JobID                 string      `gorm:"type:varchar(255);not null" json:"jobId"`
-	TargetCountry         VisaCountry `gorm:"type:varchar(50);not null" json:"targetCountry"`
-	VisaType              string      `gorm:"type:varchar(100)" json:"visaType"`               // H1B, L1, Tier2, BlueCard, etc.
-	SponsorshipConfirmed  bool        `gorm:"default:false" json:"sponsorshipConfirmed"`
-	RelocationAssistance  bool        `gorm:"default:false" json:"relocationAssistance"`
-	ImmigrationSupport    bool        `gorm:"default:false" json:"immigrationSupport"`
+	ID                   string      `gorm:"primaryKey;type:varchar(255)" json:"id"`
+	JobID                string      `gorm:"type:varchar(255);not null" json:"jobId"`
+	TargetCountry        VisaCountry `gorm:"type:varchar(50);not null" json:"targetCountry"`
+	VisaType             string      `gorm:"type:varchar(100)" json:"visaType"` // H1B, L1, Tier2, BlueCard, etc.
+	SponsorshipConfirmed bool        `gorm:"default:false" json:"sponsorshipConfirmed"`
+	RelocationAssistance bool        `gorm:"default:false" json:"relocationAssistance"`
+	ImmigrationSupport   bool        `gorm:"default:false" json:"immigrationSupport"`
 }
 
 func (VisaSponsorshipDetail) TableName() string {
