@@ -90,6 +90,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	seoContentService := service.NewSeoContentService(db, seoService, linkingService, cfg.AppURL)
 	indexingService := service.NewSearchIndexingService(db, sitemapService, cfg.AppURL)
 	crawlOptService := service.NewCrawlOptimizationService(db, cfg.AppURL)
+	seoAnalyticsService := service.NewSeoAnalyticsService(db, crawlOptService, indexingService, aiMetadataService, sitemapService, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -103,6 +104,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	seoContentCtrl := controllers.NewSeoContentController(seoContentService)
 	indexingCtrl := controllers.NewSearchIndexingController(indexingService)
 	crawlOptCtrl := controllers.NewCrawlOptimizationController(crawlOptService)
+	seoAnalyticsCtrl := controllers.NewSeoAnalyticsController(seoAnalyticsService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -117,6 +119,14 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// SEO Analytics Dashboard Endpoints
+	seoAnalyticsGroup := r.Group("/api/v1/seo-analytics")
+	{
+		seoAnalyticsGroup.GET("/overview", seoAnalyticsCtrl.GetOverview)
+		seoAnalyticsGroup.GET("/charts", seoAnalyticsCtrl.GetCharts)
+		seoAnalyticsGroup.GET("/performance", seoAnalyticsCtrl.GetPerformance)
 	}
 
 	// Crawl Optimization Engine Endpoints

@@ -337,11 +337,11 @@ func (s *CrawlOptimizationService) RunFullAudit() *CrawlDiagnosticReport {
 
 func (s *CrawlOptimizationService) GetReport() *CrawlDiagnosticReport {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	if s.lastReport == nil {
-		s.mu.RUnlock()
-		return s.RunFullAudit()
+	if s.lastReport != nil {
+		defer s.mu.RUnlock()
+		return s.lastReport
 	}
-	return s.lastReport
+	s.mu.RUnlock()
+
+	return s.RunFullAudit()
 }
