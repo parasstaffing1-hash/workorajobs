@@ -89,6 +89,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	aiMetadataService := service.NewAiMetadataService(db, cfg.AppURL)
 	seoContentService := service.NewSeoContentService(db, seoService, linkingService, cfg.AppURL)
 	indexingService := service.NewSearchIndexingService(db, sitemapService, cfg.AppURL)
+	crawlOptService := service.NewCrawlOptimizationService(db, cfg.AppURL)
 
 	visaCtrl := controllers.NewVisaController(visaService)
 	salaryCtrl := controllers.NewSalaryController(salaryService)
@@ -101,6 +102,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	aiMetadataCtrl := controllers.NewAiMetadataController(aiMetadataService)
 	seoContentCtrl := controllers.NewSeoContentController(seoContentService)
 	indexingCtrl := controllers.NewSearchIndexingController(indexingService)
+	crawlOptCtrl := controllers.NewCrawlOptimizationController(crawlOptService)
 	var uploadCtrl *controllers.UploadController
 	if s3Service != nil {
 		uploadCtrl = controllers.NewUploadController(s3Service)
@@ -115,6 +117,14 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/schema/faq", seoCtrl.GetFAQSchema)
 		seoGroup.GET("/schema/breadcrumb", seoCtrl.GetBreadcrumbSchema)
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
+	}
+
+	// Crawl Optimization Engine Endpoints
+	crawlOptGroup := r.Group("/api/v1/crawl-opt")
+	{
+		crawlOptGroup.GET("/report", crawlOptCtrl.GetReport)
+		crawlOptGroup.POST("/audit", crawlOptCtrl.TriggerAudit)
+		crawlOptGroup.GET("/issues", crawlOptCtrl.GetIssues)
 	}
 
 	// Search Engine Indexing System Endpoints
