@@ -74,7 +74,15 @@ export default function RazorpayCheckoutButton({
         throw new Error(orderData.error || "Order creation failed.");
       }
 
-      const razorpayKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_THkYG15Dw7EcN5";
+      const razorpayKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+      if (!razorpayKeyId) {
+        setStatusMessage({
+          type: "error",
+          text: "Razorpay Payment Gateway is not configured. Missing NEXT_PUBLIC_RAZORPAY_KEY_ID.",
+        });
+        setLoading(false);
+        return;
+      }
 
       // 3. Configure Razorpay Standard Modal options
       const options = {

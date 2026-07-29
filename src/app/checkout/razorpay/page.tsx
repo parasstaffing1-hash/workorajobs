@@ -21,12 +21,12 @@ export default function RazorpayCheckoutPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Razorpay Standard Checkout</h1>
-            <p className="text-xs text-slate-400 font-mono">Environment: Test Mode | Key ID: rzp_test_...5Dw7EcN5</p>
+            <p className="text-xs text-slate-400 font-mono">Environment: Enterprise Standard Checkout</p>
           </div>
         </div>
 
         <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-          Select a test plan below to initiate Razorpay Standard Web Checkout. You will be prompted with the official Razorpay payment modal.
+          Select a plan below to initiate Razorpay Standard Web Checkout. You will be prompted with the official Razorpay payment modal.
         </p>
 
         <div className="grid grid-cols-1 gap-3 mb-8">
@@ -58,7 +58,7 @@ export default function RazorpayCheckoutPage() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-          <span>Key ID: rzp_test_THkYG15Dw7EcN5</span>
+          <span>Razorpay Standard Integration</span>
           <span className="text-emerald-400 flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Test Gateway Ready
           </span>
