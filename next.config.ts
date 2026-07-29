@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
       "zod",
       "razorpay",
       "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner",
+      "recharts",
     ],
   },
   async headers() {
