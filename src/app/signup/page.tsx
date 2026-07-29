@@ -23,7 +23,6 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [devToken, setDevToken] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -40,7 +39,6 @@ export default function SignupPage() {
     e.preventDefault();
     setAlert(null);
     setErrors({});
-    setDevToken(null);
 
     // Validate with Zod
     const validation = SignupSchema.safeParse(formData);
@@ -74,11 +72,6 @@ export default function SignupPage() {
         type: "success",
         message: data.message || "Account created successfully! Please verify your email to continue.",
       });
-
-      if (data.verificationToken) {
-        setDevToken(data.verificationToken);
-      }
-
       // Scroll to top to see alert
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
@@ -101,23 +94,6 @@ export default function SignupPage() {
         footerLinkHref="/login"
       >
         {alert && <AuthAlert type={alert.type} message={alert.message} />}
-
-        {devToken && (
-          <div className="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-2">
-            <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
-              Verification Link Simulated
-            </p>
-            <p className="text-xs text-blue-800">
-              In production, an email is sent to your inbox. You can test email verification right now by clicking below:
-            </p>
-            <Link
-              href={`/verify-email?token=${devToken}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 transition-colors"
-            >
-              Verify Email Now &rarr;
-            </Link>
-          </div>
-        )}
 
         {/* Social Authentication */}
         <SocialAuthButtons isLoading={isLoading} />

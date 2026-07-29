@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthAlert } from "@/components/auth/AuthAlert";
-import { CheckCircle2, Mail, RefreshCw } from "lucide-react";
+import { CheckCircle2, Mail } from "lucide-react";
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryToken = searchParams.get("token") || "";
 
-  const [tokenInput, setTokenInput] = useState(queryToken);
   const [status, setStatus] = useState<"idle" | "verifying" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [resendEmail, setResendEmail] = useState("");
@@ -74,10 +73,6 @@ function VerifyEmailContent() {
         type: "success",
         text: data.message || "A new verification link has been generated and sent.",
       });
-
-      if (data.verificationToken) {
-        setTokenInput(data.verificationToken);
-      }
     } catch (err: any) {
       setResendMsg({
         type: "error",
@@ -147,38 +142,9 @@ function VerifyEmailContent() {
           <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
             <Mail className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-xs text-blue-900 leading-relaxed">
-              We sent a verification link to your email inbox when you signed up. Please enter your verification token below if it didn't auto-verify.
+              We sent a verification link to your inbox when you signed up. If you do not see it, use the resend option below.
             </div>
           </div>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleVerify(tokenInput);
-            }}
-            className="space-y-3"
-          >
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
-                Verification Token
-              </label>
-              <input
-                type="text"
-                placeholder="Paste token here..."
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-sm font-mono focus:outline-none focus:border-blue-600"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-11 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 cursor-pointer"
-            >
-              Verify Email Token
-            </button>
-          </form>
         </div>
       )}
     </AuthCard>
