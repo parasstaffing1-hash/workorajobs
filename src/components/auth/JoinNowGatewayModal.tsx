@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -38,6 +38,17 @@ export function JoinNowGatewayModal({
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ESC Key Listener for Accessibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -102,17 +113,24 @@ export function JoinNowGatewayModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Join Now Modal Gateway"
           className="relative w-full max-w-xl overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8"
         >
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Close modal"
+            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -123,13 +141,13 @@ export function JoinNowGatewayModal({
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
                   Join Workora Jobs
                 </h2>
-                <p className="text-xs text-slate-500">Who are you?</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Select your account role to get started</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => setRole("JOB_SEEKER")}
-                  className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-blue-50/50 hover:border-blue-500 transition-all text-left space-y-3 cursor-pointer group"
+                  className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 hover:border-blue-500 transition-all text-left space-y-3 cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
                     <User className="h-5 w-5" />
@@ -137,12 +155,12 @@ export function JoinNowGatewayModal({
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600">
                     Job Seeker
                   </h3>
-                  <p className="text-xs text-slate-500">Find job opportunities, apply with 1-click, and track applications.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Find job opportunities, apply with 1-click, and track applications.</p>
                 </button>
 
                 <button
                   onClick={() => setRole("EMPLOYER")}
-                  className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-500 transition-all text-left space-y-3 cursor-pointer group"
+                  className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 hover:border-indigo-500 transition-all text-left space-y-3 cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
                     <Building2 className="h-5 w-5" />
@@ -150,7 +168,7 @@ export function JoinNowGatewayModal({
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600">
                     Employer
                   </h3>
-                  <p className="text-xs text-slate-500">Post job listings, manage talent pipelines, and access verified candidates.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Post job listings, manage talent pipelines, and access verified candidates.</p>
                 </button>
               </div>
             </div>
@@ -160,9 +178,9 @@ export function JoinNowGatewayModal({
                 <button
                   type="button"
                   onClick={() => setRole(null)}
-                  className="text-xs font-semibold text-slate-500 hover:text-slate-900"
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 >
-                  ← Back to choice
+                  ← Back to role selection
                 </button>
                 <span className="text-xs font-bold text-slate-400">
                   {role === "EMPLOYER" ? "Employer Account" : "Job Seeker Account"}
@@ -173,7 +191,7 @@ export function JoinNowGatewayModal({
                 <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
                   {role === "EMPLOYER" ? "Create Employer Account" : "Create Job Seeker Account"}
                 </h2>
-                <p className="text-xs text-slate-500">Fill in details to get started instantly</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Fill in your details to create your free account instantly</p>
               </div>
 
               {error && (

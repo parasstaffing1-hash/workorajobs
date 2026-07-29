@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -40,6 +40,17 @@ export function SignInGatewayModal({
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ESC Key Listener for Accessibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -87,18 +98,25 @@ export function SignInGatewayModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Sign In Modal Gateway"
           className="relative w-full max-w-xl overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8"
         >
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Close modal"
+            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -258,6 +276,7 @@ export function SignInGatewayModal({
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -310,31 +329,6 @@ export function SignInGatewayModal({
                   role={view === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER"}
                   buttonText="Sign in with LinkedIn"
                 />
-                {/* Legacy GitHub login stays separate from the verified Google and
-                    LinkedIn flows while its server-side OAuth is migrated. */}
-                <div className="grid grid-cols-1 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const res = await fetch("/api/v1/auth/oauth/github", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ role: view === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER" }),
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                          onClose();
-                          router.push(view === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard");
-                        }
-                      } catch (_) {}
-                    }}
-                    className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
-                  >
-                    <span className="font-extrabold text-xs">🐙</span>
-                    <span>GitHub</span>
-                  </button>
-                </div>
               </div>
 
               <div className="pt-2 text-center text-xs text-slate-500">
