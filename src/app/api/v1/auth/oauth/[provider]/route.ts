@@ -43,7 +43,10 @@ export async function GET(
   const state = crypto.randomBytes(32).toString("base64url");
   const verifier = crypto.randomBytes(48).toString("base64url");
   const challenge = crypto.createHash("sha256").update(verifier).digest("base64url");
-  const callback = oauthPublicUrl(request, `/api/v1/auth/oauth/${provider}/callback`).toString();
+  const requestId = `oauth_init_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const envCallback = process.env[`${provider.toUpperCase()}_CALLBACK_URL`]?.trim();
+  const callback = envCallback || oauthPublicUrl(request, `/api/v1/auth/oauth/${provider}/callback`).toString();
+
   const authorizationUrl = new URL(
     provider === "google"
       ? "https://accounts.google.com/o/oauth2/v2/auth"
@@ -58,11 +61,13 @@ export async function GET(
   authorizationUrl.searchParams.set("code_challenge_method", "S256");
 
   const response = NextResponse.redirect(authorizationUrl);
-  response.cookies.set(STATE_COOKIE, JSON.stringify({ provider, state, verifier }), {
+  const cookieData = JSON.stringify({ provider, state, verifier, callback, requestId });
+  
+  response.cookies.set(STATE_COOKIE, cookieData, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api/v1/auth/oauth",
+    path: "/",
     maxAge: 10 * 60,
   });
   return response;

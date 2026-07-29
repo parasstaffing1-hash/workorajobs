@@ -15,38 +15,46 @@ interface AnalyticsOverviewWidgetProps {
 }
 
 export function AnalyticsOverviewWidget({ stats, isDark = false }: AnalyticsOverviewWidgetProps) {
+  const safeStats = stats || {
+    totalApplied: 0,
+    underReview: 0,
+    interviews: 0,
+    offers: 0,
+    responseRate: 0,
+  };
+
   const cards = [
     {
       label: "Total Applications",
-      value: stats.totalApplied,
+      value: safeStats.totalApplied ?? 0,
       sub: "Submitted to date",
       icon: <Send className="h-5 w-5 text-blue-600" />,
       bg: isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200",
     },
     {
       label: "Under Review",
-      value: stats.underReview,
+      value: safeStats.underReview ?? 0,
       sub: "Recruiter reviewing",
       icon: <Search className="h-5 w-5 text-indigo-600" />,
       bg: isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200",
     },
     {
       label: "Interviews",
-      value: stats.interviews,
+      value: safeStats.interviews ?? 0,
       sub: "Scheduled / Completed",
       icon: <Calendar className="h-5 w-5 text-amber-600" />,
       bg: isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200",
     },
     {
       label: "Offers & Hired",
-      value: stats.offers,
+      value: safeStats.offers ?? 0,
       sub: "Job offers received",
       icon: <Gift className="h-5 w-5 text-emerald-600" />,
       bg: isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200",
     },
     {
       label: "Response Rate",
-      value: `${stats.responseRate}%`,
+      value: `${safeStats.responseRate ?? 0}%`,
       sub: "Recruiter engagement",
       icon: <TrendingUp className="h-5 w-5 text-purple-600" />,
       bg: isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200",

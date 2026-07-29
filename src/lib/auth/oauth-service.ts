@@ -99,12 +99,41 @@ export class OAuthService {
         // produce a signed-in user that has no durable account record.
         throw err;
       }
-    } else if (!user.isEmailVerified) {
-      // Auto-verify email if logged in via trusted OAuth provider
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { isEmailVerified: true, emailVerifiedAt: new Date() },
-      }).catch(() => null);
+    } else {
+      // Auto-verify email and auto-provision missing profiles for existing users logging in via OAuth
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isEmailVerified: true, emailVerifiedAt: user.emailVerifiedAt || new Date() },
+        });
+      } catch (_) {}
+
+      if (user.role === "EMPLOYER" || user.role === "RECRUITER") {
+        try {
+          const empProf = await prisma.employerProfile.findUnique({ where: { userId: user.id } });
+          if (!empProf) {
+            await prisma.employerProfile.create({
+              data: {
+                userId: user.id,
+                companyName: `${user.name || "Employer"}'s Enterprise`,
+                businessEmail: user.email,
+              },
+            });
+          }
+        } catch (_) {}
+      } else {
+        try {
+          const candProf = await prisma.userProfile.findUnique({ where: { userId: user.id } });
+          if (!candProf) {
+            await prisma.userProfile.create({
+              data: {
+                userId: user.id,
+                location: "Remote",
+              },
+            });
+          }
+        } catch (_) {}
+      }
     }
 
     // 4. Upsert OAuthAccount link
