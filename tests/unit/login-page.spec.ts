@@ -60,6 +60,10 @@ describe("Auth Middleware Routing & Security", () => {
     const reqLinkedIn = new NextRequest("https://workorajobs.com/api/v1/auth/oauth/linkedin");
     const resLinkedIn = middleware(reqLinkedIn);
     expect(resLinkedIn.status).toBe(200);
+
+    const reqGitHub = new NextRequest("https://workorajobs.com/api/v1/auth/oauth/github");
+    const resGitHub = middleware(reqGitHub);
+    expect(resGitHub.status).toBe(200);
   });
 
   it("redirects unauthenticated protected employer route to /employer/login", () => {
@@ -146,13 +150,16 @@ describe("Auth API & Frontend Contract", () => {
     expect(data.user.role).toBe("EMPLOYER");
   });
 
-  it("verifies OAuth internal endpoint structure for Google and LinkedIn", () => {
+  it("verifies OAuth internal endpoint structure for Google, LinkedIn, and GitHub", () => {
     const googleUrl = `/api/v1/auth/oauth/google?${new URLSearchParams({ role: "JOB_SEEKER" })}`;
     const linkedinUrl = `/api/v1/auth/oauth/linkedin?${new URLSearchParams({ role: "EMPLOYER" })}`;
+    const githubUrl = `/api/v1/auth/oauth/github?${new URLSearchParams({ role: "JOB_SEEKER" })}`;
 
     expect(googleUrl).toContain("/api/v1/auth/oauth/google");
     expect(googleUrl).toContain("role=JOB_SEEKER");
     expect(linkedinUrl).toContain("/api/v1/auth/oauth/linkedin");
     expect(linkedinUrl).toContain("role=EMPLOYER");
+    expect(githubUrl).toContain("/api/v1/auth/oauth/github");
+    expect(githubUrl).toContain("role=JOB_SEEKER");
   });
 });
