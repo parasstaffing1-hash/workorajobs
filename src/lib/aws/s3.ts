@@ -137,21 +137,48 @@ let s3ClientInstance: S3Client | null = null;
 /**
  * Validates and retrieves AWS S3 configuration from environment variables.
  */
+export interface S3Config {
+  accessKeyId: string;
+  secretAccessKey: string;
+  region: string;
+  bucket: string;
+  endpoint?: string;
+  publicBaseUrl?: string;
+}
+
+/**
+ * Validates and retrieves AWS S3 / Cloudflare R2 configuration from environment variables.
+ */
 export function getS3Config(): S3Config {
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-  const region = process.env.AWS_REGION || "eu-north-1";
-  const bucket = process.env.AWS_S3_BUCKET;
-  const publicBaseUrl = process.env.AWS_S3_PUBLIC_BASE_URL;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
+  const endpoint =
+    process.env.CLOUDFLARE_R2_ENDPOINT?.trim() ||
+    process.env.AWS_S3_ENDPOINT?.trim() ||
+    (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
+
+  const accessKeyId =
+    process.env.CLOUDFLARE_R2_ACCESS_KEY_ID?.trim() ||
+    process.env.AWS_ACCESS_KEY_ID?.trim();
+  const secretAccessKey =
+    process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY?.trim() ||
+    process.env.AWS_SECRET_ACCESS_KEY?.trim();
+  const region = process.env.AWS_REGION?.trim() || "auto";
+  const bucket =
+    process.env.CLOUDFLARE_R2_BUCKET?.trim() ||
+    process.env.AWS_S3_BUCKET?.trim() ||
+    "workora-storage";
+  const publicBaseUrl =
+    process.env.CLOUDFLARE_R2_PUBLIC_URL?.trim() ||
+    process.env.AWS_S3_PUBLIC_BASE_URL?.trim();
 
   if (!accessKeyId || !secretAccessKey || !bucket) {
     const missing: string[] = [];
-    if (!accessKeyId) missing.push("AWS_ACCESS_KEY_ID");
-    if (!secretAccessKey) missing.push("AWS_SECRET_ACCESS_KEY");
-    if (!bucket) missing.push("AWS_S3_BUCKET");
+    if (!accessKeyId) missing.push("CLOUDFLARE_R2_ACCESS_KEY_ID / AWS_ACCESS_KEY_ID");
+    if (!secretAccessKey) missing.push("CLOUDFLARE_R2_SECRET_ACCESS_KEY / AWS_SECRET_ACCESS_KEY");
+    if (!bucket) missing.push("CLOUDFLARE_R2_BUCKET / AWS_S3_BUCKET");
 
     throw new Error(
-      `[S3 Storage Error] Missing required AWS environment variables: ${missing.join(", ")}`
+      `[Storage Error] Missing required Storage environment variables: ${missing.join(", ")}`
     );
   }
 
@@ -160,12 +187,13 @@ export function getS3Config(): S3Config {
     secretAccessKey,
     region,
     bucket,
+    endpoint,
     publicBaseUrl,
   };
 }
 
 /**
- * Returns a cached AWS SDK v3 S3Client instance.
+ * Returns a cached AWS SDK v3 / Cloudflare R2 S3Client instance.
  */
 export function getS3Client(): S3Client {
   if (s3ClientInstance) {
@@ -176,6 +204,7 @@ export function getS3Client(): S3Client {
 
   s3ClientInstance = new S3Client({
     region: config.region,
+    ...(config.endpoint ? { endpoint: config.endpoint } : {}),
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
