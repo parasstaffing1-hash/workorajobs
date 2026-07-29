@@ -35,6 +35,14 @@ func TestAuthProtectedRoutes(t *testing.T) {
 		{"POST", "/api/v1/internships/recommendations"},
 		{"POST", "/api/v1/walkins/w1/remind"},
 		{"POST", "/api/v1/jobs"},
+		{"GET", "/api/v1/seo-opt/metrics"},
+		{"GET", "/api/v1/seo-val/report"},
+		{"GET", "/api/v1/seo-auto/config"},
+		{"GET", "/api/v1/seo-analytics/overview"},
+		{"GET", "/api/v1/crawl-opt/report"},
+		{"GET", "/api/v1/indexing/dashboard"},
+		{"GET", "/api/v1/ai-metadata/versions"},
+		{"GET", "/api/v1/linking/entity"},
 	}
 
 	for _, route := range protectedRoutes {

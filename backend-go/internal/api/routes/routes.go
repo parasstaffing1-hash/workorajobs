@@ -127,24 +127,24 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoGroup.GET("/robots.txt", seoCtrl.GetRobotsTxt)
 	}
 
-	// 100M+ Page High-Performance SEO Optimization Endpoints
-	seoOptGroup := r.Group("/api/v1/seo-opt")
+	// 100M+ Page High-Performance SEO Optimization Endpoints (Admin Only)
+	seoOptGroup := r.Group("/api/v1/seo-opt", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		seoOptGroup.GET("/stream-sitemap", seoOptCtrl.StreamSitemap)
 		seoOptGroup.GET("/metrics", seoOptCtrl.GetMetrics)
 		seoOptGroup.POST("/clear-cache", seoOptCtrl.ClearCache)
 	}
 
-	// SEO Validation Engine Endpoints
-	seoValGroup := r.Group("/api/v1/seo-val")
+	// SEO Validation Engine Endpoints (Admin Only)
+	seoValGroup := r.Group("/api/v1/seo-val", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		seoValGroup.GET("/report", seoValCtrl.GetReport)
 		seoValGroup.POST("/validate-url", seoValCtrl.ValidateURL)
 		seoValGroup.POST("/audit-site", seoValCtrl.AuditSite)
 	}
 
-	// SEO Automation Engine Endpoints
-	seoAutoGroup := r.Group("/api/v1/seo-auto")
+	// SEO Automation Engine Endpoints (Admin Only)
+	seoAutoGroup := r.Group("/api/v1/seo-auto", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		seoAutoGroup.GET("/config", seoAutoCtrl.GetConfig)
 		seoAutoGroup.PUT("/config", seoAutoCtrl.UpdateConfig)
@@ -152,24 +152,24 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		seoAutoGroup.GET("/worker-status", seoAutoCtrl.GetWorkerStatus)
 	}
 
-	// SEO Analytics Dashboard Endpoints
-	seoAnalyticsGroup := r.Group("/api/v1/seo-analytics")
+	// SEO Analytics Dashboard Endpoints (Admin Only)
+	seoAnalyticsGroup := r.Group("/api/v1/seo-analytics", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		seoAnalyticsGroup.GET("/overview", seoAnalyticsCtrl.GetOverview)
 		seoAnalyticsGroup.GET("/charts", seoAnalyticsCtrl.GetCharts)
 		seoAnalyticsGroup.GET("/performance", seoAnalyticsCtrl.GetPerformance)
 	}
 
-	// Crawl Optimization Engine Endpoints
-	crawlOptGroup := r.Group("/api/v1/crawl-opt")
+	// Crawl Optimization Engine Endpoints (Admin Only)
+	crawlOptGroup := r.Group("/api/v1/crawl-opt", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		crawlOptGroup.GET("/report", crawlOptCtrl.GetReport)
 		crawlOptGroup.POST("/audit", crawlOptCtrl.TriggerAudit)
 		crawlOptGroup.GET("/issues", crawlOptCtrl.GetIssues)
 	}
 
-	// Search Engine Indexing System Endpoints
-	indexingGroup := r.Group("/api/v1/indexing")
+	// Search Engine Indexing System Endpoints (Admin Only)
+	indexingGroup := r.Group("/api/v1/indexing", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		indexingGroup.GET("/dashboard", indexingCtrl.GetDashboard)
 		indexingGroup.POST("/trigger", indexingCtrl.TriggerJob)
@@ -181,11 +181,11 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 	seoContentGroup := r.Group("/api/v1/seo-content")
 	{
 		seoContentGroup.GET("/guide", seoContentCtrl.GetGuide)
-		seoContentGroup.POST("/refresh", seoContentCtrl.RefreshGuide)
+		seoContentGroup.POST("/refresh", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"), seoContentCtrl.RefreshGuide)
 	}
 
-	// AI Metadata Engine Endpoints
-	aiMetadataGroup := r.Group("/api/v1/ai-metadata")
+	// AI Metadata Engine Endpoints (Admin Only)
+	aiMetadataGroup := r.Group("/api/v1/ai-metadata", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		aiMetadataGroup.POST("/generate", aiMetadataCtrl.GenerateMetadata)
 		aiMetadataGroup.POST("/bulk-generate", aiMetadataCtrl.BulkGenerate)
@@ -193,15 +193,15 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *zap.Logger) *gin.Engine {
 		aiMetadataGroup.POST("/rollback", aiMetadataCtrl.RollbackVersion)
 	}
 
-	// Programmatic SEO Engine Endpoints
+	// Programmatic SEO Engine Endpoints (Public read-only)
 	pseoGroup := r.Group("/api/v1/pseo")
 	{
 		pseoGroup.GET("/page", pseoCtrl.GetPseoPage)
 		pseoGroup.GET("/related", pseoCtrl.GetRelatedLinks)
 	}
 
-	// Internal Linking Engine Endpoints
-	linkingGroup := r.Group("/api/v1/linking")
+	// Internal Linking Engine Endpoints (Admin Only)
+	linkingGroup := r.Group("/api/v1/linking", middleware.AuthMiddleware(cfg.JWTAccessSecret), middleware.RequireRoles("ADMIN"))
 	{
 		linkingGroup.GET("/entity", linkingCtrl.GetEntityLinks)
 		linkingGroup.GET("/orphan-audit", linkingCtrl.AuditOrphanPages)

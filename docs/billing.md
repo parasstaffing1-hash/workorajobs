@@ -8,8 +8,8 @@ This document provides complete technical documentation for the payment provider
 
 Location: `src/lib/billing/provider.ts`
 
-- Configurable via `PAYMENT_PROVIDER` environment variable (`STRIPE`, `RAZORPAY`, `PAYPAL`, `MANUAL`).
-- Dynamically creates provider-specific payment intents without modifying core business logic.
+- Configurable via `PAYMENT_PROVIDER` environment variable (`RAZORPAY`, `PAYPAL`, `MANUAL`).
+- Defaults to `RAZORPAY` for domestic India checkout and `PAYPAL` for global checkout.
 
 ---
 

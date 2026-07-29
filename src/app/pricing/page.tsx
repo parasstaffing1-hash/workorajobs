@@ -166,7 +166,7 @@ export default function PricingPage() {
           </div>
 
           <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-            <span>Razorpay Key: rzp_test_...5Dw7EcN5</span>
+            <span>Razorpay Standard Checkout</span>
             <span className="text-emerald-400 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Test Gateway Ready
             </span>
