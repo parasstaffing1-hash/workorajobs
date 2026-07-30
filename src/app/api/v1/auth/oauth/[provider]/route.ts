@@ -26,5 +26,13 @@ export async function GET(
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("scope", cleanProvider === "google" ? "openid email profile" : "openid profile email");
   authUrl.searchParams.set("state", `${state}.${role}`);
-  return NextResponse.redirect(authUrl);
+  const response = NextResponse.redirect(authUrl);
+  response.cookies.set("oauth_state", `${state}.${role}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+  return response;
 }

@@ -7,7 +7,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pro
   const provider = (await context.params).provider.toLowerCase();
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state") || "";
-  const role = state.split(".")[1] === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER";
+  const storedState = request.cookies.get("oauth_state")?.value;
+  if (!storedState || !state || storedState.split(".")[0] !== state.split(".")[0]) {
+    return NextResponse.redirect(new URL(`/auth/login?error=oauth_state_expired`, request.url));
+  }
+  const role = storedState.split(".")[1] === "EMPLOYER" ? "EMPLOYER" : "JOB_SEEKER";
   if (!code || !["google", "linkedin"].includes(provider)) {
     return NextResponse.redirect(new URL(`/auth/login?error=oauth_failed`, request.url));
   }
@@ -29,6 +33,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pro
     const response = NextResponse.redirect(new URL(role === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard", request.url));
     response.cookies.set("sessionToken", result.sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 30 * 24 * 60 * 60, path: "/" });
     response.cookies.set("userRole", result.user.role, { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 30 * 24 * 60 * 60, path: "/" });
+    response.cookies.set("oauth_state", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 0, path: "/" });
     return response;
   } catch {
     return NextResponse.redirect(new URL(`/auth/login?error=oauth_failed`, request.url));
