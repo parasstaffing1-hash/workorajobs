@@ -137,76 +137,35 @@ export class DashboardService {
       };
     }
 
-    // Fallback Candidate Dashboard Data for dev preview mode when DB is uninitialized/offline
-    const fullProfile = await ProfileService.getProfileByUserId(userId);
-    const profileReport = calculateProfileCompletion(fullProfile);
+    // If the database is unavailable, return an empty, truthful dashboard.
+    // Never fabricate production activity or job data.
+    const profileReport = {
+      score: 0,
+      level: "Beginner",
+      completedItems: 0,
+      totalItems: 13,
+      missingItems: [],
+    };
 
     return {
       stats: {
-        totalApplied: 12,
-        underReview: 4,
-        interviews: 3,
-        offers: 1,
-        rejected: 4,
-        responseRate: 75,
+        totalApplied: 0,
+        underReview: 0,
+        interviews: 0,
+        offers: 0,
+        rejected: 0,
+        responseRate: 0,
       },
-      applicationTrend: [
-        { month: "Feb", applications: 2, interviews: 0 },
-        { month: "Mar", applications: 3, interviews: 1 },
-        { month: "Apr", applications: 2, interviews: 1 },
-        { month: "May", applications: 1, interviews: 0 },
-        { month: "Jun", applications: 4, interviews: 2 },
-        { month: "Jul", applications: 2, interviews: 1 },
-      ],
-      recentApplications: [
-        {
-          id: "app-demo-1",
-          status: "INTERVIEW_SCHEDULED",
-          createdAt: new Date().toISOString(),
-          job: {
-            id: "job-demo-1",
-            title: "Senior Full Stack Engineer (Next.js)",
-            company: { name: "Acme Corp", logoUrl: "" },
-          },
-        },
-        {
-          id: "app-demo-2",
-          status: "UNDER_REVIEW",
-          createdAt: new Date().toISOString(),
-          job: {
-            id: "job-demo-2",
-            title: "Lead Frontend Developer (React)",
-            company: { name: "Stripe", logoUrl: "" },
-          },
-        },
-      ],
+      applicationTrend: [],
+      recentApplications: [],
       recommendedJobs: [],
       recentlyViewed: [],
       upcomingInterviews: [],
       notifications: [],
       recentActivity: [],
       profileReport,
-      defaultResume: {
-        id: "resume-demo-1",
-        title: "Software_Engineer_CV.pdf",
-        fileName: "Software_Engineer_CV.pdf",
-        fileUrl: "#",
-        fileSize: 245000,
-        version: 1,
-        updatedAt: new Date().toISOString(),
-      },
-      savedJobs: [
-        {
-          id: "job-demo-3",
-          title: "Principal Staff Architect",
-          location: "San Francisco, CA",
-          type: "Full-time",
-          workMode: "Remote",
-          salary: "$180,000 - $240,000",
-          company: { name: "Vercel" },
-          savedAt: new Date().toISOString(),
-        },
-      ],
+      defaultResume: null,
+      savedJobs: [],
     };
   }
 }
