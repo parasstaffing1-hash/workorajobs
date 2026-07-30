@@ -57,20 +57,20 @@ export default function CandidateDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 py-8 px-4 sm:px-6 lg:px-8 ${
+      className={`min-h-screen transition-colors duration-300 py-8 px-4 sm:px-6 lg:px-8 maximalist-hero-mesh ${
         isDark ? "bg-slate-900 text-slate-100" : "bg-slate-50 text-slate-900"
       }`}
     >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Navigation & Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+        <div className="glass-card-enterprise p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 maximalist-card-glow">
+          <div className="flex items-center gap-4">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Candidate Dashboard</h1>
-              <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              <h1 className="text-3xl font-black tracking-tight text-gradient-maximalist">Candidate Dashboard</h1>
+              <p className={`text-xs font-semibold ${isDark ? "text-slate-400" : "text-slate-600"}`}>
                 Real-time job application analytics, interview schedule, and ATS profile metrics.
               </p>
             </div>

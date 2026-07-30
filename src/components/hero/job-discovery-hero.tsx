@@ -136,10 +136,8 @@ export function JobDiscoveryHero({
 
   return (
     <section
-      className={`relative w-full overflow-hidden bg-white dark:bg-slate-950 pt-8 pb-16 lg:pt-14 lg:pb-24 ${className}`}
+      className={`relative w-full overflow-hidden bg-white dark:bg-slate-950 pt-8 pb-16 lg:pt-14 lg:pb-24 maximalist-hero-mesh ${className}`}
     >
-
-
       {/* Decorative SVG Career Path Line */}
       {showCareerPath && (
         <svg
@@ -166,7 +164,7 @@ export function JobDiscoveryHero({
             initial={shouldAnimate ? { opacity: 0, y: -10 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 dark:bg-blue-900/40 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 text-xs font-bold uppercase tracking-wider mb-4"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-extrabold uppercase tracking-wider mb-4 backdrop-blur-md"
           >
             <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span>Over 10,000+ Verified Careers</span>
@@ -177,7 +175,7 @@ export function JobDiscoveryHero({
             initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-4"
+            className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08] mb-4 text-gradient-maximalist"
           >
             {headline}
           </motion.h1>
@@ -187,7 +185,7 @@ export function JobDiscoveryHero({
             initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed mb-8 max-w-2xl"
+            className="text-lg sm:text-xl text-slate-700 dark:text-slate-200 font-medium leading-relaxed mb-8 max-w-2xl"
           >
             {description}
           </motion.p>
@@ -197,11 +195,11 @@ export function JobDiscoveryHero({
             initial={shouldAnimate ? { opacity: 0, scale: 0.97 } : false}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="w-full max-w-2xl bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-3xl shadow-xl shadow-slate-900/8 border border-slate-200/90 dark:border-slate-800 relative z-30"
+            className="w-full max-w-2xl glass-card-enterprise p-2.5 sm:p-3 shadow-2xl relative z-30 maximalist-card-glow"
           >
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-2">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-2.5">
               {/* Job Title / Skill Input */}
-              <div className="flex items-center flex-1 w-full px-4 h-13 rounded-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 gap-3">
+              <div className="flex items-center flex-1 w-full px-4 h-13 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 gap-3">
                 <Search className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
                 <input
                   type="text"
@@ -209,7 +207,7 @@ export function JobDiscoveryHero({
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   placeholder={query || isFocused ? searchPlaceholder : animatedPlaceholders[placeholderIdx]}
-                  className="w-full bg-transparent border-none focus:outline-none text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder:text-slate-400"
+                  className="w-full bg-transparent border-none focus:outline-none text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400"
                   aria-label="Search job title, skill, or company"
                 />
                 {query && (
@@ -224,7 +222,7 @@ export function JobDiscoveryHero({
               </div>
 
               {/* Location Input */}
-              <div className="flex items-center flex-1 w-full px-4 h-13 rounded-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 gap-3">
+              <div className="flex items-center flex-1 w-full px-4 h-13 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 gap-3">
                 <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
                 <input
                   type="text"
@@ -232,7 +230,7 @@ export function JobDiscoveryHero({
                   onChange={(e) => setLocation(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   placeholder="Location or 'Remote'"
-                  className="w-full bg-transparent border-none focus:outline-none text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder:text-slate-400"
+                  className="w-full bg-transparent border-none focus:outline-none text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400"
                   aria-label="Search location"
                 />
               </div>
@@ -240,7 +238,7 @@ export function JobDiscoveryHero({
               {/* Search Button */}
               <button
                 type="submit"
-                className="w-full sm:w-auto h-13 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition-all duration-200 shrink-0 cursor-pointer active:scale-95 group"
+                className="w-full sm:w-auto h-13 px-8 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-extrabold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition-all duration-200 shrink-0 cursor-pointer active:scale-95 group"
               >
                 <span>Search Jobs</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

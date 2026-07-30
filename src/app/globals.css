@@ -165,6 +165,67 @@ textarea {
   -webkit-background-clip: text;
 }
 
+/* Polished Maximalist Design System Utilities */
+.text-gradient-maximalist {
+  background: linear-gradient(
+    135deg,
+    #2563eb 0%,
+    #7c3aed 40%,
+    #db2777 75%,
+    #f59e0b 100%
+  );
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.dark .text-gradient-maximalist {
+  background: linear-gradient(
+    135deg,
+    #60a5fa 0%,
+    #a78bfa 40%,
+    #f472b6 75%,
+    #fbbf24 100%
+  );
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.maximalist-hero-mesh {
+  background-image: 
+    radial-gradient(at 10% 15%, rgba(37, 99, 235, 0.18) 0px, transparent 55%),
+    radial-gradient(at 90% 10%, rgba(147, 51, 234, 0.16) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, rgba(245, 158, 11, 0.12) 0px, transparent 55%),
+    radial-gradient(at 80% 80%, rgba(219, 39, 119, 0.14) 0px, transparent 50%);
+}
+
+.dark .maximalist-hero-mesh {
+  background-image: 
+    radial-gradient(at 10% 15%, rgba(59, 130, 246, 0.28) 0px, transparent 55%),
+    radial-gradient(at 90% 10%, rgba(168, 85, 247, 0.26) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, rgba(251, 191, 36, 0.18) 0px, transparent 55%),
+    radial-gradient(at 80% 80%, rgba(244, 114, 182, 0.22) 0px, transparent 50%);
+}
+
+.maximalist-card-glow {
+  box-shadow: 
+    0 20px 40px -15px rgba(37, 99, 235, 0.12),
+    0 10px 20px -10px rgba(147, 51, 234, 0.1),
+    0 0 0 1px rgba(226, 232, 240, 0.8);
+}
+
+.dark .maximalist-card-glow {
+  box-shadow: 
+    0 20px 45px -15px rgba(59, 130, 246, 0.25),
+    0 10px 25px -10px rgba(168, 85, 247, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.maximalist-button-glow {
+  box-shadow: 0 10px 30px -8px rgba(37, 99, 235, 0.4);
+}
+
 .glass-panel {
   background:
     linear-gradient(180deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.7)),
@@ -174,21 +235,21 @@ textarea {
 }
 
 .glass-card-enterprise {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px) saturate(1.9);
-  -webkit-backdrop-filter: blur(24px) saturate(1.9);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(2.1);
+  -webkit-backdrop-filter: blur(28px) saturate(2.1);
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.03);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
 }
 
 .dark .glass-card-enterprise {
-  background: rgba(13, 19, 33, 0.85);
-  backdrop-filter: blur(24px) saturate(1.9);
-  -webkit-backdrop-filter: blur(24px) saturate(1.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
+  background: rgba(13, 19, 33, 0.88);
+  backdrop-filter: blur(28px) saturate(2.1);
+  -webkit-backdrop-filter: blur(28px) saturate(2.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-radius: 1.25rem;
 }
 
 .soft-shadow-xl {
@@ -217,3 +278,4 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 }
+

@@ -84,7 +84,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 maximalist-hero-mesh">
       {/* DEDICATED HEADER */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-8 py-3 flex items-center justify-between shadow-sm">
         {/* Left: Back Button */}
@@ -119,13 +119,13 @@ function LoginContent() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-md w-full mx-auto p-4 sm:p-6 flex items-center justify-center">
-        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="w-full glass-card-enterprise p-6 sm:p-8 shadow-2xl space-y-6 maximalist-card-glow">
           <div className="text-center space-y-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-              <Sparkles className="h-3 w-3" /> Workora Jobs Authentication
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+              <Sparkles className="h-3.5 w-3.5" /> Workora Jobs Authentication
             </span>
-            <h1 className="text-2xl font-black">Welcome Back</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Select account type &amp; enter credentials</p>
+            <h1 className="text-3xl font-black tracking-tight text-gradient-maximalist">Welcome Back</h1>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Select account type &amp; enter credentials</p>
           </div>
 
           {/* Role Toggle Selector */}
