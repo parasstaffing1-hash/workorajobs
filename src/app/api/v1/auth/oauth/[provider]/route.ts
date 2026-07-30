@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { oauthPublicUrl } from "@/lib/auth/oauth-public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function GET(
     return NextResponse.json({ success: false, error: "OAuth provider is not configured." }, { status: 503 });
   }
   const state = crypto.randomUUID();
-  const callback = new URL(`/api/v1/auth/oauth/${cleanProvider}/callback`, request.url).toString();
+  const callback = oauthPublicUrl(request, `/api/v1/auth/oauth/${cleanProvider}/callback`).toString();
   const authUrl = cleanProvider === "google"
     ? new URL("https://accounts.google.com/o/oauth2/v2/auth")
     : new URL("https://www.linkedin.com/oauth/v2/authorization");
