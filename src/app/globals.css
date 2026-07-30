@@ -165,6 +165,58 @@ textarea {
   -webkit-background-clip: text;
 }
 
+/* Minds Awwwards SOTD Design System Tokens */
+.minds-dark-bg {
+  background-color: #080b11;
+  color: #f1f5f9;
+}
+
+.minds-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+.minds-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  transition: all 0.2s ease-in-out;
+}
+
+.dark .minds-pill {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+}
+
+.minds-pill:hover {
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.minds-accent-coral {
+  color: #fa5d29;
+}
+
+.minds-bg-coral {
+  background-color: #fa5d29;
+}
+
+.minds-glow-cyan {
+  box-shadow: 0 0 30px -5px rgba(0, 240, 255, 0.3);
+}
+
 /* Polished Maximalist Design System Utilities */
 .text-gradient-maximalist {
   background: linear-gradient(
