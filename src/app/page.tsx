@@ -63,7 +63,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="maximalist-home">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -301,6 +301,6 @@ export default function HomePage() {
         }}
         type="application/ld+json"
       />
-    </div>
+    </>
   );
 }
