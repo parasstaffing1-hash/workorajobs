@@ -5,7 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    container_name: workora_app
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
@@ -23,6 +24,19 @@ services:
     volumes:
       - next_static:/app/.next/static
       - public_assets:/app/public
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
+        reservations:
+          memory: 256M
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,7 +48,7 @@ services:
   nginx:
     image: nginx:1.25-alpine
     container_name: workora_nginx
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -44,15 +58,27 @@ services:
       - ./nginx/certbot/www:/var/www/certbot
       - next_static:/var/www/workora/.next/static:ro
       - public_assets:/var/www/workora/public:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     networks:
       - workora_prod_net
 
   postgres:
     image: postgres:16-alpine
     container_name: workora_prod_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-workora}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workora_pass}
@@ -64,13 +90,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     networks:
       - workora_prod_net
 
   redis:
     image: redis:7-alpine
     container_name: workora_prod_redis
-    restart: always
+    restart: unless-stopped
     volumes:
       - redisdata_prod:/data
     healthcheck:
@@ -78,6 +110,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     networks:
       - workora_prod_net
 

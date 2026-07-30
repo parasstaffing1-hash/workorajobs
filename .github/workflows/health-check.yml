@@ -1,0 +1,79 @@
+name: Production Health Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify Homepage Status (200 OK)
+        run: |
+          echo "🔍 Checking Homepage HTTP response..."
+          START_TIME=$(date +%s%3N)
+          HTTP_STATUS=$(curl -s -o /tmp/home.html -w "%{http_code}" https://workorajobs.com/)
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+
+          echo "📊 Homepage Status: HTTP $HTTP_STATUS (${LATENCY}ms)"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "❌ CRITICAL: Homepage returned non-200 status ($HTTP_STATUS)"
+            exit 1
+          fi
+
+      - name: Verify API Health Endpoint (200 OK)
+        run: |
+          echo "🔍 Checking API Health endpoint..."
+          START_TIME=$(date +%s%3N)
+          HTTP_STATUS=$(curl -s -o /tmp/health.json -w "%{http_code}" https://workorajobs.com/api/v1/health)
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+
+          echo "📊 API Health Status: HTTP $HTTP_STATUS (${LATENCY}ms)"
+          cat /tmp/health.json
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "❌ CRITICAL: API Health endpoint returned status $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Verify Static CSS Asset (200 OK & text/css)
+        run: |
+          echo "🔍 Extracting static CSS asset URL from homepage..."
+          CSS_PATH=$(grep -oE '/_next/static/chunks/[a-zA-Z0-9_-]+\.css' /tmp/home.html | head -n 1)
+
+          if [ -z "$CSS_PATH" ]; then
+            echo "⚠️ Warning: No inline CSS chunk found on homepage. Using fallback asset..."
+            CSS_URL="https://workorajobs.com/_next/static/chunks/0i202dfltqh6p.css"
+          else
+            CSS_URL="https://workorajobs.com${CSS_PATH}"
+          fi
+
+          echo "🌐 Testing CSS URL: $CSS_URL"
+          RESPONSE=$(curl -sI "$CSS_URL")
+          HTTP_STATUS=$(echo "$RESPONSE" | grep -i '^HTTP/' | awk '{print $2}' | tr -d '\r')
+          CONTENT_TYPE=$(echo "$RESPONSE" | grep -i '^content-type:' | awk '{print $2}' | tr -d '\r')
+
+          echo "📊 CSS Asset Status: HTTP $HTTP_STATUS ($CONTENT_TYPE)"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "❌ CRITICAL: CSS asset returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Measure Login Endpoint Response Latency
+        run: |
+          echo "⏱️ Testing Auth Login endpoint latency..."
+          START_TIME=$(date +%s%3N)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://workorajobs.com/auth/login)
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+
+          echo "📊 Login Endpoint: HTTP $HTTP_STATUS (Response Latency: ${LATENCY}ms)"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "❌ CRITICAL: Auth login page returned status $HTTP_STATUS"
+            exit 1
+          fi

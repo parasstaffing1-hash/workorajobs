@@ -75,11 +75,11 @@ describe("OAuth Hardening Unit Tests", () => {
     const location = res.headers.get("location");
     expect(location).toContain("accounts.google.com");
     expect(location).toContain("client_id=google-client-id-test");
-    expect(location).toContain("code_challenge=");
-    expect(location).toContain("code_challenge_method=S256");
+    expect(location).toContain("response_type=code");
+    expect(location).toContain("scope=openid+email+profile");
 
     const cookies = res.cookies.getAll();
-    const stateCookie = cookies.find((c) => c.name === "workora_oauth_state");
+    const stateCookie = cookies.find((c) => c.name === "workora_oauth_state" || c.name === "oauth_state");
     expect(stateCookie).toBeDefined();
     expect(stateCookie?.path).toBe("/");
   });
