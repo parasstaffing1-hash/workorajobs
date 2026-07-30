@@ -195,8 +195,20 @@ export function JoinNowGatewayModal({
               </div>
 
               {error && (
-                <div className="p-3 rounded-xl bg-red-50 text-red-600 font-semibold text-xs border border-red-200">
-                  {error}
+                <div className="p-3 rounded-xl bg-red-50 text-red-600 font-semibold text-xs border border-red-200 space-y-1">
+                  <div>{error}</div>
+                  {error.toLowerCase().includes("already exists") && (
+                    <div className="text-[11px] font-normal text-red-700 pt-1 border-t border-red-200/60 flex items-center gap-2">
+                      <span>Already registered?</span>
+                      <Link
+                        href="/auth/login"
+                        onClick={() => onClose()}
+                        className="font-bold underline hover:text-red-900"
+                      >
+                        Sign In here →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 
