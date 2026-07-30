@@ -21,10 +21,11 @@ class MockRedis {
       clearTimeout(this.timeouts.get(key));
     }
     if (mode === "EX" && duration) {
+      const ms = Math.min(duration * 1000, 2147483647);
       const timeout = setTimeout(() => {
         this.store.delete(key);
         this.timeouts.delete(key);
-      }, duration * 1000);
+      }, ms);
       this.timeouts.set(key, timeout);
     }
     return "OK";
@@ -51,10 +52,11 @@ class MockRedis {
       if (this.timeouts.has(key)) {
         clearTimeout(this.timeouts.get(key));
       }
+      const ms = Math.min(seconds * 1000, 2147483647);
       const timeout = setTimeout(() => {
         this.store.delete(key);
         this.timeouts.delete(key);
-      }, seconds * 1000);
+      }, ms);
       this.timeouts.set(key, timeout);
       return 1;
     }

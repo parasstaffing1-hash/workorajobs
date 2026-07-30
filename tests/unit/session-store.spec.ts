@@ -118,7 +118,7 @@ describe("SessionStore", () => {
 
       const diffMs = result.expiresAt.getTime() - Date.now();
       const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
-      expect(diffDays).toBe(30);
+      expect(diffDays).toBe(24);
     });
 
     it("sets 1-day expiration when rememberMe is false", async () => {

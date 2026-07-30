@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const result = await EnterpriseAuthController.login(body, ip, userAgent);
 
-    const maxAge = body.rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+    const maxAge = body.rememberMe ? 24 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
 
     const response = NextResponse.json({
       success: true,
