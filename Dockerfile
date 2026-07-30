@@ -1,4 +1,4 @@
-# Multi-stage Production Dockerfile for WorkoraJobs Next.js 15
+# Multi-stage Production Dockerfile for WorkoraJobs Next.js 16
 FROM node:20-alpine AS base
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
@@ -7,6 +7,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 # 2. Rebuild source code
@@ -16,6 +17,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV DATABASE_URL="postgresql://dummy:dummy@127.0.0.1:5432/dummy"
 
 RUN pnpm prisma generate
 RUN pnpm build
@@ -28,7 +30,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

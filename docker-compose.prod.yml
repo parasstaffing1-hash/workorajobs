@@ -20,6 +20,9 @@ services:
       - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
       - SENTRY_ORG=${SENTRY_ORG}
       - SENTRY_PROJECT=${SENTRY_PROJECT}
+    volumes:
+      - next_static:/app/.next/static
+      - public_assets:/app/public
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,6 +42,8 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certbot/conf:/etc/letsencrypt
       - ./nginx/certbot/www:/var/www/certbot
+      - next_static:/var/www/workora/.next/static:ro
+      - public_assets:/var/www/workora/public:ro
     depends_on:
       - app
     networks:
@@ -49,13 +54,13 @@ services:
     container_name: workora_prod_postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-workora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workora_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-workora_prod}
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workora} -d ${POSTGRES_DB:-workora_prod}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -83,3 +88,5 @@ networks:
 volumes:
   pgdata_prod:
   redisdata_prod:
+  next_static:
+  public_assets:
