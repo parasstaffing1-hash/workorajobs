@@ -21,12 +21,18 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
     }
 
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [onClose, open]);
 
   return (
@@ -35,7 +41,8 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
         <motion.div
           animate={{ opacity: 1 }}
           aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 py-8 backdrop-blur-md gpu-accelerated"
+          onClick={onClose}
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 sm:p-6 backdrop-blur-md gpu-layer overflow-y-auto"
           exit={{ opacity: 0 }}
           initial={shouldReduceMotion ? false : { opacity: 0 }}
           role="dialog"
@@ -43,7 +50,8 @@ export function Modal({ open, title, children, onClose }: ModalProps) {
         >
           <motion.div
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="glass-panel w-full max-w-lg rounded-2xl border border-slate-200/80 dark:border-white/10 p-6 shadow-2xl gpu-accelerated"
+            onClick={(e) => e.stopPropagation()}
+            className="glass-panel w-full max-w-lg rounded-2xl border border-slate-200/80 dark:border-white/10 p-6 shadow-2xl gpu-layer max-h-[90vh] overflow-y-auto my-auto"
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             initial={
               shouldReduceMotion ? false : { opacity: 0, scale: 0.94, y: 16 }

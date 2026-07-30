@@ -126,6 +126,21 @@ textarea {
   text-wrap: balance;
 }
 
+/* Unified 8-Point Spacing Utility Classes */
+.space-y-8pt > * + * {
+  margin-top: 8px;
+}
+.space-y-16pt > * + * {
+  margin-top: 16px;
+}
+.space-y-24pt > * + * {
+  margin-top: 24px;
+}
+.space-y-32pt > * + * {
+  margin-top: 32px;
+}
+
+/* Enterprise Glass Panels & Motion Tokens */
 .glass-nav {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -159,19 +174,21 @@ textarea {
 }
 
 .glass-card-enterprise {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px) saturate(1.9);
   -webkit-backdrop-filter: blur(24px) saturate(1.9);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.03);
+  border-radius: 1rem;
 }
 
 .dark .glass-card-enterprise {
-  background: rgba(13, 19, 33, 0.8);
+  background: rgba(13, 19, 33, 0.85);
   backdrop-filter: blur(24px) saturate(1.9);
   -webkit-backdrop-filter: blur(24px) saturate(1.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
 }
 
 .soft-shadow-xl {
@@ -180,6 +197,13 @@ textarea {
 
 .dark .soft-shadow-xl {
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Responsive Table Container & Touch Scrollbar Utility */
+.table-responsive-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Reduced Motion Support (WCAG 2.1 AAA) */
