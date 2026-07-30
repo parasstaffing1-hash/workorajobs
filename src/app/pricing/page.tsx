@@ -63,21 +63,22 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen minds-dark-bg text-white flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-600/15 blur-[120px] pointer-events-none rounded-full"></div>
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] minds-glow-coral blur-[140px] pointer-events-none rounded-full opacity-40"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] minds-glow-cyan blur-[140px] pointer-events-none rounded-full opacity-30"></div>
 
       <div className="max-w-6xl w-full space-y-12 relative z-10">
         {/* Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <span>⚡ Razorpay Web Checkout Integration</span>
+          <div className="minds-pill inline-flex items-center gap-2 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            <span>⚡ Enterprise Checkout Integration</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
             Flexible Plans for Employers & Job Seekers
           </h1>
           <p className="text-slate-400 text-base sm:text-lg">
-            Choose a plan below to test Razorpay Standard Checkout. Instant order creation, secure payment processing, and HMAC-SHA256 signature verification.
+            Choose a plan below for instant order creation, secure payment processing, and HMAC-SHA256 signature verification.
           </p>
         </div>
 
@@ -91,12 +92,12 @@ export default function PricingPage() {
                 onClick={() => setSelectedProduct(product)}
                 className={`relative flex flex-col justify-between p-8 rounded-3xl transition-all duration-300 cursor-pointer ${
                   isSelected
-                    ? "bg-slate-900 border-2 border-blue-500 shadow-2xl shadow-blue-500/10 scale-[1.02]"
-                    : "bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-900/80"
+                    ? "minds-card border-2 border-[#FA5D29] shadow-2xl shadow-[#FA5D29]/20 scale-[1.02]"
+                    : "minds-card border border-white/10 hover:border-white/20 hover:bg-slate-900/60"
                 }`}
               >
                 {product.recommended && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-widest py-1 px-4 rounded-full shadow-md">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 minds-bg-coral text-white text-[11px] font-bold uppercase tracking-widest py-1 px-4 rounded-full shadow-lg">
                     {product.badge}
                   </div>
                 )}
@@ -119,7 +120,7 @@ export default function PricingPage() {
                     {product.features.map((feature, i) => (
                       <li key={i} className="flex items-center gap-3 text-xs text-slate-300">
                         <svg
-                          className="h-4 w-4 text-blue-400 shrink-0"
+                          className="h-4 w-4 text-[#FA5D29] shrink-0"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -137,7 +138,7 @@ export default function PricingPage() {
                   <button
                     className={`w-full py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                       isSelected
-                        ? "bg-blue-600 text-white"
+                        ? "minds-bg-coral text-white shadow-lg shadow-[#FA5D29]/30"
                         : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                     }`}
                   >
@@ -150,9 +151,9 @@ export default function PricingPage() {
         </div>
 
         {/* Selected Plan Checkout Panel */}
-        <div className="glass-panel bg-slate-900/90 border border-slate-800 rounded-3xl p-8 max-w-xl mx-auto text-center space-y-6 shadow-2xl backdrop-blur-xl">
+        <div className="minds-card border border-white/15 rounded-3xl p-8 max-w-xl mx-auto text-center space-y-6 shadow-2xl backdrop-blur-xl">
           <div className="space-y-1">
-            <span className="text-xs font-mono text-blue-400 uppercase tracking-widest">Active Selection</span>
+            <span className="text-xs font-mono text-[#FA5D29] uppercase tracking-widest">Active Selection</span>
             <h3 className="text-2xl font-bold">{selectedProduct.title}</h3>
             <p className="text-sm text-slate-400">Total Due: <strong className="text-white text-lg">₹{selectedProduct.amount}</strong></p>
           </div>
@@ -165,10 +166,10 @@ export default function PricingPage() {
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-            <span>Razorpay Standard Checkout</span>
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 font-mono">
+            <span>Enterprise Gateway Checkout</span>
             <span className="text-emerald-400 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Test Gateway Ready
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Payment Gateway Ready
             </span>
           </div>
         </div>
