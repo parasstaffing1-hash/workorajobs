@@ -31,7 +31,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pro
     if (!profileResponse.ok) throw new Error("OAuth profile lookup failed");
     const profile = await profileResponse.json();
     const result = await OAuthService.authenticateWithProvider({ provider: provider as "google" | "linkedin", providerAccountId: profile.sub, email: profile.email, name: profile.name, picture: profile.picture, role: role as any, accessToken: tokens.access_token }, request.headers.get("x-forwarded-for") || "127.0.0.1", request.headers.get("user-agent") || "Browser");
-    const response = NextResponse.redirect(oauthPublicUrl(request, role === "EMPLOYER" ? "/employer/dashboard" : "/candidate/dashboard"));
+    const response = NextResponse.redirect(
+      oauthPublicUrl(
+        request,
+        result.user.role === "EMPLOYER" || result.user.role === "RECRUITER"
+          ? "/employer/dashboard"
+          : "/candidate/dashboard"
+      )
+    );
     response.cookies.set("sessionToken", result.sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 30 * 24 * 60 * 60, path: "/" });
     response.cookies.set("userRole", result.user.role, { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 30 * 24 * 60 * 60, path: "/" });
     response.cookies.set("oauth_state", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 0, path: "/" });

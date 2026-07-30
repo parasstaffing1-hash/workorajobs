@@ -54,6 +54,20 @@ if [[ -r /etc/workora/oauth.env ]]; then
 fi
 
 export DATABASE_URL="${DATABASE_URL:-postgresql://${POSTGRES_USER:-workora}:${POSTGRES_PASSWORD:-workora_password}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-workora_jobs}?schema=public}"
+export REDIS_URL="${REDIS_URL:-redis://127.0.0.1:6379}"
+
+# Persist the local Redis endpoint for the systemd runtime without printing or
+# replacing any secrets already stored in the root-only environment file.
+install -d -m 700 /etc/workora
+touch /etc/workora/oauth.env
+chmod 600 /etc/workora/oauth.env
+if ! grep -q '^REDIS_URL=' /etc/workora/oauth.env; then
+  printf '\nREDIS_URL=redis://127.0.0.1:6379\n' >>/etc/workora/oauth.env
+fi
+
+if systemctl list-unit-files redis6.service >/dev/null 2>&1; then
+  systemctl enable --now redis6.service
+fi
 
 # Production predates Prisma's migration ledger. Baseline only when the legacy
 # web User table exists and the ledger does not, so an empty database still

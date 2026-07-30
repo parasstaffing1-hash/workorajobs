@@ -109,6 +109,16 @@ export default function CandidateDashboardPage() {
               >
                 Applications
               </Link>
+              <Link
+                href="/auth/set-password"
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                  isDark
+                    ? "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
+                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                Password
+              </Link>
             </div>
 
             {/* Dark Mode Toggle */}

@@ -79,7 +79,11 @@ export function SignInGatewayModal({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Authentication failed. Please verify credentials.");
+        throw new Error(
+          res.status === 401 || res.status === 400
+            ? "Invalid email or password. If you joined with Google or LinkedIn, continue with that provider, then create a password from your dashboard."
+            : data.error || "Authentication failed. Please verify credentials."
+        );
       }
 
       onClose();
@@ -89,6 +93,7 @@ export function SignInGatewayModal({
       } else {
         router.push("/candidate/dashboard");
       }
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Failed to sign in.");
     } finally {
@@ -257,7 +262,7 @@ export function SignInGatewayModal({
                       Password
                     </label>
                     <Link
-                      href={view === "EMPLOYER" ? "/employer/forgot-password" : "/candidate/forgot-password"}
+                      href={view === "EMPLOYER" ? "/employer/forgot-password" : "/auth/forgot-password"}
                       className="text-[11px] font-semibold text-blue-600 hover:underline"
                     >
                       Forgot Password?

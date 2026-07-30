@@ -76,6 +76,16 @@ export default function EmployerDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/auth/set-password"
+              className={`inline-flex h-10 items-center rounded-xl border px-3 text-xs font-bold transition-colors ${
+                isDark
+                  ? "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              Password
+            </Link>
             <button
               onClick={() => setIsDark(!isDark)}
               className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${

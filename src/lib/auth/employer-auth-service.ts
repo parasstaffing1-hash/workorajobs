@@ -59,7 +59,7 @@ export class EmployerAuthService {
     const tokenHash = crypto.createHash("sha256").update(verificationToken).digest("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    await prisma.passwordReset.create({
+    await prisma.emailVerification.create({
       data: {
         email: user.email,
         tokenHash,

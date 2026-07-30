@@ -83,7 +83,10 @@ export class SessionStore {
     rememberMe?: boolean;
   }): Promise<{ sessionToken: string; expiresAt: Date }> {
     const sessionToken = crypto.randomBytes(32).toString("hex");
-    const durationDays = data.rememberMe ? 30 : 1;
+    // Keep the authoritative DB session aligned with the 7/30-day cookies
+    // issued by the login routes. Previously a non-remembered cookie lived for
+    // seven days while its server-side session expired after one day.
+    const durationDays = data.rememberMe ? 30 : 7;
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
     const parsedUa = this.parseUserAgent(data.userAgent || "");
 
