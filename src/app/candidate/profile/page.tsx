@@ -112,13 +112,22 @@ export default function CandidateProfilePage() {
             <span>Back to Job Search</span>
           </Link>
 
-          <Link
-            href="/candidate/sessions"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            <span>Security &amp; Device Sessions</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/auth/set-password"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              <span>Password</span>
+            </Link>
+            <Link
+              href="/candidate/sessions"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              <span>Security &amp; Device Sessions</span>
+            </Link>
+          </div>
         </div>
 
         {alert && <AuthAlert type={alert.type} message={alert.message} />}

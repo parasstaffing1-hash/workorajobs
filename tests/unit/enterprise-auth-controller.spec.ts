@@ -24,6 +24,11 @@ jest.mock("@/lib/prisma", () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    emailVerification: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
     loginHistory: {
       create: jest.fn(),
     },
@@ -101,7 +106,7 @@ describe("EnterpriseAuthController", () => {
         role: "JOB_SEEKER",
         isEmailVerified: false,
       });
-      (prisma.passwordReset.create as jest.Mock).mockResolvedValue({});
+      (prisma.emailVerification.create as jest.Mock).mockResolvedValue({});
       (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
       const result = await EnterpriseAuthController.signup(validSignup);
@@ -131,7 +136,7 @@ describe("EnterpriseAuthController", () => {
         role: "EMPLOYER",
         isEmailVerified: false,
       });
-      (prisma.passwordReset.create as jest.Mock).mockResolvedValue({});
+      (prisma.emailVerification.create as jest.Mock).mockResolvedValue({});
       (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
       const result = await EnterpriseAuthController.signup(employerSignup);
@@ -163,7 +168,7 @@ describe("EnterpriseAuthController", () => {
         role: "JOB_SEEKER",
         isEmailVerified: false,
       });
-      (prisma.passwordReset.create as jest.Mock).mockResolvedValue({});
+      (prisma.emailVerification.create as jest.Mock).mockResolvedValue({});
       (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
       const result = await EnterpriseAuthController.signup({
@@ -187,7 +192,7 @@ describe("EnterpriseAuthController", () => {
         role: "JOB_SEEKER",
         isEmailVerified: false,
       });
-      (prisma.passwordReset.create as jest.Mock).mockResolvedValue({});
+      (prisma.emailVerification.create as jest.Mock).mockResolvedValue({});
       (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
       const result = await EnterpriseAuthController.signup(validSignup);
@@ -315,15 +320,15 @@ describe("EnterpriseAuthController", () => {
       const rawToken = "verification-token-123";
       const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
 
-      (prisma.passwordReset.findFirst as jest.Mock).mockResolvedValue({
+      (prisma.emailVerification.findFirst as jest.Mock).mockResolvedValue({
         id: "record-1",
         email: "user@example.com",
         tokenHash,
-        isUsed: false,
+        isVerified: false,
         expiresAt: new Date(Date.now() + 86400000),
       });
       (prisma.user.update as jest.Mock).mockResolvedValue({});
-      (prisma.passwordReset.update as jest.Mock).mockResolvedValue({});
+      (prisma.emailVerification.update as jest.Mock).mockResolvedValue({});
 
       const result = await EnterpriseAuthController.verifyEmail(rawToken);
 

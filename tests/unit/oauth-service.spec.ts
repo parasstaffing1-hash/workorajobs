@@ -97,6 +97,10 @@ describe("OAuthService", () => {
 
     expect(result.user.email).toBe("new.google@gmail.com");
     expect(result.user.isEmailVerified).toBe(true);
-    expect(prisma.user.create).toHaveBeenCalled();
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ passwordHash: null }),
+      })
+    );
   });
 });

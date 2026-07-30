@@ -6,7 +6,6 @@
  * ============================================================================
  */
 
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SessionStore } from "@/lib/auth/session-store";
@@ -61,17 +60,17 @@ export class OAuthService {
       }).catch(() => null);
     }
 
-    // 3. If User doesn't exist, Create New User with Email Verified
+    // 3. If User doesn't exist, create an OAuth-only user with no local
+    // password. A random bcrypt hash made these accounts look like password
+    // accounts even though no password could ever match it.
     if (!user) {
-      const dummyPassword = crypto.randomBytes(32).toString("hex");
-      const passwordHash = await bcrypt.hash(dummyPassword, 12);
       const name = input.name || cleanEmail.split("@")[0];
 
       try {
         user = await prisma.user.create({
           data: {
             email: cleanEmail,
-            passwordHash,
+            passwordHash: null,
             name,
             role: role as any,
             isEmailVerified: true,

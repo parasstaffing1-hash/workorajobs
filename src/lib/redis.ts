@@ -21,11 +21,14 @@ class MockRedis {
       clearTimeout(this.timeouts.get(key));
     }
     if (mode === "EX" && duration) {
-      const ms = Math.min(duration * 1000, 2147483647);
+      // Node timers cannot represent intervals above 2^31-1 ms. Long-lived
+      // sessions are still authoritative in PostgreSQL; cap only this
+      // development fallback timer to avoid immediate expiry and warnings.
+      const timeoutMs = Math.min(duration * 1000, 2_147_483_647);
       const timeout = setTimeout(() => {
         this.store.delete(key);
         this.timeouts.delete(key);
-      }, ms);
+      }, timeoutMs);
       this.timeouts.set(key, timeout);
     }
     return "OK";
@@ -52,11 +55,11 @@ class MockRedis {
       if (this.timeouts.has(key)) {
         clearTimeout(this.timeouts.get(key));
       }
-      const ms = Math.min(seconds * 1000, 2147483647);
+      const timeoutMs = Math.min(seconds * 1000, 2_147_483_647);
       const timeout = setTimeout(() => {
         this.store.delete(key);
         this.timeouts.delete(key);
-      }, ms);
+      }, timeoutMs);
       this.timeouts.set(key, timeout);
       return 1;
     }

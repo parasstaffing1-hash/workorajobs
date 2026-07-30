@@ -6,7 +6,10 @@ import { NextRequest } from "next/server";
  * https://0.0.0.0, which OAuth providers must never receive as a callback URL.
  */
 export function oauthPublicUrl(request: NextRequest, pathname: string): URL {
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const configuredOrigin =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.APP_URL?.trim() ||
+    (process.env.NODE_ENV === "production" ? "https://workorajobs.com" : "");
   if (configuredOrigin) {
     const origin = new URL(configuredOrigin);
     if (process.env.NODE_ENV === "production" && origin.protocol !== "https:") {

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       userId: result.user.id,
       email: result.user.email,
       role: "EMPLOYER",
+      rememberMe: true,
     });
 
     const token = signJwt({

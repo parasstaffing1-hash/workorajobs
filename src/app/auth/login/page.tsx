@@ -57,7 +57,7 @@ function LoginContent() {
       if (!res.ok || !data.success) {
         const errorMsg =
           res.status === 401
-            ? "Invalid email or password."
+            ? "Invalid email or password. If you joined with Google or LinkedIn, use the same provider above, then choose Password on your dashboard to enable email sign-in."
             : data.error || data.message || "Failed to sign in. Please verify your credentials.";
         throw new Error(errorMsg);
       }
@@ -65,13 +65,24 @@ function LoginContent() {
       setAlert({ type: "success", message: "Sign in successful! Redirecting..." });
 
       setTimeout(() => {
-        if (returnUrlParam) {
-          router.push(returnUrlParam);
-        } else if (role === "EMPLOYER" || data.user?.role === "EMPLOYER") {
+        const userRole = data.user?.role;
+        const safeReturnUrl =
+          returnUrlParam &&
+          returnUrlParam.startsWith("/") &&
+          !returnUrlParam.startsWith("//") &&
+          ((userRole === "EMPLOYER" && returnUrlParam.startsWith("/employer")) ||
+            (userRole !== "EMPLOYER" && returnUrlParam.startsWith("/candidate")))
+            ? returnUrlParam
+            : null;
+
+        if (safeReturnUrl) {
+          router.push(safeReturnUrl);
+        } else if (userRole === "EMPLOYER") {
           router.push("/employer/dashboard");
         } else {
           router.push("/candidate/dashboard");
         }
+        router.refresh();
       }, 500);
     } catch (err: any) {
       setAlert({

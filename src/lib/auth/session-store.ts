@@ -83,7 +83,8 @@ export class SessionStore {
     rememberMe?: boolean;
   }): Promise<{ sessionToken: string; expiresAt: Date }> {
     const sessionToken = crypto.randomBytes(32).toString("hex");
-    const durationDays = data.rememberMe ? 24 : 1;
+    // Keep session aligned with Node 32-bit signed integer timer limit (2^31-1 ms ~ 24.8 days)
+    const durationDays = data.rememberMe ? 24 : 7;
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
     const parsedUa = this.parseUserAgent(data.userAgent || "");
 

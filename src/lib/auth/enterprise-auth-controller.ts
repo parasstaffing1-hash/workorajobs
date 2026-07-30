@@ -135,7 +135,7 @@ export class EnterpriseAuthController {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await Promise.all([
-      prisma.passwordReset.create({
+      prisma.emailVerification.create({
         data: {
           email: cleanEmail,
           tokenHash: crypto.createHash("sha256").update(verificationToken).digest("hex"),
@@ -164,6 +164,7 @@ export class EnterpriseAuthController {
       role: user.role,
       ipAddress,
       userAgent,
+      rememberMe: true,
     });
 
     const accessToken = signJwt({ userId: user.id, email: user.email, role: user.role });
@@ -372,8 +373,8 @@ export class EnterpriseAuthController {
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    const record = await prisma.passwordReset.findFirst({
-      where: { tokenHash, isUsed: false, expiresAt: { gt: new Date() } },
+    const record = await prisma.emailVerification.findFirst({
+      where: { tokenHash, isVerified: false, expiresAt: { gt: new Date() } },
     }).catch(() => null);
 
     if (!record) {
@@ -387,9 +388,9 @@ export class EnterpriseAuthController {
       data: { isEmailVerified: true, emailVerifiedAt: new Date() },
     });
 
-    await prisma.passwordReset.update({
+    await prisma.emailVerification.update({
       where: { id: record.id },
-      data: { isUsed: true },
+      data: { isVerified: true },
     });
 
     return { success: true };
