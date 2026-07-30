@@ -1,5 +1,5 @@
 # Multi-stage Production Dockerfile for WorkoraJobs Next.js 16
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
