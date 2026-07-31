@@ -23,9 +23,7 @@ async function getAuthUserId(request: NextRequest): Promise<string | null> {
     if (jwt) return jwt.userId;
   }
 
-  // Fallback: For dev testing, allow first available user if no session token present
-  const firstUser = await prisma.user.findFirst({ select: { id: true } });
-  return firstUser?.id || null;
+  return null;
 }
 
 export async function GET(request: NextRequest) {

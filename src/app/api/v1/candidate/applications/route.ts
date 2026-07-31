@@ -23,9 +23,7 @@ async function getAuthUserId(request: NextRequest): Promise<string | null> {
     if (jwt) return jwt.userId;
   }
 
-  // Fallback for dev environment
-  const firstUser = await prisma.user.findFirst({ select: { id: true } });
-  return firstUser?.id || null;
+  return null;
 }
 
 export async function GET(request: NextRequest) {

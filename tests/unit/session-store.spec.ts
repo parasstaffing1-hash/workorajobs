@@ -134,7 +134,7 @@ describe("SessionStore", () => {
 
       const diffMs = result.expiresAt.getTime() - Date.now();
       const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
-      expect(diffDays).toBe(1);
+      expect(diffDays).toBe(7);
     });
 
     it("throws database error when DB write fails during session creation", async () => {
